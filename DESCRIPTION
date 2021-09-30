@@ -16,3 +16,5 @@ RoxygenNote: 7.1.1
 Imports: LBSPR, shinyWidgets, methods
 Depends: 
     R (>= 4.0)
+URL: https://github.com/natureanalytics-ca/fishSimGTG
+BugReports: https://github.com/natureanalytics-ca/fishSimGTG/issues
