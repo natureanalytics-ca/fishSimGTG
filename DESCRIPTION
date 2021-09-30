@@ -1,0 +1,18 @@
+Package: fishSimGTG
+Title: Numerical simulations of fish population dynamics
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "William",
+           family = "Harford",
+           role = c("aut", "cre"),
+           email = "bill@natureanalytics.ca",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: Conducts projections, MSE, and equilibrium conditions for a specified fish life history.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Imports: LBSPR, shinyWidgets, methods
+Depends: 
+    R (>= 4.0)
