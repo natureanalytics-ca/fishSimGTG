@@ -15,3 +15,13 @@
 #' @format An S4 object of class LifeHistory
 #' @source Simulated data
 "LifeHistoryExample"
+
+#' LBSPR sim example
+#'
+#' The data object LifeHistoryExample is used in the lsbsprSimWrapper to produce YPR & SPR arrays.
+#'
+#' @format An S4 object of class LBSPRarray
+#' @source Simulated data
+"lbsprSimExample"
+
+

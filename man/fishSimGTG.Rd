@@ -8,6 +8,14 @@
 \description{
 Conducts projections, MSE, and equilibrium conditions for a specified fish life history.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/natureanalytics-ca/fishSimGTG}
+  \item Report bugs at \url{https://github.com/natureanalytics-ca/fishSimGTG/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: William Harford \email{bill@natureanalytics.ca} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})
 

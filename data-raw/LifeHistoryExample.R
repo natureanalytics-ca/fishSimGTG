@@ -21,6 +21,8 @@ LifeHistoryExample@M<-0.3
 LifeHistoryExample@Tmax<- floor(-log(0.01)/0.3)
 LifeHistoryExample@Steep<-0.8
 
-sim<-lbsprSimWrapper(LifeHistoryExample)
+lbsprSimExample<-lbsprSimWrapper(LifeHistoryExample)
 
 usethis::use_data(LifeHistoryExample)
+usethis::use_data(lbsprSimExample)
+
