@@ -17,6 +17,8 @@
 #' @param LifeHistory  A life history object.
 #' @param binWidth LBSPR length bin width, default value is 1.
 #' @param binMin LBSPR binMin, default is 0
+#' @param LcStep Length step size in cm for sequence of length at vulnerability. Approx. knife edge vul. SL50 = Lc, SL95 = Lc + 1
+#' @param F_MStep F/M ratio step size for sequence of F_M
 #' @param progressName When used within a shiny app, this function can update a shinyWidgets::progress bar.
 #' progressName is the id of the shinyWidgets::progress bar specified in a shiny app.
 #' @param sessionName Required to update a shinyWidgets::progress bar
@@ -35,7 +37,7 @@
 #'
 #' sim<-lbsprSimWrapper(lh)
 
-lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, progressName=NULL, sessionName=NULL){
+lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep = 0.2, progressName=NULL, sessionName=NULL){
 
   #-----------------------------
   #Create life history pars list
@@ -65,8 +67,8 @@ lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, progressName=NULL, 
   #------------------
 
   Lmax<-(1 - 0.01^(1/MyPars@MK)) * MyPars@Linf
-  Lc<-seq(floor(0.1*Lmax),  floor(Lmax), 1)
-  F_M<-round(seq(0, 4, 0.2), 1)
+  Lc<-seq(floor(0.1*Lmax),  floor(Lmax), LcStep)
+  F_M<-round(seq(0, 4, F_MStep), 1)
   SPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
   YPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
   Yield_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
@@ -119,7 +121,7 @@ lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, progressName=NULL, 
 
   return(new("LBSPRarray",
              LifeHistory = LifeHistory,
-             sim=list(Lc = Lc, F_M = F_M, SPR_EU = SPR_EU, YPR_EU = YPR_EU, Yield_EU=Yield_EU, stop = stop)
+             sim=list(Lc = Lc, F_M = F_M, SPR_EU = SPR_EU, YPR_EU = YPR_EU, Yield_EU=Yield_EU, LcStep = LcStep, F_MStep = F_MStep, stop = stop)
         )
   )
 }

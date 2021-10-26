@@ -13,6 +13,7 @@
 #' @param title A title for the object, useful for displaying the contents of the object
 #' @param speciesName Scientific name of the species
 #' @param shortDescription A brief description of the object. This could be the common name, stock, geographic location of the stock, etc.
+#' @param L_type The method of measuring length. e.g. TL for total length. Must be consistent for all length params e.g., Linf, L50, L95
 #' @param L_units Units of measure for the object. cm is expected. Must be consistent for all length params e.g., Linf, L50, L95
 #' @param W_units Units of weight for the object. Must be consistent with LW_A and LW_B params
 #' @param Linf von Bertalanffy Loo parameter
@@ -25,6 +26,11 @@
 #' @param LW_B Parameter for length-weight relationship W=aL^b
 #' @param Tmax Maximum observed age
 #' @param Steep Steepness of the Beverton-Holt stock recruit relationship
+#' @param bld When the life history is build using the Shiny app, a nice layout with build info is saved
+#' @param author Author of the life history - do not include your email address as these life histories may be posted online
+#' @param authAffiliaton A way to identify the author without relying on an email address
+#' @param longDescription Document the rational for choices made in creating the life history. Other users will rely on this information.
+#' @param reference A placeholder for references.
 #' @importFrom methods new
 
 
@@ -33,6 +39,7 @@ setClass("LifeHistory",
            title = "character",
            speciesName = "character",
            shortDescription = "character",
+           L_type = "character",
            L_units = "character",
            Walpha_units = "character",
            Linf = "numeric",
@@ -45,6 +52,7 @@ setClass("LifeHistory",
            LW_B = "numeric",
            Tmax = "numeric",
            Steep = "numeric",
+           bld = "list",
            author = "character",
            authAffiliaton = "character",
            longDescription = "character",

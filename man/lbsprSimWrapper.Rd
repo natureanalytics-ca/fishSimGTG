@@ -8,6 +8,8 @@ lbsprSimWrapper(
   LifeHistory,
   binWidth = 1,
   binMin = 0,
+  LcStep = 1,
+  F_MStep = 0.2,
   progressName = NULL,
   sessionName = NULL
 )
@@ -18,6 +20,10 @@ lbsprSimWrapper(
 \item{binWidth}{LBSPR length bin width, default value is 1.}
 
 \item{binMin}{LBSPR binMin, default is 0}
+
+\item{LcStep}{Length step size in cm for sequence of length at vulnerability. Approx. knife edge vul. SL50 = Lc, SL95 = Lc + 1}
+
+\item{F_MStep}{F/M ratio step size for sequence of F_M}
 
 \item{progressName}{When used within a shiny app, this function can update a shinyWidgets::progress bar.
 progressName is the id of the shinyWidgets::progress bar specified in a shiny app.}

@@ -11,6 +11,8 @@
 
 \item{shortDescription}{A brief description of the object. This could be the common name, stock, geographic location of the stock, etc.}
 
+\item{L_type}{The method of measuring length. e.g. TL for total length. Must be consistent for all length params e.g., Linf, L50, L95}
+
 \item{L_units}{Units of measure for the object. cm is expected. Must be consistent for all length params e.g., Linf, L50, L95}
 
 \item{W_units}{Units of weight for the object. Must be consistent with LW_A and LW_B params}
@@ -34,6 +36,16 @@
 \item{Tmax}{Maximum observed age}
 
 \item{Steep}{Steepness of the Beverton-Holt stock recruit relationship}
+
+\item{bld}{When the life history is build using the Shiny app, a nice layout with build info is saved}
+
+\item{author}{Author of the life history - do not include your email address as these life histories may be posted online}
+
+\item{authAffiliaton}{A way to identify the author without relying on an email address}
+
+\item{longDescription}{Document the rational for choices made in creating the life history. Other users will rely on this information.}
+
+\item{reference}{A placeholder for references.}
 }
 \description{
 An S4 object that holds a description of a life history.
