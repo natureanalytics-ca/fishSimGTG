@@ -19,9 +19,7 @@
 #' @param binMin LBSPR binMin, default is 0
 #' @param LcStep Length step size in cm for sequence of length at vulnerability. Approx. knife edge vul. SL50 = Lc, SL95 = Lc + 1
 #' @param F_MStep F/M ratio step size for sequence of F_M
-#' @param progressName When used within a shiny app, this function can update a shinyWidgets::progress bar.
-#' progressName is the id of the shinyWidgets::progress bar specified in a shiny app.
-#' @param sessionName Required to update a shinyWidgets::progress bar
+#' @param hostName When used within a shiny app, this function can update a host from the waiter package. See example Input is name of the host object.
 #' @import LBSPR
 #' @importFrom shinyWidgets updateProgressBar
 #' @importFrom methods new
@@ -34,10 +32,55 @@
 #' lh@MK<-1.5
 #' lh@LW_A<-0.01
 #' lh@LW_B<-3
+#' #' sim<-lbsprSimWrapper(lh)
 #'
-#' sim<-lbsprSimWrapper(lh)
+#' #################################################
+#' #Use of hostess loading bar from waiter package
+#' ################################################
+#' \dontrun{
+#' library(shiny)
+#' library(waiter)
+#' library(fishSimGTG)
+#'
+#' ui <- fluidPage(
+#'  useWaiter(),
+#'   useHostess(), # include dependencies
+#'   actionButton("btn", "render"),
+#')
+#'
+#' server <- function(input, output){
+#'
+#'   host <- Hostess$new()
+#'   w <- Waiter$new(
+#'     html = host$get_loader(
+#'       preset = "bubble",
+#'       text_color = "black",
+#'       center_page = TRUE,
+#'       class = "",
+#'       min = 0,
+#'       max = 100,
+#'       svg = NULL,
+#'       progress_type = "fill",
+#'       fill_direction = c("btt", "ttb", "ltr", "rtl"),
+#'       stroke_direction = c("normal", "reverse"),
+#'       fill_color = NULL,
+#'       stroke_color = "pink"
+#'     ),
+#'     color = transparent(alpha = 0.2),
+#'     fadeout = TRUE
+#'   )
+#'
+#'  w$show()
+#'   lbsprSimWrapper(LifeHistory = LifeHistoryExample, hostName=host)
+#'   w$hide()
+#'
+#' }
+#'
+#'
+#' shinyApp(ui, server)}
 
-lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep = 0.2, progressName=NULL, sessionName=NULL){
+
+lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep = 0.2, hostName=NULL){
 
   #-----------------------------
   #Create life history pars list
@@ -105,12 +148,13 @@ lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep
 
       counter<-counter+1
 
-      if(!is.null(progressName)){
-        shinyWidgets::updateProgressBar(
-          session = sessionName,
-          id = progressName,
-          value = round(counter/steps*100,0)
-        )
+      if(!is.null(hostName)){
+        hostName$set(round(counter/steps*100,0))
+        # shinyWidgets::updateProgressBar(
+        #   session = sessionName,
+        #   id = progressName,
+        #   value = round(counter/steps*100,0)
+        # )
       }
     }
     if(stop) break

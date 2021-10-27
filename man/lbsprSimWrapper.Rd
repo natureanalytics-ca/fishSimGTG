@@ -10,8 +10,7 @@ lbsprSimWrapper(
   binMin = 0,
   LcStep = 1,
   F_MStep = 0.2,
-  progressName = NULL,
-  sessionName = NULL
+  hostName = NULL
 )
 }
 \arguments{
@@ -25,10 +24,7 @@ lbsprSimWrapper(
 
 \item{F_MStep}{F/M ratio step size for sequence of F_M}
 
-\item{progressName}{When used within a shiny app, this function can update a shinyWidgets::progress bar.
-progressName is the id of the shinyWidgets::progress bar specified in a shiny app.}
-
-\item{sessionName}{Required to update a shinyWidgets::progress bar}
+\item{hostName}{When used within a shiny app, this function can update a host from the waiter package. See example Input is name of the host object.}
 }
 \description{
 Wrapper for LBSPRsim that produces YPR, Yield, and SPR arrays across combinations of F_M and Lc
@@ -48,6 +44,50 @@ lh@L95<-67
 lh@MK<-1.5
 lh@LW_A<-0.01
 lh@LW_B<-3
+#' sim<-lbsprSimWrapper(lh)
 
-sim<-lbsprSimWrapper(lh)
+#################################################
+#Use of hostess loading bar from waiter package
+################################################
+\dontrun{
+library(shiny)
+library(waiter)
+library(fishSimGTG)
+
+ui <- fluidPage(
+ useWaiter(),
+  useHostess(), # include dependencies
+  actionButton("btn", "render"),
+)
+
+server <- function(input, output){
+
+  host <- Hostess$new()
+  w <- Waiter$new(
+    html = host$get_loader(
+      preset = "bubble",
+      text_color = "black",
+      center_page = TRUE,
+      class = "",
+      min = 0,
+      max = 100,
+      svg = NULL,
+      progress_type = "fill",
+      fill_direction = c("btt", "ttb", "ltr", "rtl"),
+      stroke_direction = c("normal", "reverse"),
+      fill_color = NULL,
+      stroke_color = "pink"
+    ),
+    color = transparent(alpha = 0.2),
+    fadeout = TRUE
+  )
+
+ w$show()
+  lbsprSimWrapper(LifeHistory = LifeHistoryExample, hostName=host)
+  w$hide()
+
+}
+
+
+shinyApp(ui, server)}
 }
