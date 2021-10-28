@@ -18,6 +18,7 @@
 #' @param W_units Units of weight for the object. Must be consistent with LW_A and LW_B params
 #' @param Linf von Bertalanffy Loo parameter
 #' @param K von Bertalanffy K parameter per year
+#' @param t0 von Bertalanffy t0 parameter
 #' @param L50 Length at 50% maturity.
 #' @param L95 Length at 95% maturity. Must be a value larger than L50
 #' @param M Natural mortality rate per year
@@ -26,11 +27,9 @@
 #' @param LW_B Parameter for length-weight relationship W=aL^b
 #' @param Tmax Maximum observed age
 #' @param Steep Steepness of the Beverton-Holt stock recruit relationship
-#' @param bld When the life history is build using the Shiny app, a nice layout with build info is saved
 #' @param author Author of the life history - do not include your email address as these life histories may be posted online
 #' @param authAffiliaton A way to identify the author without relying on an email address
 #' @param longDescription Document the rational for choices made in creating the life history. Other users will rely on this information.
-#' @param reference A placeholder for references.
 #' @importFrom methods new
 
 
@@ -44,6 +43,7 @@ setClass("LifeHistory",
            Walpha_units = "character",
            Linf = "numeric",
            K =  "numeric",
+           t0 = "numeric",
            L50 = "numeric",
            L95 = "numeric",
            M =  "numeric",
@@ -52,7 +52,6 @@ setClass("LifeHistory",
            LW_B = "numeric",
            Tmax = "numeric",
            Steep = "numeric",
-           bld = "list",
            author = "character",
            authAffiliaton = "character",
            longDescription = "character",

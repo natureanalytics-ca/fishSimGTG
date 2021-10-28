@@ -21,6 +21,8 @@
 
 \item{K}{von Bertalanffy K parameter per year}
 
+\item{t0}{von Bertalanffy t0 parameter}
+
 \item{L50}{Length at 50\% maturity.}
 
 \item{L95}{Length at 95\% maturity. Must be a value larger than L50}
@@ -37,15 +39,11 @@
 
 \item{Steep}{Steepness of the Beverton-Holt stock recruit relationship}
 
-\item{bld}{When the life history is build using the Shiny app, a nice layout with build info is saved}
-
 \item{author}{Author of the life history - do not include your email address as these life histories may be posted online}
 
 \item{authAffiliaton}{A way to identify the author without relying on an email address}
 
 \item{longDescription}{Document the rational for choices made in creating the life history. Other users will rely on this information.}
-
-\item{reference}{A placeholder for references.}
 }
 \description{
 An S4 object that holds a description of a life history.

@@ -19,6 +19,7 @@ LifeHistoryExample@L_units<-"cm"
 LifeHistoryExample@Walpha_units<-"g"
 LifeHistoryExample@K<-0.2
 LifeHistoryExample@M<-0.3
+LifeHistoryExample@t0<-0
 LifeHistoryExample@Tmax<- floor(-log(0.01)/0.3)
 LifeHistoryExample@Steep<-0.99
 
