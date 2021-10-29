@@ -27,27 +27,32 @@ LH_to_dataframe <- function(LifeHistoryObj, digits=3) {
     mutate(across(any_of(c("Linf", "K", "t0", "L50", "L95", "M", "MK", "LW_B", "Steep")), round, digits))  %>%
     mutate(across(any_of(c("Tmax")), round, 1))  %>%
     mutate(across(any_of(c("LW_A")), signif, digits))  %>%
-    gather() %>%
-    mutate(across(any_of(c("key")), str_replace, "title", "Title")) %>%
-    mutate(across(any_of(c("key")), str_replace, "speciesName", "Species")) %>%
-    mutate(across(any_of(c("key")), str_replace, "shortDescription", "Short description")) %>%
-    mutate(across(any_of(c("key")), str_replace, "L_type", "Length type")) %>%
-    mutate(across(any_of(c("key")), str_replace, "L_units", "Length units")) %>%
-    mutate(across(any_of(c("key")), str_replace, "Walpha_units", "Weight units")) %>%
-    mutate(across(any_of(c("key")), str_replace, "Linf", "von Bertalanffy Loo")) %>%
-    mutate(across(any_of(c("key")), str_replace, "K", "von Bertalanffy K")) %>%
-    mutate(across(any_of(c("key")), str_replace, "t0", "von Bertalanffy t0")) %>%
-    mutate(across(any_of(c("key")), str_replace, "L50", "Length at 50% maturity")) %>%
-    mutate(across(any_of(c("key")), str_replace, "L95", "Length at 95% maturity")) %>%
-    mutate(across(any_of(c("key")), str_replace, "M", "Natural mortality")) %>%
-    mutate(across(any_of(c("key")), str_replace, "MK", "M/K")) %>%
-    mutate(across(any_of(c("key")), str_replace, "LW_A", "Length-weight alpha")) %>%
-    mutate(across(any_of(c("key")), str_replace, "LW_B", "Length-weight beta")) %>%
-    mutate(across(any_of(c("key")), str_replace, "Tmax", "Maximum age")) %>%
-    mutate(across(any_of(c("key")), str_replace, "Steep", "Beverton-Holt steepness")) %>%
-    mutate(across(any_of(c("key")),str_replace, "author", "Author")) %>%
-    mutate(across(any_of(c("key")), str_replace, "authAffiliation", "Author affiliation")) %>%
-    mutate(across(any_of(c("key")), str_replace, "longDescription", "Long description"))
+    rename_with(
+      ~ case_when(
+        . == "title" ~ "Title",
+        . == "speciesName" ~ "Species",
+        . == "shortDescription" ~ "Short description",
+        . == "L_type" ~ "Length type",
+        . == "L_units" ~ "Length units",
+        . == "Walpha_units" ~ "Weight units",
+        . == "Linf" ~ "von Bertalanffy Loo",
+        . == "K" ~ "von Bertalanffy K",
+        . == "t0" ~ "von Bertalanffy t0",
+        . == "L50" ~ "Length at 50% maturity",
+        . == "L95" ~ "Length at 95% maturity",
+        . == "M" ~ "Natural mortality",
+        . == "MK" ~ "M/K",
+        . == "LW_A" ~ "Length-weight alpha",
+        . == "LW_B" ~ "Length-weight beta",
+        . == "Tmax" ~ "Maximum age",
+        . == "Steep" ~ "Beverton-Holt steepness",
+        . == "author" ~ "Author",
+        . == "authAffiliation" ~ "Author affiliation",
+        . == "longDescription" ~ "Long description",
+        TRUE ~ .
+      )
+    ) %>%
+    gather()
 }
 
 
