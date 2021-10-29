@@ -10,17 +10,23 @@
 #'Converts S4 life history object to data frame with nice variable names
 #'
 #' @param LifeHistoryObj  A life history object.
+#' @param digits Integer indicating the number of decimal places (round). Applied as significant digits (signif) to L-W alpha.
 #' @import tidyverse
+#' @importFrom methods slot slotNames
+#' @importFrom stats setNames
 #' @export
 #' @examples
 #' library(tidyverse)
 #' LH_to_dataframe(LifeHistoryExample)
 
-LH_to_dataframe <- function(LifeHistoryObj) {
+LH_to_dataframe <- function(LifeHistoryObj, digits=3) {
   nms <- slotNames(LifeHistoryObj)
   lst <- lapply(nms, function(nm) slot(LifeHistoryObj, nm))
   ind<-which(lengths(lst)!=0)
   data.frame(setNames(lst[ind], nms[ind])) %>%
+    mutate(across(c(Linf, K, t0, L50, L95, M, MK, LW_B, Steep), round, digits))  %>%
+    mutate(across(c(Tmax), round, 1))  %>%
+    mutate(across(c(LW_A), signif, digits))  %>%
     gather() %>%
     mutate_at("key", str_replace, "title", "Title") %>%
     mutate_at("key", str_replace, "speciesName", "Species") %>%

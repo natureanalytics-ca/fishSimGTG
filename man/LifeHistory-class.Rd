@@ -41,7 +41,7 @@
 
 \item{author}{Author of the life history - do not include your email address as these life histories may be posted online}
 
-\item{authAffiliaton}{A way to identify the author without relying on an email address}
+\item{authAffiliation}{A way to identify the author without relying on an email address}
 
 \item{longDescription}{Document the rational for choices made in creating the life history. Other users will rely on this information.}
 }

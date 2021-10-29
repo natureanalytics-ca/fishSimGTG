@@ -4,10 +4,12 @@
 \alias{LH_to_dataframe}
 \title{Life History object to data frame}
 \usage{
-LH_to_dataframe(LifeHistoryObj)
+LH_to_dataframe(LifeHistoryObj, digits = 3)
 }
 \arguments{
 \item{LifeHistoryObj}{A life history object.}
+
+\item{digits}{Integer indicating the number of decimal places (round). Applied as significant digits (signif) to L-W alpha.}
 }
 \description{
 Converts S4 life history object to data frame with nice variable names
