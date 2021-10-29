@@ -28,7 +28,7 @@
 #' @param Tmax Maximum observed age
 #' @param Steep Steepness of the Beverton-Holt stock recruit relationship
 #' @param author Author of the life history - do not include your email address as these life histories may be posted online
-#' @param authAffiliaton A way to identify the author without relying on an email address
+#' @param authAffiliation A way to identify the author without relying on an email address
 #' @param longDescription Document the rational for choices made in creating the life history. Other users will rely on this information.
 #' @importFrom methods new
 
@@ -53,9 +53,8 @@ setClass("LifeHistory",
            Tmax = "numeric",
            Steep = "numeric",
            author = "character",
-           authAffiliaton = "character",
-           longDescription = "character",
-           reference = "character")
+           authAffiliation = "character",
+           longDescription = "character")
 )
 
 #lbspr Object
