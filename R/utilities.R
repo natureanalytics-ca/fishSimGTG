@@ -46,7 +46,8 @@ LH_to_dataframe <- function(LifeHistoryObj, digits=3) {
     mutate(across(any_of(c("key")), str_replace, "Tmax", "Maximum age")) %>%
     mutate(across(any_of(c("key")), str_replace, "Steep", "Beverton-Holt steepness")) %>%
     mutate(across(any_of(c("key")),str_replace, "author", "Author")) %>%
-    mutate(across(any_of(c("key")), str_replace, "authAffiliation", "Author affiliation"))
+    mutate(across(any_of(c("key")), str_replace, "authAffiliation", "Author affiliation")) %>%
+    mutate(across(any_of(c("key")), str_replace, "longDescription", "Long description"))
 }
 
 
