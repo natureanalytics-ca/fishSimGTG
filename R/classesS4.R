@@ -27,6 +27,9 @@
 #' @param LW_B Parameter for length-weight relationship W=aL^b
 #' @param Tmax Maximum observed age
 #' @param Steep Steepness of the Beverton-Holt stock recruit relationship
+#' @param isHermaph Logical whether species is a protogynous hermaphrodite (TRUE). FALSE is gonochoristic species.
+#' @param H50 Length at 50% male.
+#' @param H95 Length at 95% male. Must be a value larger than H50
 #' @param author Author of the life history - do not include your email address as these life histories may be posted online
 #' @param authAffiliation A way to identify the author without relying on an email address
 #' @param longDescription Document the rational for choices made in creating the life history. Other users will rely on this information.
@@ -53,9 +56,13 @@ setClass("LifeHistory",
            LW_B = "numeric",
            Tmax = "numeric",
            Steep = "numeric",
+           isHermaph = "logical",
+           H50 = "numeric",
+           H95 = "numeric",
            author = "character",
            authAffiliation = "character",
-           longDescription = "character")
+           longDescription = "character",
+           ID = "character")
 )
 
 #lbspr Object
