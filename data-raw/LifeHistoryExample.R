@@ -10,7 +10,6 @@ LifeHistoryExample@L95<-67
 LifeHistoryExample@MK<-1.5
 LifeHistoryExample@LW_A<-0.01
 LifeHistoryExample@LW_B<-3
-
 LifeHistoryExample@title<-"Example fish"
 LifeHistoryExample@shortDescription<-"Simulated life history of a fish based on B-H invariants"
 LifeHistoryExample@speciesName<-"Example fish"
@@ -22,6 +21,10 @@ LifeHistoryExample@M<-0.3
 LifeHistoryExample@t0<-0
 LifeHistoryExample@Tmax<- floor(-log(0.01)/0.3)
 LifeHistoryExample@Steep<-0.99
+LifeHistoryExample@R0<-1000
+LifeHistoryExample@recSD<-0.6
+LifeHistoryExample@recRho<-0
+LifeHistoryExample@isHermaph<-FALSE
 
 lbsprSimExample<-lbsprSimWrapper(LifeHistoryExample)
 

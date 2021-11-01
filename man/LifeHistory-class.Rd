@@ -39,11 +39,25 @@
 
 \item{Steep}{Steepness of the Beverton-Holt stock recruit relationship}
 
+\item{R0}{Unfished number of recruits}
+
+\item{recSD}{Inter annual recruitment variation}
+
+\item{recRho}{Inter-annual correlation in recruitment variation}
+
+\item{isHermaph}{Logical whether species is a protogynous hermaphrodite (TRUE). FALSE is gonochoristic species.}
+
+\item{H50}{Length at 50\% male.}
+
+\item{H95}{Length at 95\% male. Must be a value larger than H50}
+
 \item{author}{Author of the life history - do not include your email address as these life histories may be posted online}
 
 \item{authAffiliation}{A way to identify the author without relying on an email address}
 
 \item{longDescription}{Document the rational for choices made in creating the life history. Other users will rely on this information.}
+
+\item{ID}{A user ID. Not required.}
 }
 \description{
 An S4 object that holds a description of a life history.

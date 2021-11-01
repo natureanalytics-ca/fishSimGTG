@@ -24,8 +24,8 @@ LH_to_dataframe <- function(LifeHistoryObj, digits=3) {
   lst <- lapply(nms, function(nm) slot(LifeHistoryObj, nm))
   ind<-which(lengths(lst)!=0)
   data.frame(setNames(lst[ind], nms[ind])) %>%
-    mutate(across(any_of(c("Linf", "K", "t0", "L50", "L95", "M", "MK", "LW_B", "Steep")), round, digits))  %>%
-    mutate(across(any_of(c("Tmax")), round, 1))  %>%
+    mutate(across(any_of(c("Linf", "K", "t0", "L50", "L95", "M", "MK", "LW_B", "Steep", "H50", "H95", "recSD", "recRho")), round, digits))  %>%
+    mutate(across(any_of(c("Tmax", "R0")), round, 1))  %>%
     mutate(across(any_of(c("LW_A")), signif, digits))  %>%
     rename_with(
       ~ case_when(
@@ -46,6 +46,12 @@ LH_to_dataframe <- function(LifeHistoryObj, digits=3) {
         . == "LW_B" ~ "Length-weight beta",
         . == "Tmax" ~ "Maximum age",
         . == "Steep" ~ "Beverton-Holt steepness",
+        . == "R0" ~ "Unfished recruitment",
+        . == "recSD" ~ "Recruitment log-scale standard deviation",
+        . == "recRho" ~ "Recruitment inter-annual correlation",
+        . == "isHermaph" ~ "Protogynous hermaphrodite",
+        . == "H50" ~ "Length at which cohort is 50% male",
+        . == "H95" ~ "Length at which cohort is 95% male",
         . == "author" ~ "Author",
         . == "authAffiliation" ~ "Author affiliation",
         . == "longDescription" ~ "Long description",
