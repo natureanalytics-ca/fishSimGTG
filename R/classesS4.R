@@ -30,6 +30,7 @@
 #' @param author Author of the life history - do not include your email address as these life histories may be posted online
 #' @param authAffiliation A way to identify the author without relying on an email address
 #' @param longDescription Document the rational for choices made in creating the life history. Other users will rely on this information.
+#' @param ID A user ID. Not required.
 #' @importFrom methods new
 
 
