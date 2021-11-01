@@ -27,6 +27,9 @@
 #' @param LW_B Parameter for length-weight relationship W=aL^b
 #' @param Tmax Maximum observed age
 #' @param Steep Steepness of the Beverton-Holt stock recruit relationship
+#' @param R0 Unfished number of recruits
+#' @param recSD Inter annual recruitment variation
+#' @param recRho Inter-annual correlation in recruitment variation
 #' @param isHermaph Logical whether species is a protogynous hermaphrodite (TRUE). FALSE is gonochoristic species.
 #' @param H50 Length at 50% male.
 #' @param H95 Length at 95% male. Must be a value larger than H50
@@ -56,6 +59,9 @@ setClass("LifeHistory",
            LW_B = "numeric",
            Tmax = "numeric",
            Steep = "numeric",
+           R0 = "numeric",
+           recSD = "numeric",
+           recRho = "numeric",
            isHermaph = "logical",
            H50 = "numeric",
            H95 = "numeric",
