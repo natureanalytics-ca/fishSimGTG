@@ -20,6 +20,7 @@
 #' LH_to_dataframe(LifeHistoryExample)
 
 LH_to_dataframe <- function(LifeHistoryObj, digits=3) {
+  slot(LifeHistoryObj, 'appBuild', check=FALSE) <- NULL
   nms <- slotNames(LifeHistoryObj)
   lst <- lapply(nms, function(nm) slot(LifeHistoryObj, nm))
   ind<-which(lengths(lst)!=0)
