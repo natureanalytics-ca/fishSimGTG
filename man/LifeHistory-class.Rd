@@ -57,6 +57,8 @@
 
 \item{longDescription}{Document the rational for choices made in creating the life history. Other users will rely on this information.}
 
+\item{appBuild}{A data frame that holds details when the life history is built using the Shiny app}
+
 \item{ID}{A user ID. Not required.}
 }
 \description{
