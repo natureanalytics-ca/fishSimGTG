@@ -101,7 +101,7 @@ lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep
   MyPars@BinMin <- binMin
   #Setup place holder values for these parameters, we will change these later
   MyPars@SL50 <- LifeHistory@L50
-  MyPars@SL95 <- LifeHistory@L50+1
+  MyPars@SL95 <- LifeHistory@L50+0.1
   MyPars@FM<-1
 
 
