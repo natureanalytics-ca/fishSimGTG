@@ -150,16 +150,14 @@ lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep
 
       if(!is.null(hostName)){
         hostName$set(round(counter/steps*100,0))
-        # shinyWidgets::updateProgressBar(
-        #   session = sessionName,
-        #   id = progressName,
-        #   value = round(counter/steps*100,0)
-        # )
       }
     }
     if(stop) break
   }
 
+  if(!is.null(hostName)){
+    hostName$close()
+  }
   Yield_EU<- Yield_EU/max(Yield_EU, na.rm=TRUE)
 
 
