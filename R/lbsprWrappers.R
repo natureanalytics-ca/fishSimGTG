@@ -129,6 +129,9 @@ lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep
   steps<-NROW(Lc)*NROW(F_M)
   counter <- 0
   stop = FALSE
+  if(!is.null(hostName)){
+    hostName$start()
+  }
   for (i in 1:NROW(F_M)){
     for (j in 1:NROW(Lc)){
       tmpPars<-MyPars
