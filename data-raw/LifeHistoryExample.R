@@ -6,7 +6,7 @@ library(LBSPR)
 LifeHistoryExample<-new("LifeHistory")
 LifeHistoryExample@Linf<-100
 LifeHistoryExample@L50<-66
-LifeHistoryExample@L95<-66.1
+LifeHistoryExample@L95<-67
 LifeHistoryExample@MK<-1.5
 LifeHistoryExample@LW_A<-0.01
 LifeHistoryExample@LW_B<-3
