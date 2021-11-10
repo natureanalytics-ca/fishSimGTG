@@ -134,7 +134,7 @@ lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep
       tmpPars<-MyPars
       tmpPars@FM<-F_M[i]
       tmpPars@SL50 <- Lc[j]
-      tmpPars@SL95 <-Lc[j]+1
+      tmpPars@SL95 <-Lc[j]+0.1
       tmpSim <- show_condition(LBSPRsim(tmpPars, verbose=FALSE))
 
       if(is.na(tmpSim)[1]) {
