@@ -111,7 +111,7 @@ lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep
 
   Lmax<-(1 - 0.01^(1/MyPars@MK)) * MyPars@Linf
   Lc<-seq(floor(0.1*Lmax),  floor(Lmax), LcStep)
-  F_M<-seq(0, 4, F_MStep)
+  F_M<-round(seq(0, 4, F_MStep), 1)
   SPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
   YPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
   Yield_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
