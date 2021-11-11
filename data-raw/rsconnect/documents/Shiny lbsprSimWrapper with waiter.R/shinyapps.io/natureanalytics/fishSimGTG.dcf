@@ -1,0 +1,12 @@
+name: fishSimGTG
+title: fishSimGTG
+username:
+account: natureanalytics
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5104799
+bundleId: 5241972
+url: https://natureanalytics.shinyapps.io/fishSimGTG/
+when: 1636664460.27247
+asMultiple: FALSE
+asStatic: FALSE

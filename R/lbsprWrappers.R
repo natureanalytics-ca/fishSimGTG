@@ -132,7 +132,6 @@ lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep
   stop = FALSE
   if(!is.null(hostName) & !is.null(waitName)){
     waitName$show()
-    #hostName$start()
   }
   for (i in 1:NROW(F_M)){
     for (j in 1:NROW(Lc)){
@@ -154,14 +153,13 @@ lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep
       counter<-counter+1
 
       if(!is.null(hostName) & !is.null(waitName)){
-        hostName$set(round(counter/steps*100,0))
+        hostName$set(counter/steps*100)
       }
     }
     if(stop) break
   }
 
   if(!is.null(hostName) & !is.null(waitName)){
-    #hostName$close()
     waitName$hide()
   }
   Yield_EU<- Yield_EU/max(Yield_EU, na.rm=TRUE)
