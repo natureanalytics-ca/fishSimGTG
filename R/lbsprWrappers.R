@@ -19,7 +19,8 @@
 #' @param binMin LBSPR binMin, default is 0
 #' @param LcStep Length step size in cm for sequence of length at vulnerability. Approx. knife edge vul. SL50 = Lc, SL95 = Lc + 1
 #' @param F_MStep F/M ratio step size for sequence of F_M
-#' @param hostName When used within a shiny app, this function can update a host from the waiter package. See example Input is name of the host object.
+#' @param waitName When used within a shiny app, this function can update a host from the waiter package. See example.
+#' @param hostName When used within a shiny app, this function can update a host from the waiter package. See example.
 #' @import LBSPR
 #' @importFrom shinyWidgets updateProgressBar
 #' @importFrom methods new
@@ -71,7 +72,7 @@
 #'   )
 #'
 #'  w$show()
-#'   lbsprSimWrapper(LifeHistory = LifeHistoryExample, hostName=host)
+#'   lbsprSimWrapper(LifeHistory = LifeHistoryExample, waitName=w, hostName=host)
 #'   w$hide()
 #'
 #' }
@@ -80,7 +81,7 @@
 #' shinyApp(ui, server)}
 
 
-lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep = 0.2, hostName=NULL){
+lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep = 0.2, waitName=NULL, hostName=NULL){
 
   #-----------------------------
   #Create life history pars list
@@ -129,7 +130,7 @@ lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep
   steps<-NROW(Lc)*NROW(F_M)
   counter <- 0
   stop = FALSE
-  if(!is.null(hostName)){
+  if(!is.null(hostName) & !is.null(waitName)){
     waitName$show()
     #hostName$start()
   }
@@ -152,14 +153,14 @@ lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep
 
       counter<-counter+1
 
-      if(!is.null(hostName)){
+      if(!is.null(hostName) & !is.null(waitName)){
         hostName$set(round(counter/steps*100,0))
       }
     }
     if(stop) break
   }
 
-  if(!is.null(hostName)){
+  if(!is.null(hostName) & !is.null(waitName)){
     #hostName$close()
     waitName$hide()
   }
