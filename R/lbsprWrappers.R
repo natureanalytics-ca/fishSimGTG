@@ -101,7 +101,10 @@ lbsprSimWrapper<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1, F_MS
      LifeHistoryObj@L50 >= LifeHistoryObj@Linf ||
      LifeHistoryObj@L50 >= LifeHistoryObj@L95
   ) {
-    return(stop = TRUE)
+    return(new("LBSPRarray",
+               LifeHistory = LifeHistoryObj,
+               sim=list(stop = TRUE))
+    )
   } else {
 
     #-----------------------------
