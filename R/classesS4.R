@@ -25,6 +25,8 @@
 #' @param MK Ratio of M to K
 #' @param LW_A Parameter for length-weight relationship W=aL^b
 #' @param LW_B Parameter for length-weight relationship W=aL^b
+#' @param Lfec_A Parameter for length-fecundity relationship fec=aL^b
+#' @param Lfec_B Parameter for length-fecundity relationship fec=aL^b
 #' @param Tmax Maximum observed age
 #' @param Steep Steepness of the Beverton-Holt stock recruit relationship
 #' @param R0 Unfished number of recruits
@@ -58,6 +60,8 @@ setClass("LifeHistory",
            MK = "numeric",
            LW_A = "numeric",
            LW_B = "numeric",
+           Lfec_A = "numeric",
+           Lfec_B = "numeric",
            Tmax = "numeric",
            Steep = "numeric",
            R0 = "numeric",

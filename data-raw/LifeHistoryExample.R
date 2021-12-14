@@ -10,6 +10,8 @@ LifeHistoryExample@L95<-67
 LifeHistoryExample@MK<-1.5
 LifeHistoryExample@LW_A<-0.01
 LifeHistoryExample@LW_B<-3
+LifeHistoryExample@Lfec_A<-0.01
+LifeHistoryExample@Lfec_B<-3
 LifeHistoryExample@title<-"Example fish"
 LifeHistoryExample@shortDescription<-"Simulated life history of a fish based on B-H invariants"
 LifeHistoryExample@speciesName<-"Example fish"

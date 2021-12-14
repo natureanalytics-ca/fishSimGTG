@@ -5,17 +5,16 @@
 \title{LBSPR eumetric simulation}
 \usage{
 lbsprSimWrapper(
-  LifeHistory,
+  LifeHistoryObj,
   binWidth = 1,
   binMin = 0,
   LcStep = 1,
   F_MStep = 0.2,
+  waitName = NULL,
   hostName = NULL
 )
 }
 \arguments{
-\item{LifeHistory}{A life history object.}
-
 \item{binWidth}{LBSPR length bin width, default value is 1.}
 
 \item{binMin}{LBSPR binMin, default is 0}
@@ -24,7 +23,11 @@ lbsprSimWrapper(
 
 \item{F_MStep}{F/M ratio step size for sequence of F_M}
 
-\item{hostName}{When used within a shiny app, this function can update a host from the waiter package. See example Input is name of the host object.}
+\item{waitName}{When used within a shiny app, this function can update a host from the waiter package. See example.}
+
+\item{hostName}{When used within a shiny app, this function can update a host from the waiter package. See example.}
+
+\item{LifeHistory}{A life history object.}
 }
 \description{
 Wrapper for LBSPRsim that produces YPR, Yield, and SPR arrays across combinations of F_M and Lc
@@ -83,7 +86,7 @@ server <- function(input, output){
   )
 
  w$show()
-  lbsprSimWrapper(LifeHistory = LifeHistoryExample, hostName=host)
+  lbsprSimWrapper(LifeHistory = LifeHistoryExample, waitName=w, hostName=host)
   w$hide()
 
 }

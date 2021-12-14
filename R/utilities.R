@@ -45,6 +45,8 @@ LH_to_dataframe <- function(LifeHistoryObj, digits=3) {
         . == "MK" ~ "M/K",
         . == "LW_A" ~ "Length-weight alpha",
         . == "LW_B" ~ "Length-weight beta",
+        . == "Lfec_A" ~ "Length-fecundity alpha",
+        . == "Lfec_B" ~ "Length-fecundity beta",
         . == "Tmax" ~ "Maximum age",
         . == "Steep" ~ "Beverton-Holt steepness",
         . == "R0" ~ "Unfished recruitment",

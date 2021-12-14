@@ -45,7 +45,7 @@ server <- function(input, output){
   observeEvent(input$rn, {
 
     #X<-runIt
-    sim<-lbsprSimWrapper(LifeHistory = LifeHistoryExample,
+    sim<-fishSimGTG::lbsprSimWrapper(LifeHistory = LifeHistoryExample,
                                      binWidth = 2,
                                      binMin = 0,
                                      LcStep = 2,

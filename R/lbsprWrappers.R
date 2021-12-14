@@ -81,93 +81,117 @@
 #' shinyApp(ui, server)}
 
 
-lbsprSimWrapper<-function(LifeHistory, binWidth=1, binMin=0, LcStep = 1, F_MStep = 0.2, waitName=NULL, hostName=NULL){
+lbsprSimWrapper<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1, F_MStep = 0.2, waitName=NULL, hostName=NULL){
 
-  #-----------------------------
-  #Create life history pars list
-  #-----------------------------
+  if(!is.numeric(binWidth) ||
+     !is.numeric(binMin) ||
+     !is.numeric(LcStep) ||
+     !is.numeric(F_MStep) ||
+     binWidth < 0 ||
+     binMin < 0 ||
+     LcStep < 0 ||
+     F_MStep < 0 ||
+     length(LifeHistoryObj@Linf) == 0 ||
+     length(LifeHistoryObj@L50) == 0 ||
+     length(LifeHistoryObj@L95) == 0 ||
+     length(LifeHistoryObj@MK) == 0 ||
+     LifeHistoryObj@Linf < 0 ||
+     LifeHistoryObj@L50 < 0 ||
+     LifeHistoryObj@MK < 0 ||
+     LifeHistoryObj@L50 >= LifeHistoryObj@Linf ||
+     LifeHistoryObj@L50 >= LifeHistoryObj@L95
+  ) {
+    return(stop = TRUE)
+  } else {
 
-  MyPars <- new("LB_pars")
-  MyPars@Linf <- LifeHistory@Linf
-  MyPars@L50 <- LifeHistory@L50
-  MyPars@L95 <- LifeHistory@L95
-  MyPars@MK <- LifeHistory@MK
-  MyPars@BinWidth <- binWidth
-  MyPars@Steepness<-LifeHistory@Steep
-  MyPars@L_units <- LifeHistory@L_units
-  MyPars@Walpha <- LifeHistory@LW_A
-  MyPars@Walpha_units <-LifeHistory@Walpha_units
-  MyPars@Wbeta <- LifeHistory@LW_B
-  MyPars@FecB <- LifeHistory@LW_B
-  MyPars@BinMin <- binMin
-  #Setup place holder values for these parameters, we will change these later
-  MyPars@SL50 <- LifeHistory@L50
-  MyPars@SL95 <- LifeHistory@L50+1
-  MyPars@FM<-1
+    #-----------------------------
+    #Create life history pars list
+    #-----------------------------
 
+    MyPars <- new("LB_pars")
+    MyPars@Linf <- LifeHistoryObj@Linf
+    MyPars@L50 <- LifeHistoryObj@L50
+    MyPars@L95 <- LifeHistoryObj@L95
+    MyPars@MK <- LifeHistoryObj@MK
+    MyPars@BinWidth <- binWidth
+    MyPars@BinMin <- binMin
+    if(length(LifeHistoryObj@Steep) > 0) MyPars@Steepness<-LifeHistoryObj@Steep
+    if(length(LifeHistoryObj@L_units) > 0) MyPars@L_units <- LifeHistoryObj@L_units
+    if(length(LifeHistoryObj@LW_A) > 0) MyPars@Walpha <- LifeHistoryObj@LW_A
+    if(length(LifeHistoryObj@Walpha_units) > 0) MyPars@Walpha_units <-LifeHistoryObj@Walpha_units
+    if(length(LifeHistoryObj@LW_B) > 0)  MyPars@Wbeta <- LifeHistoryObj@LW_B
+    if(length(LifeHistoryObj@Lfec_B) > 0) {
+      MyPars@FecB <- LifeHistoryObj@Lfec_B
+    } else {
+      MyPars@FecB <-  MyPars@Wbeta
+    }
 
-  #------------------
-  #Eumetric analysis
-  #------------------
+    #Setup place holder values for these parameters, we will change these later
+    MyPars@SL50 <- LifeHistoryObj@L50
+    MyPars@SL95 <- LifeHistoryObj@L95
+    MyPars@FM<-1
 
-  Lmax<-(1 - 0.01^(1/MyPars@MK)) * MyPars@Linf
-  Lc<-seq(floor(0.1*Lmax),  floor(Lmax), LcStep)
-  F_M<-round(seq(0, 4, F_MStep), 3)
-  SPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
-  YPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
-  Yield_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
+    #------------------
+    #Eumetric analysis
+    #------------------
 
-  show_condition <- function(code) {
-    tryCatch({
-      x<-code
-      list(SPR=x@SPR, YPR=x@YPR, Yield=x@Yield)
-    },       error = function(c)NA,
-    warning = function(c) NA,
-    message = function(c) NA
+    Lmax<-(1 - 0.01^(1/MyPars@MK)) * MyPars@Linf
+    Lc<-seq(floor(0.1*Lmax),  floor(Lmax), LcStep)
+    F_M<-round(seq(0, 4, F_MStep), 3)
+    SPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
+    YPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
+    Yield_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
+
+    show_condition <- function(code) {
+      tryCatch({
+        x<-code
+        list(SPR=x@SPR, YPR=x@YPR, Yield=x@Yield)
+      },       error = function(c)NA,
+      warning = function(c) NA,
+      message = function(c) NA
+      )
+    }
+
+    steps<-NROW(Lc)*NROW(F_M)
+    counter <- 0
+    stop = FALSE
+    if(!is.null(hostName) & !is.null(waitName)){
+      waitName$show()
+    }
+    for (i in 1:NROW(F_M)){
+      for (j in 1:NROW(Lc)){
+        tmpPars<-MyPars
+        tmpPars@FM<-F_M[i]
+        tmpPars@SL50 <- Lc[j]
+        tmpPars@SL95 <-Lc[j]+1
+        tmpSim <- show_condition(LBSPRsim(tmpPars, verbose=FALSE))
+
+        if(is.na(tmpSim)[1]) {
+          stop = TRUE
+          break
+        }
+
+        SPR_EU[i,j]=tmpSim$SPR
+        YPR_EU[i,j]=tmpSim$YPR
+        Yield_EU[i,j]=tmpSim$Yield
+
+        counter<-counter+1
+
+        if(!is.null(hostName) & !is.null(waitName)){
+          hostName$set(counter/steps*100)
+        }
+      }
+      if(stop) break
+    }
+
+    if(!is.null(hostName) & !is.null(waitName)){
+      waitName$hide()
+    }
+    Yield_EU<- Yield_EU/max(Yield_EU, na.rm=TRUE)
+
+    return(new("LBSPRarray",
+               LifeHistory = LifeHistoryObj,
+               sim=list(Lc = Lc, F_M = F_M, SPR_EU = SPR_EU, YPR_EU = YPR_EU, Yield_EU=Yield_EU, LcStep = LcStep, F_MStep = F_MStep, stop = stop))
     )
   }
-
-  steps<-NROW(Lc)*NROW(F_M)
-  counter <- 0
-  stop = FALSE
-  if(!is.null(hostName) & !is.null(waitName)){
-    waitName$show()
-  }
-  for (i in 1:NROW(F_M)){
-    for (j in 1:NROW(Lc)){
-      tmpPars<-MyPars
-      tmpPars@FM<-F_M[i]
-      tmpPars@SL50 <- Lc[j]
-      tmpPars@SL95 <-Lc[j]+1
-      tmpSim <- show_condition(LBSPRsim(tmpPars, verbose=FALSE))
-
-      if(is.na(tmpSim)[1]) {
-        stop = TRUE
-        break
-      }
-
-      SPR_EU[i,j]=tmpSim$SPR
-      YPR_EU[i,j]=tmpSim$YPR
-      Yield_EU[i,j]=tmpSim$Yield
-
-      counter<-counter+1
-
-      if(!is.null(hostName) & !is.null(waitName)){
-        hostName$set(counter/steps*100)
-      }
-    }
-    if(stop) break
-  }
-
-  if(!is.null(hostName) & !is.null(waitName)){
-    waitName$hide()
-  }
-  Yield_EU<- Yield_EU/max(Yield_EU, na.rm=TRUE)
-
-
-  return(new("LBSPRarray",
-             LifeHistory = LifeHistory,
-             sim=list(Lc = Lc, F_M = F_M, SPR_EU = SPR_EU, YPR_EU = YPR_EU, Yield_EU=Yield_EU, LcStep = LcStep, F_MStep = F_MStep, stop = stop)
-        )
-  )
 }
