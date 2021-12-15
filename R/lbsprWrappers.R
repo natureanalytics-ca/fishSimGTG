@@ -123,7 +123,7 @@ lbsprSimWrapper<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1, F_MS
     if(length(LifeHistoryObj@LW_A) > 0) MyPars@Walpha <- LifeHistoryObj@LW_A
     if(length(LifeHistoryObj@Walpha_units) > 0) MyPars@Walpha_units <-LifeHistoryObj@Walpha_units
     if(length(LifeHistoryObj@LW_B) > 0)  MyPars@Wbeta <- LifeHistoryObj@LW_B
-    if(length(LifeHistoryObj@Lfec_B) > 0) {
+    if("Lfec_B" %in% slotNames(LifeHistoryObj) & length(LifeHistoryObj@Lfec_B) > 0) {
       MyPars@FecB <- LifeHistoryObj@Lfec_B
     } else {
       MyPars@FecB <-  MyPars@Wbeta
