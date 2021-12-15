@@ -35,10 +35,6 @@
 
 \item{LW_B}{Parameter for length-weight relationship W=aL^b}
 
-\item{Lfec_A}{Parameter for length-fecundity relationship fec=aL^b}
-
-\item{Lfec_B}{Parameter for length-fecundity relationship fec=aL^b}
-
 \item{Tmax}{Maximum observed age}
 
 \item{Steep}{Steepness of the Beverton-Holt stock recruit relationship}
