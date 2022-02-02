@@ -39,7 +39,7 @@ LHwrapper<-function(LifeHistoryObj){
     #----------------
     #How many gtg?
     #----------------
-    gtg<-13
+    gtg<-21
     gtg<-ifelse((gtg %% 2) == 0, gtg+1, gtg)
     CVLinf<-0.1
     maxsd<-2 #number of standard deviations from mean Linf
