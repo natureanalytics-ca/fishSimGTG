@@ -26,10 +26,10 @@ LHwrapper<-function(LifeHistoryObj){
      length(LifeHistoryObj@M) == 0 ||
      length(LifeHistoryObj@LW_A) == 0 ||
      length(LifeHistoryObj@LW_B) == 0 ||
-     length(LifeHistoryObj@isHermaph) == 0 ||
      LifeHistoryObj@Linf < 0 ||
      LifeHistoryObj@L50 < 0 ||
-     LifeHistoryObj@MK < 0 ||
+     LifeHistoryObj@M < 0 ||
+     LifeHistoryObj@K < 0 ||
      LifeHistoryObj@L50 >= LifeHistoryObj@Linf ||
      LifeHistoryObj@L50 >= LifeHistoryObj@L95
   ) {
@@ -70,7 +70,7 @@ LHwrapper<-function(LifeHistoryObj){
 
     mat<-list()
     for (l in 1:gtg){
-      if(LifeHistoryObj@isHermaph){
+      if(length(LifeHistoryObj@isHermaph) != 0 && LifeHistoryObj@isHermaph){
         s<--(LifeHistoryObj@H95-LifeHistoryObj@H50)/log(1/0.95-1)
         probFemale<-(1-plogis(L[[l]], location=LifeHistoryObj@H50, scale=s))
       } else {
