@@ -11,9 +11,9 @@
 #'
 #' @param LifeHistoryObj  A life history object.
 #' @param digits Integer indicating the number of decimal places (round). Applied as significant digits (signif) to L-W alpha.
-#' @import tidyverse
-#' @importFrom methods slot slotNames
+#' @importFrom methods slot slotNames slot<-
 #' @importFrom stats setNames
+#' @import tidyverse
 #' @export
 #' @examples
 #' library(tidyverse)

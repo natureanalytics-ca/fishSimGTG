@@ -9,7 +9,7 @@
 #'
 #'An S4 object that holds a description of a life history.
 #'
-#'This S4 object is used as input to a variety of fuctions, including various population dynamics simulation functions.
+#'This S4 object is used as input to a variety of functions, including various population dynamics simulation functions.
 #' @param title A title for the object, useful for displaying the contents of the object
 #' @param speciesName Scientific name of the species
 #' @param shortDescription A brief description of the object. This could be the common name, stock, geographic location of the stock, etc.
@@ -73,11 +73,67 @@ setClass("LifeHistory",
            ID = "character")
 )
 
-#lbspr Object
-setClass("LBSPRarray",
+
+#----------------------
+#Stock object
+#----------------------
+
+#Roxygen header
+#'Stock object
+#'
+#'An S4 object that holds a description of a fish stock, including selectivity and discard information.
+#'
+#'This S4 object is used as input to a variety of functions, including various population dynamics simulation functions.
+#'Options for vulnerability and retention retention functions along with guidance on parameter specification is found in Sel documentation
+#' @param title A title for the object, useful for displaying the contents of the object
+#' @param historicalVulType String. Vulnerability function for historical time period, see selWrapper for options
+#' @param historicalVulParams Numeric value or vector for vulnerability params for historical time period. See selWrapper for options
+#' @param historicalRetType String. Retention function for historical time period. See selWrapper for options
+#' @param historicalRetParams Numeric value or vector for retention params for historical time period. See selWrapper for options
+#' @param historicalRetMax Numeric value that defines the peak of the historical retention curve. A value between 0 and 1.
+#' @param historicalDmort Historical tiem period discard mortality rate (not instantaneous rate, rather it is the fraction of discards killed e.g. 0.25 is 25% killed). A value between 0 and 1.
+#' @param projectionVulType String. Vulnerability function for projection time period, see selWrapper for options
+#' @param projectionVulParams Numeric value or vector for vulnerability params for projection time period. See selWrapper for options
+#' @param projectionRetType String. Retention function for projection time period. See selWrapper for options
+#' @param projectionRetParams Numeric value or vector for retention params for projection time period. See selWrapper for options
+#' @param projectionRetMax Numeric value that defines the peak of the projection retention curve. A value between 0 and 1.
+#' @param projectionDmort Projection time period discard mortality rate (not instantaneous rate, rather it is the fraction of discards killed e.g. 0.25 is 25% killed). A value between 0 and 1.
+
+#' @importFrom methods new
+#'
+setClass("Fishery",
+         representation(
+           title = "character",
+           historicalVulType = "character",
+           historicalVulParams = "numeric",
+           historicalRetType = "character",
+           historicalRetParams = "numeric",
+           historicalRetMax = "numeric",
+           historicalDmort = "numeric",
+           projectionVulType = "character",
+           projectionVulParams = "numeric",
+           projectionRetType = "character",
+           projectionRetParams = "numeric",
+           projectionRetMax = "numeric",
+           projectionDmort = "numeric"
+         )
+)
+
+
+#----------------------
+#YPR object
+#----------------------
+
+#Roxygen header
+#'YPR object
+#'
+#'An S4 object that holds the output of YPR analysis in a standardized format.
+#'#' @importFrom methods new
+setClass("YPRarray",
   representation(
     LifeHistory = "LifeHistory",
     sim = "list"
   )
 )
+
 
