@@ -353,6 +353,8 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
 #' @param F_MStep F/M ratio step size for sequence of F_M
 #' @param waitName When used within a shiny app, this function can update a host from the waiter package. See example.
 #' @param hostName When used within a shiny app, this function can update a host from the waiter package. See example.
+#' @param gtg The number of growth-type groups. Default is 13.
+#' @param stepsPerYear The number of steps per year. Default is 12.
 #' @importFrom shinyWidgets updateProgressBar
 #' @importFrom methods new
 #' @export
@@ -364,7 +366,7 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
 #' lh@MK<-1.5
 #' lh@LW_A<-0.01
 #' lh@LW_B<-3
-#' #' sim<-lbsprSimWrapper(lh)
+#' #' sim<-gtgYPRWrapper(lh)
 #'
 #' #################################################
 #' #Use of hostess loading bar from waiter package
@@ -403,7 +405,7 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
 #'   )
 #'
 #'  w$show()
-#'   gtgSimWrapper(LifeHistoryObj = LifeHistoryExample, waitName=w, hostName=host)
+#'   gtgYPRWrapper(LifeHistoryObj = LifeHistoryExample, waitName=w, hostName=host)
 #'   w$hide()
 #'
 #' }
@@ -412,7 +414,7 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
 #' shinyApp(ui, server)}
 
 
-gtgSimWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL, hostName=NULL){
+gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL, hostName=NULL, gtg=13, stepsPerYear=12){
 
 
   if(!is.numeric(LcStep) ||
@@ -447,6 +449,11 @@ gtgSimWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
     FisheryObj@historicalRetType<-"full"
     FisheryObj@historicalRetMax<-1.0
     FisheryObj@historicalDmort<-0.0
+
+    TimeAreaObj<-new("TimeArea")
+    TimeAreaObj@gtg<-gtg
+    TimeAreaObj@stepsPerYear<-stepsPerYear
+
     Lmax<-(1 - 0.01^(1/(LifeHistoryObj@M/LifeHistoryObj@K))) * LifeHistoryObj@Linf
     Lc<-seq(floor(0.1*Lmax),  floor(Lmax), LcStep)
     F_M<-round(seq(0, 4, F_MStep), 3)
@@ -454,6 +461,10 @@ gtgSimWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
     YPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
     Yield_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
 
+    #------
+    #Get lh
+    #------
+    lh<-LHwrapper(LifeHistoryObj, TimeAreaObj)
 
     show_condition <- function(code) {
       tryCatch({
@@ -469,12 +480,15 @@ gtgSimWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
     if(!is.null(hostName) & !is.null(waitName)){
       waitName$show()
     }
-    for (i in 1:NROW(F_M)){
-      for (j in 1:NROW(Lc)){
+    for (j in 1:NROW(Lc)){
 
-        FisheryObj@historicalVulParams<-c(Lc[j], Lc[j]+1)
+      FisheryObj@historicalVulParams<-c(Lc[j], Lc[j]+1)
+      sel<-selWrapper(LifeHistoryObj, TimeAreaObj, FisheryObj, doProjection = FALSE, doPlot = FALSE)
+
+      for (i in 1:NROW(F_M)){
+
         Feq<-F_M[i]*LifeHistoryObj@M
-        tmpSim<-show_condition(solveD(LifeHistoryObj, FisheryObj, doFit = FALSE, F_in = Feq))
+        tmpSim<-show_condition(solveD(lh = lh, sel=sel, doFit = FALSE, F_in = Feq))
 
         if(is.null(tmpSim)[1]) {
           stop = TRUE

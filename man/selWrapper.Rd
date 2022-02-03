@@ -4,10 +4,18 @@
 \alias{selWrapper}
 \title{Selectivity wrapper for sub-cohorts}
 \usage{
-selWrapper(LifeHistoryObj, FisheryObj, doProjection = FALSE, doPlot = FALSE)
+selWrapper(
+  LifeHistoryObj,
+  TimeAreaObj,
+  FisheryObj,
+  doProjection = FALSE,
+  doPlot = FALSE
+)
 }
 \arguments{
 \item{LifeHistoryObj}{A life history object.}
+
+\item{TimeAreaObj}{A time-area object}
 
 \item{FisheryObj}{A stock object}
 

@@ -98,7 +98,6 @@ setClass("LifeHistory",
 #' @param projectionRetParams Numeric value or vector for retention params for projection time period. See selWrapper for options
 #' @param projectionRetMax Numeric value that defines the peak of the projection retention curve. A value between 0 and 1.
 #' @param projectionDmort Projection time period discard mortality rate (not instantaneous rate, rather it is the fraction of discards killed e.g. 0.25 is 25% killed). A value between 0 and 1.
-
 #' @importFrom methods new
 #'
 setClass("Fishery",
@@ -119,7 +118,28 @@ setClass("Fishery",
          )
 )
 
+#----------------------
+#Time-area object
+#----------------------
+#Roxygen header
+#'Time-area object
+#'
+#'An S4 object that holds descriptions of time step, gtg, and area params
+#'
+#'This S4 object is used as input to a variety of functions, including various population dynamics simulation functions.
+#'Options for vulnerability and retention retention functions along with guidance on parameter specification is found in Sel documentation
+#' @param title A title for the object, useful for displaying the contents of the object
+#' @param gtg Number of growth-type groups
+#' @param stepsPerYear Number of time steps per year (e.g., 1 for annual time step, 12 for monthly time step)
+#' @importFrom methods new
 
+setClass("TimeArea",
+         representation(
+           title = "character",
+           gtg = "numeric",
+           stepsPerYear = "numeric"
+         )
+)
 #----------------------
 #YPR object
 #----------------------

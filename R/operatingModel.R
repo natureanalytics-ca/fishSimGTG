@@ -10,13 +10,17 @@
 #'Creates the necessary age-based vectors describing life history of sub-cohorts
 #'
 #' @param LifeHistoryObj  A life history object.
+#' @param TimeAreaObj A time-area object
 #' @importFrom methods slot slotNames
 #' @importFrom stats dnorm plogis
 #' @export
 #' @examples
-#'LHwrapper(LifeHistoryExample)
+#' ta<-new("TimeArea")
+#' ta@gtg<-13
+#' ta@stepsPerYear<-1
+#'LHwrapper(LifeHistoryObj = LifeHistoryExample, TimeAreaObj=ta)
 
-LHwrapper<-function(LifeHistoryObj){
+LHwrapper<-function(LifeHistoryObj, TimeAreaObj){
 
   if(class(LifeHistoryObj) != "LifeHistory" ||
      length(LifeHistoryObj@Linf) == 0 ||
@@ -31,7 +35,11 @@ LHwrapper<-function(LifeHistoryObj){
      LifeHistoryObj@M < 0 ||
      LifeHistoryObj@K < 0 ||
      LifeHistoryObj@L50 >= LifeHistoryObj@Linf ||
-     LifeHistoryObj@L50 >= LifeHistoryObj@L95
+     LifeHistoryObj@L50 >= LifeHistoryObj@L95 ||
+     class(TimeAreaObj) != "TimeArea" ||
+     length(TimeAreaObj@gtg) == 0 ||
+     length(TimeAreaObj@stepsPerYear) == 0 ||
+     TimeAreaObj@stepsPerYear < 1
   ) {
     NULL
   } else {
@@ -39,7 +47,7 @@ LHwrapper<-function(LifeHistoryObj){
     #----------------
     #How many gtg?
     #----------------
-    gtg<-21
+    gtg<-ceiling(ifelse(TimeAreaObj@gtg < 3, 3, TimeAreaObj@gtg))
     gtg<-ifelse((gtg %% 2) == 0, gtg+1, gtg)
     CVLinf<-0.1
     maxsd<-2 #number of standard deviations from mean Linf
@@ -55,10 +63,11 @@ LHwrapper<-function(LifeHistoryObj){
     #---------------
     #Age classes
     #---------------
+    stepsPerYear<-TimeAreaObj@stepsPerYear
     if(length(LifeHistoryObj@Tmax) == 0 || LifeHistoryObj@Tmax < 2) {
-      ages<-seq(1,ceiling(-log(0.01)/LifeHistoryObj@M),1)
+      ages<-seq(1,ceiling(-log(0.01)/LifeHistoryObj@M),1/stepsPerYear)
     } else {
-      ages<-seq(1,LifeHistoryObj@Tmax,1)
+      ages<-seq(1,LifeHistoryObj@Tmax,1/stepsPerYear)
     }
 
     #---------------------
@@ -86,6 +95,7 @@ LHwrapper<-function(LifeHistoryObj){
       mat=mat,
       L=L,
       gtg = gtg,
+      stepsPerYear = stepsPerYear,
       recProb = recProb,
       maxAge=ages[NROW(ages)]))
   }
@@ -118,6 +128,7 @@ LHwrapper<-function(LifeHistoryObj){
 #'
 #'Total dead is: Vul x (Ret + (1-Ret)D)
 #' @param LifeHistoryObj  A life history object.
+#' @param TimeAreaObj A time-area object
 #' @param FisheryObj A stock object
 #' @param doProjection calculate selectivity, discard, etc. for projection time period
 #' @param doPlot Creates a basic plot to visualize outcomes. Useful for ensuring parameter selections are sensible.
@@ -126,9 +137,9 @@ LHwrapper<-function(LifeHistoryObj){
 #' @importFrom stats median
 #' @export
 
-selWrapper<-function(LifeHistoryObj, FisheryObj, doProjection = FALSE, doPlot = FALSE){
+selWrapper<-function(LifeHistoryObj, TimeAreaObj, FisheryObj, doProjection = FALSE, doPlot = FALSE){
 
-  lh<-LHwrapper(LifeHistoryObj)
+  lh<-LHwrapper(LifeHistoryObj, TimeAreaObj)
 
   #logistic
   logisticProb<-function(L, param, maxProb){
@@ -285,7 +296,6 @@ selWrapper<-function(LifeHistoryObj, FisheryObj, doProjection = FALSE, doPlot = 
 
     if(doProjection){
       par(mfcol=c(1,2), las =1)
-      x<-ceiling(median(1:lh$gtg))
       plot(unlist(lh$L)[order(unlist(lh$L))], unlist(historical$vul)[order(unlist(lh$L))], type = "l", col = "purple", lwd =3, ylim = c(0,1), xlab = "Length", ylab = "Probability", main = "Historical")
       lines(unlist(lh$L)[order(unlist(lh$L))], unlist(historical$ret)[order(unlist(lh$L))], lwd =3, col = "blue")
       lines(unlist(lh$L)[order(unlist(lh$L))], unlist(historical$keep)[order(unlist(lh$L))], lwd =3, col = "green", lty = 3)
@@ -323,6 +333,7 @@ selWrapper<-function(LifeHistoryObj, FisheryObj, doProjection = FALSE, doPlot = 
 
 
 
+
 #-----------------------------------------
 #Equilibrium calculations for sub-cohorts
 #-----------------------------------------
@@ -331,25 +342,22 @@ selWrapper<-function(LifeHistoryObj, FisheryObj, doProjection = FALSE, doPlot = 
 #'Equilibrium conditions for sub-cohorts
 #'
 #'Creates the necessary age-based vectors equilibrium abundance, biomass and catch for sub-cohorts
-#' @param LifeHistoryObj  A life history object.
-#' @param FisheryObj A stock object
+#' @param lh  An object produced by LHWrapper.
+#' @param sel An object produced by selWrapper
 #' @param doFit Logical. When TRUE, estimates equilibrium fishing mortality based on input D_in. Ignores F_in. Default is FALSE
 #' @param F_in Equilibrium fishing mortality rate. Used to calculate equilibrium conditions of the stock. Ignored when doFit = TRUE
 #' @param D_type When doFit = TRUE, specifies type of equilibrium state metric that is specified in D_in (e.g., SSB depletion or SPR). Currently not in use and only SSB depletion is supported
 #' @param D_in When doFit = TRUE, specifies value of equilibrium state. Currently this must be SSB depletion (value between 0 and 1)
 #' @param doPlot Equilibrium length composition
 #' @importFrom methods slot slotNames
-#' @import ggplot2 gridExtra
+#' @import dplyr ggplot2 gridExtra
 #' @importFrom stats optimize
 #' @export
+#' @examples
+#' sim<-gtgYPRWrapper(LifeHistoryObj = LifeHistoryExample, gtg=21, stepsPerYear = 12)
 
-solveD<-function(LifeHistoryObj, FisheryObj, doFit = FALSE, F_in = NULL, D_type = NULL, D_in = NULL, doPlot = FALSE){
+solveD<-function(lh, sel, doFit = FALSE, F_in = NULL, D_type = NULL, D_in = NULL, doPlot = FALSE){
 
-  #------------------------------------------
-  #Create life history wrapper & selectivity
-  #------------------------------------------
-  lh<-LHwrapper(LifeHistoryObj)
-  sel<-selWrapper(LifeHistoryObj, FisheryObj, doProjection = FALSE, doPlot = FALSE)
 
   if(is.null(lh) ||
      is.null(sel) ||
@@ -360,15 +368,24 @@ solveD<-function(LifeHistoryObj, FisheryObj, doFit = FALSE, F_in = NULL, D_type 
     return(NULL)
   } else {
 
+    #---------------
+    #Steps per year
+    #---------------
+    stepsPerYear <- lh$stepsPerYear
+    totalSteps <- NROW(lh$L[[1]])
+
     #----------------------------------------
     #Fitting functions
     #----------------------------------------
+
+    #FIX for loop so it runs fast
+
     min.Depletion<-function(logFmort){
       Fmort<-exp(logFmort)
       N<-lapply(1:lh$gtg, FUN=function(x) {
         Neq<-vector()
         Neq[1]<-lh$recProb[x]
-        for(i in 2:lh$maxAge) Neq[i]<-exp(-lh$LifeHistory@M - Fmort*sel$historical$removal[[x]][i-1])*Neq[i-1]
+        for(i in 2:totalSteps) Neq[i]<-exp(-lh$LifeHistory@M/stepsPerYear - Fmort/stepsPerYear*sel$historical$removal[[x]][i-1])*Neq[i-1]
         Neq
       })
       SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]]*lh$mat[[x]]*lh$W[[x]])))
@@ -381,10 +398,7 @@ solveD<-function(LifeHistoryObj, FisheryObj, doFit = FALSE, F_in = NULL, D_type 
     #Wbar
     #---------------
     N<-lapply(1:lh$gtg, FUN=function(x) {
-      Neq<-vector()
-      Neq[1]<-lh$recProb[x]
-      for(i in 2:lh$maxAge) Neq[i]<-exp(-lh$LifeHistory@M)*Neq[i-1]
-      Neq
+      dplyr::lag(cumprod(rep(exp(-lh$LifeHistory@M/stepsPerYear), totalSteps)), n=1, default = 1)*lh$recProb[x]
     })
     Wbar<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]]*lh$mat[[x]]*lh$W[[x]])))
 
@@ -405,12 +419,9 @@ solveD<-function(LifeHistoryObj, FisheryObj, doFit = FALSE, F_in = NULL, D_type 
     #Re-cacl regardless of having D_in because in some cases fit cannot deplete stock to target
     #-------------------------------------------------------------------------------------------
     N<-lapply(1:lh$gtg, FUN=function(x) {
-      Neq<-vector()
-      Neq[1]<-lh$recProb[x]
-      for(i in 2:lh$maxAge) Neq[i]<-exp(-lh$LifeHistory@M - Feq*sel$historical$removal[[x]][i-1])*Neq[i-1]
-      Neq
+      dplyr::lag(cumprod(exp(-lh$LifeHistory@M/stepsPerYear - Feq/stepsPerYear*sel$historical$removal[[x]])), n=1, default = 1)*lh$recProb[x]
     })
-    YPR<-sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Feq*sel$historical$keep[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq*sel$historical$removal[[x]]-lh$LifeHistory@M))*N[[x]])))
+    YPR<-sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Feq/stepsPerYear*sel$historical$keep[[x]]/(Feq/stepsPerYear*sel$historical$removal[[x]] + lh$LifeHistory@M/stepsPerYear)*(1-exp(-Feq/stepsPerYear*sel$historical$removal[[x]]-lh$LifeHistory@M/stepsPerYear))*N[[x]])))
     SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]]*lh$mat[[x]]*lh$W[[x]])))
     SPR<-SB / Wbar
     D<-max(0, (4*lh$LifeHistory@Steep*SPR+lh$LifeHistory@Steep-1)/(5*lh$LifeHistory@Steep-1))
@@ -420,36 +431,31 @@ solveD<-function(LifeHistoryObj, FisheryObj, doFit = FALSE, F_in = NULL, D_type 
     #------------------------------
     Req<-recruit(LifeHistoryObj = lh$LifeHistory, B0=Wbar, stock=Wbar*D, forceR=FALSE)
     N<-lapply(1:lh$gtg, FUN=function(x) {
-      Neq<-vector()
-      Neq[1]<-lh$recProb[x]*Req
-      for(i in 2:lh$maxAge) Neq[i]<-exp(-lh$LifeHistory@M - Feq*sel$historical$removal[[x]][i-1])*Neq[i-1]
-      Neq
+      dplyr::lag(cumprod(exp(-lh$LifeHistory@M/stepsPerYear - Feq/stepsPerYear*sel$historical$removal[[x]])), n=1, default = 1)*lh$recProb[x]*Req
     })
     SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]]*lh$mat[[x]]*lh$W[[x]])))
     VB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]]*sel$historical$vul[[x]]*lh$W[[x]])))
-    catchN<-sum(sapply(1:lh$gtg, FUN=function(x) sum(Feq*sel$historical$keep[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq*sel$historical$removal[[x]]-lh$LifeHistory@M))*N[[x]])))
-    catchB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Feq*sel$historical$keep[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq*sel$historical$removal[[x]]-lh$LifeHistory@M))*N[[x]])))
-    discN<-sum(sapply(1:lh$gtg, FUN=function(x) sum(Feq*sel$historical$discard[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq*sel$historical$removal[[x]]-lh$LifeHistory@M))*N[[x]])))
-    discB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Feq*sel$historical$discard[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq*sel$historical$removal[[x]]-lh$LifeHistory@M))*N[[x]])))
+    catchN<-sum(sapply(1:lh$gtg, FUN=function(x) sum(Feq*sel$historical$keep[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq/stepsPerYear*sel$historical$removal[[x]]-lh$LifeHistory@M/stepsPerYear))*N[[x]])))
+    catchB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Feq*sel$historical$keep[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq/stepsPerYear*sel$historical$removal[[x]]-lh$LifeHistory@M/stepsPerYear))*N[[x]])))
+    discN<-sum(sapply(1:lh$gtg, FUN=function(x) sum(Feq*sel$historical$discard[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq/stepsPerYear*sel$historical$removal[[x]]-lh$LifeHistory@M/stepsPerYear))*N[[x]])))
+    discB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Feq*sel$historical$discard[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq/stepsPerYear*sel$historical$removal[[x]]-lh$LifeHistory@M/stepsPerYear))*N[[x]])))
     B0<-Wbar*lh$LifeHistory@R0
 
 
     if(doPlot) {
 
-
-
       tmp1<-data.frame(
         l = unlist(lapply(1:lh$gtg, FUN=function(x){
-        rep(lh$L[[x]], N[[x]])
-      })))
+          rep(lh$L[[x]], N[[x]])
+        })))
 
 
       tmp2<-data.frame(
         l = unlist(lapply(1:lh$gtg, FUN=function(x){
-        rep(lh$L[[x]], N[[x]]*sel$historical$vul[[x]])
-      })))
+          rep(lh$L[[x]], N[[x]]*sel$historical$vul[[x]])
+        })))
 
-      p1<-ggplot(tmp1, aes(x=~l)) +
+      p1<-ggplot(tmp1, aes(x=l)) +
         geom_histogram(binwidth=1, position="identity", fill="#58C7B1", color="white") +
         labs(
           y= "Count",
@@ -472,7 +478,7 @@ solveD<-function(LifeHistoryObj, FisheryObj, doFit = FALSE, F_in = NULL, D_type 
           title = element_text(color = '#808080', face="bold")
         )
 
-      p2<-ggplot(tmp2, aes(x=~l)) +
+      p2<-ggplot(tmp2, aes(x=l)) +
         geom_histogram(binwidth=1, position="identity", fill="#58C7B1", color="white") +
         labs(
           y= "Count",
@@ -506,6 +512,194 @@ solveD<-function(LifeHistoryObj, FisheryObj, doFit = FALSE, F_in = NULL, D_type 
   }
 }
 
+
+#-----------------------------------------
+#Equilibrium calculations - slow version
+#-----------------------------------------
+
+#Roxygen header
+#'A slow version of solveD, used for debugging
+#'
+#'See solveD
+#' @param LifeHistoryObj  An LifeHistory object
+#' @param TimeAreaObj A TimeArea object
+#' @param FisheryObj A FisheryObj
+#' @param doFit Logical. When TRUE, estimates equilibrium fishing mortality based on input D_in. Ignores F_in. Default is FALSE
+#' @param F_in Equilibrium fishing mortality rate. Used to calculate equilibrium conditions of the stock. Ignored when doFit = TRUE
+#' @param D_type When doFit = TRUE, specifies type of equilibrium state metric that is specified in D_in (e.g., SSB depletion or SPR). Currently not in use and only SSB depletion is supported
+#' @param D_in When doFit = TRUE, specifies value of equilibrium state. Currently this must be SSB depletion (value between 0 and 1)
+#' @param doPlot Equilibrium length composition
+#' @importFrom methods slot slotNames
+#' @import ggplot2 gridExtra
+#' @importFrom stats optimize
+
+
+solveDSlow<-function(LifeHistoryObj, TimeAreaObj, FisheryObj, doFit = FALSE, F_in = NULL, D_type = NULL, D_in = NULL, doPlot = FALSE){
+
+  #------------------------------------------
+  #Create life history wrapper & selectivity
+  #------------------------------------------
+  lh<-LHwrapper(LifeHistoryObj, TimeAreaObj)
+  sel<-selWrapper(LifeHistoryObj, TimeAreaObj, FisheryObj, doProjection = FALSE, doPlot = FALSE)
+
+  if(is.null(lh) ||
+     is.null(sel) ||
+     length(lh$LifeHistory@Steep) == 0 ||
+     lh$LifeHistory@Steep <= 0.2 ||
+     lh$LifeHistory@Steep > 1
+  ) {
+    return(NULL)
+  } else {
+
+    #---------------
+    #Steps per year
+    #---------------
+    stepsPerYear <- lh$stepsPerYear
+    totalSteps <- NROW(lh$L[[1]])
+
+    #----------------------------------------
+    #Fitting functions
+    #----------------------------------------
+    min.Depletion<-function(logFmort){
+      Fmort<-exp(logFmort)
+      N<-lapply(1:lh$gtg, FUN=function(x) {
+        Neq<-vector()
+        Neq[1]<-lh$recProb[x]
+        for(i in 2:totalSteps) Neq[i]<-exp(-lh$LifeHistory@M/stepsPerYear - Fmort/stepsPerYear*sel$historical$removal[[x]][i-1])*Neq[i-1]
+        Neq
+      })
+      SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]]*lh$mat[[x]]*lh$W[[x]])))
+      SPR<- SB / Wbar
+      D<-(4*lh$LifeHistory@Steep*SPR+lh$LifeHistory@Steep-1)/(5*lh$LifeHistory@Steep-1)
+      (D-D_in)^2
+    }
+
+    #---------------
+    #Wbar
+    #---------------
+    N<-lapply(1:lh$gtg, FUN=function(x) {
+      Neq<-vector()
+      Neq[1]<-lh$recProb[x]
+      for(i in 2:totalSteps) Neq[i]<-exp(-lh$LifeHistory@M/stepsPerYear)*Neq[i-1]
+      Neq
+    })
+    Wbar<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]]*lh$mat[[x]]*lh$W[[x]])))
+
+    #-------------
+    #Get Feq
+    #-------------
+
+    ##FIX PROBLEM WITH optimize
+
+    if(doFit){
+      Feq<-exp(optimize(min.Depletion, lh, sel, D_in, Wbar, lower=-14, upper=1.1, maximum=FALSE, tol=0.00000001)$minimum)
+    } else {
+      Feq<-F_in
+    }
+
+    #-------------------------------------------------------------------------------------------
+    #Get current SSB depletion
+    #Re-cacl regardless of having D_in because in some cases fit cannot deplete stock to target
+    #-------------------------------------------------------------------------------------------
+    N<-lapply(1:lh$gtg, FUN=function(x) {
+      Neq<-vector()
+      Neq[1]<-lh$recProb[x]
+      for(i in 2:totalSteps) Neq[i]<-exp(-lh$LifeHistory@M/stepsPerYear - Feq/stepsPerYear*sel$historical$removal[[x]][i-1])*Neq[i-1]
+      Neq
+    })
+    YPR<-sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Feq/stepsPerYear*sel$historical$keep[[x]]/(Feq/stepsPerYear*sel$historical$removal[[x]] + lh$LifeHistory@M/stepsPerYear)*(1-exp(-Feq/stepsPerYear*sel$historical$removal[[x]]-lh$LifeHistory@M/stepsPerYear))*N[[x]])))
+    SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]]*lh$mat[[x]]*lh$W[[x]])))
+    SPR<-SB / Wbar
+    D<-max(0, (4*lh$LifeHistory@Steep*SPR+lh$LifeHistory@Steep-1)/(5*lh$LifeHistory@Steep-1))
+
+    #------------------------------
+    #Scale stock size and catches
+    #------------------------------
+    Req<-recruit(LifeHistoryObj = lh$LifeHistory, B0=Wbar, stock=Wbar*D, forceR=FALSE)
+    N<-lapply(1:lh$gtg, FUN=function(x) {
+      Neq<-vector()
+      Neq[1]<-lh$recProb[x]*Req
+      for(i in 2:totalSteps) Neq[i]<-exp(-lh$LifeHistory@M/stepsPerYear - Feq/stepsPerYear*sel$historical$removal[[x]][i-1])*Neq[i-1]
+      Neq
+    })
+    SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]]*lh$mat[[x]]*lh$W[[x]])))
+    VB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]]*sel$historical$vul[[x]]*lh$W[[x]])))
+    catchN<-sum(sapply(1:lh$gtg, FUN=function(x) sum(Feq*sel$historical$keep[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq/stepsPerYear*sel$historical$removal[[x]]-lh$LifeHistory@M/stepsPerYear))*N[[x]])))
+    catchB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Feq*sel$historical$keep[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq/stepsPerYear*sel$historical$removal[[x]]-lh$LifeHistory@M/stepsPerYear))*N[[x]])))
+    discN<-sum(sapply(1:lh$gtg, FUN=function(x) sum(Feq*sel$historical$discard[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq/stepsPerYear*sel$historical$removal[[x]]-lh$LifeHistory@M/stepsPerYear))*N[[x]])))
+    discB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Feq*sel$historical$discard[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq/stepsPerYear*sel$historical$removal[[x]]-lh$LifeHistory@M/stepsPerYear))*N[[x]])))
+    B0<-Wbar*lh$LifeHistory@R0
+
+
+    if(doPlot) {
+
+      tmp1<-data.frame(
+        l = unlist(lapply(1:lh$gtg, FUN=function(x){
+          rep(lh$L[[x]], N[[x]])
+        })))
+
+
+      tmp2<-data.frame(
+        l = unlist(lapply(1:lh$gtg, FUN=function(x){
+          rep(lh$L[[x]], N[[x]]*sel$historical$vul[[x]])
+        })))
+
+      p1<-ggplot(tmp1, aes(x=l)) +
+        geom_histogram(binwidth=1, position="identity", fill="#58C7B1", color="white") +
+        labs(
+          y= "Count",
+          x = "Length",
+          title = "Population length composition"
+        ) +
+        theme(
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill='transparent'), #transparent panel bg
+          plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
+          axis.line = element_line(colour = "#808080"),
+          legend.position = "right",
+          strip.text.x = element_text(size=10, color = '#808080', face="bold"),
+          strip.text.y = element_text(size=10, color = '#808080', face="bold"),
+          axis.text.x = element_text( size = 10, color = '#808080', face="bold"),
+          axis.text.y = element_text( size = 10, color = '#808080', face="bold"),
+          axis.title.x = element_text(size=10, color = '#808080', face="bold", margin = margin(t = 10, r = 0, b = 0, l = 0, unit = "pt")),
+          axis.title.y = element_text(size=10, color = '#808080', face="bold", margin = margin(t = 0, r = 10, b = 0, l = 0, unit = "pt")),
+          title = element_text(color = '#808080', face="bold")
+        )
+
+      p2<-ggplot(tmp2, aes(x=l)) +
+        geom_histogram(binwidth=1, position="identity", fill="#58C7B1", color="white") +
+        labs(
+          y= "Count",
+          x = "Length",
+          title = "vulnerable length composition"
+        ) +
+        theme(
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill='transparent'), #transparent panel bg
+          plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
+          axis.line = element_line(colour = "#808080"),
+          legend.position = "right",
+          strip.text.x = element_text(size=10, color = '#808080', face="bold"),
+          strip.text.y = element_text(size=10, color = '#808080', face="bold"),
+          axis.text.x = element_text( size = 10, color = '#808080', face="bold"),
+          axis.text.y = element_text( size = 10, color = '#808080', face="bold"),
+          axis.title.x = element_text(size=10, color = '#808080', face="bold", margin = margin(t = 10, r = 0, b = 0, l = 0, unit = "pt")),
+          axis.title.y = element_text(size=10, color = '#808080', face="bold", margin = margin(t = 0, r = 10, b = 0, l = 0, unit = "pt")),
+          title = element_text(color = '#808080', face="bold")
+        )
+
+      grid.arrange(p1, p2, nrow = 1)
+
+    }
+
+    #------------
+    #Return list
+    #------------
+    return(list(Feq=Feq, D=D, SPR=SPR, Req=Req, B0=B0, SB=SB, VB=VB, catchN=catchN, catchB=catchB, discN=discN, discB=discB, N=N, YPR = YPR))
+  }
+}
 
 #-----------------------------------------
 #Stock - recruitment calculations
