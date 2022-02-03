@@ -100,7 +100,7 @@ print("Time in minutes: ")
 print((proc.time()-ptm)/60)
 
 ptm<-proc.time()
-sim4<-gtgYPRWrapper(LifeHistoryObj = lh, gtg=21, stepsPerYear = 12)
+sim4<-gtgYPRWrapper(LifeHistoryObj = lh, gtg=13, stepsPerYear = 12)
 print("Time in minutes: ")
 print((proc.time()-ptm)/60)
 

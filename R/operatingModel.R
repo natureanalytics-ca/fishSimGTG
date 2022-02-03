@@ -65,16 +65,20 @@ LHwrapper<-function(LifeHistoryObj, TimeAreaObj){
     #---------------
     stepsPerYear<-TimeAreaObj@stepsPerYear
     if(length(LifeHistoryObj@Tmax) == 0 || LifeHistoryObj@Tmax < 2) {
-      ages<-seq(1,ceiling(-log(0.01)/LifeHistoryObj@M),1/stepsPerYear)
+      ages<-seq(0, ceiling(-log(0.01)/LifeHistoryObj@M),1/stepsPerYear)
     } else {
-      ages<-seq(1,LifeHistoryObj@Tmax,1/stepsPerYear)
+      ages<-seq(0, LifeHistoryObj@Tmax,1/stepsPerYear)
     }
 
     #---------------------
     #Life history vectors
     #---------------------
     t0<-ifelse(length(LifeHistoryObj@t0) == 0, 0, LifeHistoryObj@t0)
-    L<-lapply(gtg_Linf, FUN=function(x) x*(1-exp(-LifeHistoryObj@K*(ages-t0))))
+    L<-lapply(gtg_Linf, FUN=function(x) {
+      tmp<-x*(1-exp(-LifeHistoryObj@K*(ages-t0)))
+      tmp[tmp < 0] <- 0
+      tmp
+    })
     W<-lapply(1:gtg, FUN=function(x) LifeHistoryObj@LW_A*L[[x]]^LifeHistoryObj@LW_B)
 
     mat<-list()
@@ -350,7 +354,7 @@ selWrapper<-function(LifeHistoryObj, TimeAreaObj, FisheryObj, doProjection = FAL
 #' @param D_in When doFit = TRUE, specifies value of equilibrium state. Currently this must be SSB depletion (value between 0 and 1)
 #' @param doPlot Equilibrium length composition
 #' @importFrom methods slot slotNames
-#' @import dplyr ggplot2 gridExtra
+#' @import ggplot2 gridExtra dplyr
 #' @importFrom stats optimize
 #' @export
 #' @examples
@@ -379,6 +383,8 @@ solveD<-function(lh, sel, doFit = FALSE, F_in = NULL, D_type = NULL, D_in = NULL
     #----------------------------------------
 
     #FIX for loop so it runs fast
+    #FIX fact that this function assumes age 1 rec, fix to reflect age 0 rec
+    #FIX to include plus group
 
     min.Depletion<-function(logFmort){
       Fmort<-exp(logFmort)
@@ -398,9 +404,11 @@ solveD<-function(lh, sel, doFit = FALSE, F_in = NULL, D_type = NULL, D_in = NULL
     #Wbar
     #---------------
     N<-lapply(1:lh$gtg, FUN=function(x) {
-      dplyr::lag(cumprod(rep(exp(-lh$LifeHistory@M/stepsPerYear), totalSteps)), n=1, default = 1)*lh$recProb[x]
+      tmp<-dplyr::lag(cumprod(rep(exp(-lh$LifeHistory@M/stepsPerYear), totalSteps)), n=1, default = 1)*lh$recProb[x]
+      tmp[totalSteps]<- tmp[totalSteps]/(1-exp(-lh$LifeHistory@M/stepsPerYear))
+      tmp
     })
-    Wbar<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]]*lh$mat[[x]]*lh$W[[x]])))
+    Wbar<-sum(sapply(1:lh$gtg, FUN=function(x) sum((N[[x]]*lh$mat[[x]]*lh$W[[x]])[2:totalSteps])))
 
     #-------------
     #Get Feq
@@ -419,10 +427,12 @@ solveD<-function(lh, sel, doFit = FALSE, F_in = NULL, D_type = NULL, D_in = NULL
     #Re-cacl regardless of having D_in because in some cases fit cannot deplete stock to target
     #-------------------------------------------------------------------------------------------
     N<-lapply(1:lh$gtg, FUN=function(x) {
-      dplyr::lag(cumprod(exp(-lh$LifeHistory@M/stepsPerYear - Feq/stepsPerYear*sel$historical$removal[[x]])), n=1, default = 1)*lh$recProb[x]
+      tmp<-dplyr::lag(cumprod(exp(-lh$LifeHistory@M/stepsPerYear - Feq/stepsPerYear*sel$historical$removal[[x]])), n=1, default = 1)*lh$recProb[x]
+      tmp[totalSteps]<- tmp[totalSteps]/(1-exp(-lh$LifeHistory@M/stepsPerYear - Feq/stepsPerYear*sel$historical$removal[[x]][totalSteps]))
+      tmp
     })
     YPR<-sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Feq/stepsPerYear*sel$historical$keep[[x]]/(Feq/stepsPerYear*sel$historical$removal[[x]] + lh$LifeHistory@M/stepsPerYear)*(1-exp(-Feq/stepsPerYear*sel$historical$removal[[x]]-lh$LifeHistory@M/stepsPerYear))*N[[x]])))
-    SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]]*lh$mat[[x]]*lh$W[[x]])))
+    SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum((N[[x]]*lh$mat[[x]]*lh$W[[x]])[2:totalSteps])))
     SPR<-SB / Wbar
     D<-max(0, (4*lh$LifeHistory@Steep*SPR+lh$LifeHistory@Steep-1)/(5*lh$LifeHistory@Steep-1))
 
@@ -431,16 +441,17 @@ solveD<-function(lh, sel, doFit = FALSE, F_in = NULL, D_type = NULL, D_in = NULL
     #------------------------------
     Req<-recruit(LifeHistoryObj = lh$LifeHistory, B0=Wbar, stock=Wbar*D, forceR=FALSE)
     N<-lapply(1:lh$gtg, FUN=function(x) {
-      dplyr::lag(cumprod(exp(-lh$LifeHistory@M/stepsPerYear - Feq/stepsPerYear*sel$historical$removal[[x]])), n=1, default = 1)*lh$recProb[x]*Req
+      tmp<-dplyr::lag(cumprod(exp(-lh$LifeHistory@M/stepsPerYear - Feq/stepsPerYear*sel$historical$removal[[x]])), n=1, default = 1)*lh$recProb[x]*Req
+      tmp[totalSteps]<- tmp[totalSteps]/(1-exp(-lh$LifeHistory@M/stepsPerYear - Feq/stepsPerYear*sel$historical$removal[[x]][totalSteps]))
+      tmp
     })
-    SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]]*lh$mat[[x]]*lh$W[[x]])))
+    SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum((N[[x]]*lh$mat[[x]]*lh$W[[x]])[2:totalSteps])))
     VB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]]*sel$historical$vul[[x]]*lh$W[[x]])))
     catchN<-sum(sapply(1:lh$gtg, FUN=function(x) sum(Feq*sel$historical$keep[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq/stepsPerYear*sel$historical$removal[[x]]-lh$LifeHistory@M/stepsPerYear))*N[[x]])))
     catchB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Feq*sel$historical$keep[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq/stepsPerYear*sel$historical$removal[[x]]-lh$LifeHistory@M/stepsPerYear))*N[[x]])))
     discN<-sum(sapply(1:lh$gtg, FUN=function(x) sum(Feq*sel$historical$discard[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq/stepsPerYear*sel$historical$removal[[x]]-lh$LifeHistory@M/stepsPerYear))*N[[x]])))
     discB<-sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Feq*sel$historical$discard[[x]]/(Feq*sel$historical$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Feq/stepsPerYear*sel$historical$removal[[x]]-lh$LifeHistory@M/stepsPerYear))*N[[x]])))
     B0<-Wbar*lh$LifeHistory@R0
-
 
     if(doPlot) {
 
