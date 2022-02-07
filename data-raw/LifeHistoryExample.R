@@ -3,6 +3,7 @@
 devtools::load_all()
 library(LBSPR)
 
+#Life history
 LifeHistoryExample<-new("LifeHistory")
 LifeHistoryExample@Linf<-100
 LifeHistoryExample@L50<-66
@@ -26,8 +27,17 @@ LifeHistoryExample@recSD<-0.6
 LifeHistoryExample@recRho<-0
 LifeHistoryExample@isHermaph<-FALSE
 
-lbsprSimExample<-lbsprSimWrapper(LifeHistoryExample)
-
 usethis::use_data(LifeHistoryExample, overwrite = TRUE)
+
+#Use life history in YPR sim examples
+lbsprSimExample<-lbsprSimWrapper(LifeHistoryExample)
 usethis::use_data(lbsprSimExample, overwrite = TRUE)
+
+lbsprSimExample<-lbsprSimWrapper(LifeHistoryExample)
+usethis::use_data(lbsprSimExample, overwrite = TRUE)
+
+gtgSimExample<-gtgYPRWrapper(LifeHistoryExample)
+usethis::use_data(gtgSimExample, overwrite = TRUE)
+
+
 

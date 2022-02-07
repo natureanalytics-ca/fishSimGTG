@@ -56,9 +56,9 @@ X<-selWrapper(LifeHistoryObj=lh, TimeAreaObj = ta, FisheryObj = FisheryObj, doPr
 FisheryObj<-new("Fishery")
 FisheryObj@title<-"Test"
 FisheryObj@historicalVulType<-"logistic"
-FisheryObj@historicalVulParams<-c(50,75)
-FisheryObj@historicalRetType<-"full"
-FisheryObj@historicalRetParams<-c(60,70)
+FisheryObj@historicalVulParams<-c(1,2)
+FisheryObj@historicalRetType<-"slotLimit"
+FisheryObj@historicalRetParams<-c(66,2000)
 FisheryObj@historicalRetMax<-1
 FisheryObj@historicalDmort<-0
 
@@ -69,8 +69,8 @@ ta@stepsPerYear<-12
 lh<-LHwrapper(LifeHistoryObj=LifeHistoryExample, TimeAreaObj = ta)
 sel<-selWrapper(LifeHistoryObj=LifeHistoryExample, TimeAreaObj = ta, FisheryObj = FisheryObj, doProjection = TRUE, doPlot = TRUE)
 
-X<-solveD(lh, sel, doFit = FALSE, F_in = 0, doPlot = TRUE)
-
+X<-solveD(lh, sel, doFit = FALSE, F_in = 3*LifeHistoryExample@M, doPlot = TRUE)
+X$YPR
 
 
 
