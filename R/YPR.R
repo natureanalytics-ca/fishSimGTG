@@ -416,7 +416,9 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
 
 gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL, hostName=NULL, gtg=13, stepsPerYear=12){
 
-
+  #-----------------------------
+  #Initial check of conditions
+  #-----------------------------
   if(!is.numeric(LcStep) ||
      !is.numeric(F_MStep) ||
      LcStep < 0 ||
@@ -430,7 +432,7 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
   } else {
 
     #----------------------------------------------------------
-    #LH assumptions
+    #LH assumptions and check of sufficient life history
     #If certain params not provided, then assumptions are made.
     #Same assumptions are made as in LBSPRsim for compatability
     #-----------------------------------------------------------
@@ -441,9 +443,7 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
     if(length(LifeHistoryObj@LW_B) == 0) LifeHistoryObj@LW_B<-3
     if(length(LifeHistoryObj@R0) == 0) LifeHistoryObj@R0<-10000
 
-    #------------------
-    #Eumetric analysis
-    #------------------
+
     FisheryObj<-new("Fishery")
     FisheryObj@historicalVulType<-"logistic"
     FisheryObj@historicalRetType<-"full"
@@ -454,70 +454,81 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
     TimeAreaObj@gtg<-gtg
     TimeAreaObj@stepsPerYear<-stepsPerYear
 
-    Lmax<-(1 - 0.01^(1/(LifeHistoryObj@M/LifeHistoryObj@K))) * LifeHistoryObj@Linf
-    Lc<-seq(floor(0.1*Lmax),  floor(Lmax), LcStep)
-    F_M<-round(seq(0, 4, F_MStep), 3)
-    SPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
-    YPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
-    Yield_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
-
-    #------
-    #Get lh
-    #------
+    #---------------------------------------------------
+    #Check that life history requirements have been met
+    #---------------------------------------------------
     lh<-LHwrapper(LifeHistoryObj, TimeAreaObj)
+    if(is.null(lh)) {
+      return(new("YPRarray",
+                 LifeHistory = LifeHistoryObj,
+                 sim=list(stop = TRUE))
+      )
+    } else {
 
-    show_condition <- function(code) {
-      tryCatch({
-        code
-      },
-      error = function(c) NULL
+      #------------------
+      #Eumetric analysis
+      #------------------
+
+      Lmax<-(1 - 0.01^(1/(LifeHistoryObj@M/LifeHistoryObj@K))) * LifeHistoryObj@Linf
+      Lc<-seq(floor(0.1*Lmax),  floor(Lmax), LcStep)
+      F_M<-round(seq(0, 4, F_MStep), 3)
+      SPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
+      YPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
+      Yield_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
+
+      show_condition <- function(code) {
+        tryCatch({
+          code
+        },
+        error = function(c) NULL
+        )
+      }
+
+      steps<-NROW(Lc)*NROW(F_M)
+      counter <- 0
+      stop = FALSE
+      if(!is.null(hostName) & !is.null(waitName)){
+        waitName$show()
+      }
+      for (j in 1:NROW(Lc)){
+
+        FisheryObj@historicalVulParams<-c(Lc[j], Lc[j]+1)
+        sel<-selWrapper(LifeHistoryObj, TimeAreaObj, FisheryObj, doProjection = FALSE, doPlot = FALSE)
+
+        for (i in 1:NROW(F_M)){
+
+          Feq<-F_M[i]*LifeHistoryObj@M
+          tmpSim<-show_condition(solveD(lh = lh, sel=sel, doFit = FALSE, F_in = Feq))
+
+          if(is.null(tmpSim)[1]) {
+            stop = TRUE
+            break
+          }
+
+          SPR_EU[i,j]=tmpSim$SPR
+          YPR_EU[i,j]=tmpSim$YPR
+          Yield_EU[i,j]=tmpSim$catchB
+
+          counter<-counter+1
+
+          if(!is.null(hostName) & !is.null(waitName)){
+            hostName$set(counter/steps*100)
+          }
+
+        }
+        if(stop) break
+      }
+
+      if(!is.null(hostName) & !is.null(waitName)){
+        waitName$hide()
+      }
+      Yield_EU<- Yield_EU/max(Yield_EU, na.rm=TRUE)
+
+      return(new("YPRarray",
+                 LifeHistory = LifeHistoryObj,
+                 sim=list(Lc = Lc, F_M = F_M, SPR_EU = SPR_EU, YPR_EU = YPR_EU, Yield_EU=Yield_EU, LcStep = LcStep, F_MStep = F_MStep, stop = stop))
       )
     }
-
-    steps<-NROW(Lc)*NROW(F_M)
-    counter <- 0
-    stop = FALSE
-    if(!is.null(hostName) & !is.null(waitName)){
-      waitName$show()
-    }
-    for (j in 1:NROW(Lc)){
-
-      FisheryObj@historicalVulParams<-c(Lc[j], Lc[j]+1)
-      sel<-selWrapper(LifeHistoryObj, TimeAreaObj, FisheryObj, doProjection = FALSE, doPlot = FALSE)
-
-      for (i in 1:NROW(F_M)){
-
-        Feq<-F_M[i]*LifeHistoryObj@M
-        tmpSim<-show_condition(solveD(lh = lh, sel=sel, doFit = FALSE, F_in = Feq))
-
-        if(is.null(tmpSim)[1]) {
-          stop = TRUE
-          break
-        }
-
-        SPR_EU[i,j]=tmpSim$SPR
-        YPR_EU[i,j]=tmpSim$YPR
-        Yield_EU[i,j]=tmpSim$catchB
-
-        counter<-counter+1
-
-        if(!is.null(hostName) & !is.null(waitName)){
-          hostName$set(counter/steps*100)
-        }
-
-      }
-      if(stop) break
-    }
-
-    if(!is.null(hostName) & !is.null(waitName)){
-      waitName$hide()
-    }
-    Yield_EU<- Yield_EU/max(Yield_EU, na.rm=TRUE)
-
-    return(new("YPRarray",
-               LifeHistory = LifeHistoryObj,
-               sim=list(Lc = Lc, F_M = F_M, SPR_EU = SPR_EU, YPR_EU = YPR_EU, Yield_EU=Yield_EU, LcStep = LcStep, F_MStep = F_MStep, stop = stop))
-    )
   }
 }
 
