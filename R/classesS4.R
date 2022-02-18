@@ -140,6 +140,7 @@ setClass("TimeArea",
            stepsPerYear = "numeric"
          )
 )
+
 #----------------------
 #YPR object
 #----------------------
