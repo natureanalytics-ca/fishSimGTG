@@ -408,6 +408,13 @@
       "Repository": "CRAN",
       "Hash": "10bec8a8264f3eb59531e8c4c0303f96"
     },
+    "here": {
+      "Package": "here",
+      "Version": "1.0.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "24b224366f9c2e7534d2344d10d59211"
+    },
     "highr": {
       "Package": "highr",
       "Version": "0.9",
@@ -813,6 +820,20 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "02fba70d7c5c1ab0754d9c0108c029eb"
+    },
+    "snow": {
+      "Package": "snow",
+      "Version": "0.4-4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "40b74690debd20c57d93d8c246b305d4"
+    },
+    "snowfall": {
+      "Package": "snowfall",
+      "Version": "1.84-6.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "b5fbc9e2fb5072eb284ecfe970270309"
     },
     "sourcetools": {
       "Package": "sourcetools",

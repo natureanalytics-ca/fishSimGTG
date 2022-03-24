@@ -189,7 +189,7 @@ lbsprSimWrapper<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1, F_MS
     }
     Yield_EU<- Yield_EU/max(Yield_EU, na.rm=TRUE)
 
-    return(new("YPRarray",
+    return(new("LBSPRarray",
                LifeHistory = LifeHistoryObj,
                sim=list(Lc = Lc, F_M = F_M, SPR_EU = SPR_EU, YPR_EU = YPR_EU, Yield_EU=Yield_EU, LcStep = LcStep, F_MStep = F_MStep, stop = stop))
     )
@@ -327,7 +327,7 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
     }
     Yield_EU<- Yield_EU/max(Yield_EU, na.rm=TRUE)
 
-    return(new("YPRarray",
+    return(new("LBSPRarray",
                LifeHistory = LifeHistoryObj,
                sim=list(Lc = Lc, F_M = F_M, SPR_EU = SPR_EU, YPR_EU = YPR_EU, Yield_EU=Yield_EU, LcStep = LcStep, F_MStep = F_MStep, stop = stop))
     )
@@ -426,7 +426,7 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
      class(LifeHistoryObj) != "LifeHistory"
   ) {
     return(new("YPRarray",
-               LifeHistory = LifeHistoryObj,
+               lh = NULL,
                sim=list(stop = TRUE))
     )
   } else {
@@ -443,24 +443,22 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
     if(length(LifeHistoryObj@LW_B) == 0) LifeHistoryObj@LW_B<-3
     if(length(LifeHistoryObj@R0) == 0) LifeHistoryObj@R0<-10000
 
-
     FisheryObj<-new("Fishery")
-    FisheryObj@historicalVulType<-"logistic"
-    FisheryObj@historicalRetType<-"full"
-    FisheryObj@historicalRetMax<-1.0
-    FisheryObj@historicalDmort<-0.0
+    FisheryObj@vulType<-"logistic"
+    FisheryObj@retType<-"full"
+    FisheryObj@retMax<-1.0
+    FisheryObj@Dmort<-0.0
 
     TimeAreaObj<-new("TimeArea")
     TimeAreaObj@gtg<-gtg
-    TimeAreaObj@stepsPerYear<-stepsPerYear
 
     #---------------------------------------------------
     #Check that life history requirements have been met
     #---------------------------------------------------
-    lh<-LHwrapper(LifeHistoryObj, TimeAreaObj)
+    lh<-LHwrapper(LifeHistoryObj, TimeAreaObj, stepsPerYear)
     if(is.null(lh)) {
       return(new("YPRarray",
-                 LifeHistory = LifeHistoryObj,
+                 lh = lh,
                  sim=list(stop = TRUE))
       )
     } else {
@@ -492,12 +490,12 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
       }
       for (j in 1:NROW(Lc)){
 
-        FisheryObj@historicalVulParams<-c(Lc[j], Lc[j]+1)
-        sel<-selWrapper(LifeHistoryObj, TimeAreaObj, FisheryObj, doProjection = FALSE, doPlot = FALSE)
+        FisheryObj@vulParams<-c(Lc[j], Lc[j]+1)
+        sel<-selWrapper(lh, TimeAreaObj, FisheryObj, doPlot = FALSE)
 
         for (i in 1:NROW(F_M)){
 
-          Feq<-F_M[i]*LifeHistoryObj@M
+          Feq<-F_M[i]*lh$LifeHistory@M
           tmpSim<-show_condition(solveD(lh = lh, sel=sel, doFit = FALSE, F_in = Feq))
 
           if(is.null(tmpSim)[1]) {
@@ -525,7 +523,7 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
       Yield_EU<- Yield_EU/max(Yield_EU, na.rm=TRUE)
 
       return(new("YPRarray",
-                 LifeHistory = LifeHistoryObj,
+                 lh = lh,
                  sim=list(Lc = Lc, F_M = F_M, SPR_EU = SPR_EU, YPR_EU = YPR_EU, Yield_EU=Yield_EU, LcStep = LcStep, F_MStep = F_MStep, stop = stop))
       )
     }

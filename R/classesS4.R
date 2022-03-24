@@ -9,7 +9,7 @@
 #'
 #'An S4 object that holds a description of a life history.
 #'
-#'This S4 object is used as input to a variety of functions, including various population dynamics simulation functions.
+#'This S4 object is used as to input a life history.
 #' @param title A title for the object, useful for displaying the contents of the object
 #' @param speciesName Scientific name of the species
 #' @param shortDescription A brief description of the object. This could be the common name, stock, geographic location of the stock, etc.
@@ -79,42 +79,29 @@ setClass("LifeHistory",
 #----------------------
 
 #Roxygen header
-#'Stock object
+#'Fishery object
 #'
 #'An S4 object that holds a description of a fish stock, including selectivity and discard information.
 #'
-#'This S4 object is used as input to a variety of functions, including various population dynamics simulation functions.
 #'Options for vulnerability and retention retention functions along with guidance on parameter specification is found in Sel documentation
 #' @param title A title for the object, useful for displaying the contents of the object
-#' @param historicalVulType String. Vulnerability function for historical time period, see selWrapper for options
-#' @param historicalVulParams Numeric value or vector for vulnerability params for historical time period. See selWrapper for options
-#' @param historicalRetType String. Retention function for historical time period. See selWrapper for options
-#' @param historicalRetParams Numeric value or vector for retention params for historical time period. See selWrapper for options
-#' @param historicalRetMax Numeric value that defines the peak of the historical retention curve. A value between 0 and 1.
-#' @param historicalDmort Historical tiem period discard mortality rate (not instantaneous rate, rather it is the fraction of discards killed e.g. 0.25 is 25% killed). A value between 0 and 1.
-#' @param projectionVulType String. Vulnerability function for projection time period, see selWrapper for options
-#' @param projectionVulParams Numeric value or vector for vulnerability params for projection time period. See selWrapper for options
-#' @param projectionRetType String. Retention function for projection time period. See selWrapper for options
-#' @param projectionRetParams Numeric value or vector for retention params for projection time period. See selWrapper for options
-#' @param projectionRetMax Numeric value that defines the peak of the projection retention curve. A value between 0 and 1.
-#' @param projectionDmort Projection time period discard mortality rate (not instantaneous rate, rather it is the fraction of discards killed e.g. 0.25 is 25% killed). A value between 0 and 1.
+#' @param vulType String. Vulnerability function for historical time period, see selWrapper for options
+#' @param vulParams Numeric value or vector for vulnerability params for historical time period. See selWrapper for options
+#' @param retType String. Retention function for historical time period. See selWrapper for options
+#' @param retParams Numeric value or vector for retention params for historical time period. See selWrapper for options
+#' @param retMax Numeric value that defines the peak of the historical retention curve. A value between 0 and 1.
+#' @param Dmort Historical tiem period discard mortality rate (not instantaneous rate, rather it is the fraction of discards killed e.g. 0.25 is 25% killed). A value between 0 and 1.
 #' @importFrom methods new
 #'
 setClass("Fishery",
          representation(
            title = "character",
-           historicalVulType = "character",
-           historicalVulParams = "numeric",
-           historicalRetType = "character",
-           historicalRetParams = "numeric",
-           historicalRetMax = "numeric",
-           historicalDmort = "numeric",
-           projectionVulType = "character",
-           projectionVulParams = "numeric",
-           projectionRetType = "character",
-           projectionRetParams = "numeric",
-           projectionRetMax = "numeric",
-           projectionDmort = "numeric"
+           vulType = "character",
+           vulParams = "numeric",
+           retType = "character",
+           retParams = "numeric",
+           retMax = "numeric",
+           Dmort = "numeric"
          )
 )
 
@@ -126,20 +113,84 @@ setClass("Fishery",
 #'
 #'An S4 object that holds descriptions of time step, gtg, and area params
 #'
-#'This S4 object is used as input to a variety of functions, including various population dynamics simulation functions.
-#'Options for vulnerability and retention retention functions along with guidance on parameter specification is found in Sel documentation
+#'Inputs for number of gtg, time step, and areas
 #' @param title A title for the object, useful for displaying the contents of the object
 #' @param gtg Number of growth-type groups
-#' @param stepsPerYear Number of time steps per year (e.g., 1 for annual time step, 12 for monthly time step)
+#' @param areas Number of areas in the model, must be greater than 1.
+#' @param recArea A vector of length areas. Fraction of recruitment to each area with values summing to 1.
+#' @param move A matrix of migration rates of dimensions areas x areas
+#' @param iterations Number of iterations to run
+#' @param historicalYears Number of years to simulate historical dynamics
+#' @param historicalBio Number greater than 0 and less than 1. Model assumes we are dealing with an already exploited fish population
+#' @param historicalBioType String. The type of historical biomass state, options are: 'relB' or 'SPR'.
+#' @param historicalEffort A matrix of nrows = historicalYears and ncols = areas that contains value multipiers of initial equilibrium fishing effort
 #' @importFrom methods new
 
 setClass("TimeArea",
          representation(
            title = "character",
            gtg = "numeric",
-           stepsPerYear = "numeric"
+           areas = "numeric",
+           recArea = "numeric",
+           move = "matrix",
+           iterations = "numeric",
+           historicalYears = "numeric",
+           historicalBio = "numeric",
+           historicalBioType = "character",
+           historicalEffort = "matrix"
          )
 )
+
+#----------------------
+#Strategy object
+#----------------------
+#Roxygen header
+#'Strategy object
+#'
+#'An S4 object that holds descriptions of projections to be made, including a harvest strategy
+#'
+#'Details of projection to be made
+#' @param title A title for the object, useful for describing the strategy
+#' @param projectionYears Number of forward projection years to simulate
+#' @param projectionName String. The name of projection method to apply. This is the name of the projection function
+#' @param projectionParams List. List structure follows specification of the projection function specified in projectionName
+#' @importFrom methods new
+
+setClass("Strategy",
+         representation(
+            title = "character",
+            projectionYears = "integer",
+            projectionName = "character",
+            projectionParams = "list"
+         )
+)
+
+#----------------------
+#Stochastic object
+#----------------------
+#Roxygen header
+#'Stochastic object
+#'
+#'An S4 object that holds parameters for stochastic components of the population dynamics.
+#'
+#'Details of stochastic components of the population dynamics. This list creates additional inputs as well as overrides for parameters specified elsewhere, allowing corresponding model components to become stochastic. Exception is recruitment variation, which is entered in the LifeHistory object
+#' @param title A title for the object, useful for describing the scenario under exploration
+#' @param historicalBio A vector of length 2 that contains a min and a max for historical equilibrium biomass. Replaces TimeArea@historicalBio. Continues to rely on TimeArea@historicalBioType. Range sampled at each iteration using a uniform distribution.
+#' @param historicalCPUE A vector of length 2 that contains a min and a max for historical equilibrium fishery CPUE. Used to calculate a scaling coefficient, q, which allows results to be scaled to observed levels of CPUE. Range sampled at each iteration using a uniform distribution.
+#' @param historicalCPUEType String. The type of fishery dependent CPUE, options are: 'vulB' or 'vulN'. Choice is used to calculating scaling coefficient relative to vulnerable biomass or vulnerable abundance.
+#' @importFrom methods new
+
+setClass("Stochastic",
+         representation(
+           title = "character",
+           historicalBio = "numeric",
+           historicalCPUE = 'numeric',
+           historicalCPUEType = "character"
+         )
+)
+
+
+
 
 #----------------------
 #YPR object
@@ -152,9 +203,24 @@ setClass("TimeArea",
 #'#' @importFrom methods new
 setClass("YPRarray",
   representation(
-    LifeHistory = "LifeHistory",
+    lh = "list",
     sim = "list"
   )
 )
 
+#----------------------
+#LBSRR sim ypr object
+#----------------------
+
+#Roxygen header
+#'LBSPR YPR object
+#'
+#'An S4 object that holds the output of YPR analysis in a standardized format.
+#'#' @importFrom methods new
+setClass("LBSPRarray",
+         representation(
+           LifeHistory = "LifeHistory",
+           sim = "list"
+         )
+)
 

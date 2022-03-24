@@ -13,10 +13,9 @@ lh@Tmax<-1 #Keeping this set at 1 will override Tmax and use -log(0.01)/M for ma
 
 ta<-new("TimeArea")
 ta@gtg<-13
-ta@stepsPerYear<-12
 
 ptm<-proc.time()
-x<-LHwrapper(LifeHistoryObj = lh, TimeAreaObj=ta)
+x<-LHwrapper(LifeHistoryObj = lh, TimeAreaObj=ta, stepsPerYear = 12)
 print("Time in minutes: ")
 print((proc.time()-ptm)/60)
 
@@ -24,54 +23,44 @@ print((proc.time()-ptm)/60)
 #----------------------------------
 #Demonstrate selectivity plotting
 #-----------------------------------
-lh<-LifeHistoryExample
-lh@MK<-2
-lh@M<-0.2
-lh@K<-0.1
-lh@Tmax<-1 #Keeping this set at 1 will override Tmax and use -log(0.01)/M for max age
-
 FisheryObj<-new("Fishery")
 FisheryObj@title<-"Test"
-FisheryObj@historicalVulType<-"logistic"
-FisheryObj@historicalVulParams<-c(50,75)
-FisheryObj@historicalRetType<-"slotLimit"
-FisheryObj@historicalRetParams<-c(60,70)
-FisheryObj@historicalRetMax<-1
-FisheryObj@historicalDmort<-0.1
-FisheryObj@projectionVulType<-"logistic"
-FisheryObj@projectionVulParams<-c(50,75)
-FisheryObj@projectionRetType<-"full"
-FisheryObj@projectionRetMax<-0.5
-FisheryObj@projectionDmort<-0
+FisheryObj@vulType<-"logistic"
+FisheryObj@vulParams<-c(50,75)
+FisheryObj@retType<-"slotLimit"
+FisheryObj@retParams<-c(60,70)
+FisheryObj@retMax<-1
+FisheryObj@Dmort<-0.1
 
 ta<-new("TimeArea")
 ta@gtg<-13
-ta@stepsPerYear<-1
 
-X<-selWrapper(LifeHistoryObj=lh, TimeAreaObj = ta, FisheryObj = FisheryObj, doProjection = TRUE, doPlot = TRUE)
+lh<-LHwrapper(LifeHistoryObj=LifeHistoryExample, TimeAreaObj = ta, stepsPerYear = 12)
+sel<-selWrapper(lh = lh, TimeAreaObj = ta, FisheryObj = FisheryObj, doPlot = TRUE)
 
 #----------------------------------------
 #Demonstrate plotting function of solveD
 #----------------------------------------
 FisheryObj<-new("Fishery")
 FisheryObj@title<-"Test"
-FisheryObj@historicalVulType<-"logistic"
-FisheryObj@historicalVulParams<-c(1,2)
-FisheryObj@historicalRetType<-"slotLimit"
-FisheryObj@historicalRetParams<-c(66,2000)
-FisheryObj@historicalRetMax<-1
-FisheryObj@historicalDmort<-0
+FisheryObj@vulType<-"logistic"
+FisheryObj@vulParams<-c(1,2)
+FisheryObj@retType<-"slotLimit"
+FisheryObj@retParams<-c(66,2000)
+FisheryObj@retMax<-1
+FisheryObj@Dmort<-0
 
 ta<-new("TimeArea")
 ta@gtg<-13
-ta@stepsPerYear<-12
 
-lh<-LHwrapper(LifeHistoryObj=LifeHistoryExample, TimeAreaObj = ta)
-sel<-selWrapper(LifeHistoryObj=LifeHistoryExample, TimeAreaObj = ta, FisheryObj = FisheryObj, doProjection = TRUE, doPlot = TRUE)
+lh<-LHwrapper(LifeHistoryObj=LifeHistoryExample, TimeAreaObj = ta, stepsPerYear = 12)
+sel<-selWrapper(lh=lh, TimeAreaObj = ta, FisheryObj = FisheryObj, doPlot = TRUE)
 
-X<-solveD(lh, sel, doFit = FALSE, F_in = 3*LifeHistoryExample@M, doPlot = TRUE)
-X$YPR
+X<-solveD(lh, sel, doFit = FALSE, F_in = 2*LifeHistoryExample@M, doPlot = FALSE)
+X$SB/X$B0
 
+Y<-solveD(lh, sel, doFit = TRUE, D_type = "relB" , D_in =X$SB/X$B0)
+Y$Feq
 
 
 #---------------------
