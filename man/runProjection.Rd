@@ -15,7 +15,7 @@ runProjection(
   fileName,
   seed = 1,
   doPlot = FALSE,
-  exportList = NULL
+  customToCluster = NULL
 )
 }
 \arguments{
@@ -39,7 +39,7 @@ runProjection(
 
 \item{doPlot}{Logical whether to produce diagnostic plots upon completing simulations. Default is FALSE (no plots)}
 
-\item{exportList}{A character vector containing name or names of management strategies to export to the cluster.}
+\item{customStrategy}{A character vector containing name or names of management strategies to export to the cluster.}
 }
 \description{
 Function for running projections or MSE

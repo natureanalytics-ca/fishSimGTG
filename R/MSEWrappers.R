@@ -254,7 +254,7 @@ evalMSE<-function(inputObject){
 #' @param fileName A file name for output. Required
 #' @param seed A value used in base::set.seed function for producing consistent set of stochastic elements. Optional
 #' @param doPlot Logical whether to produce diagnostic plots upon completing simulations. Default is FALSE (no plots)
-#' @param exportList A character vector containing name or names of management strategies to export to the cluster.
+#' @param customToCluster A character vector containing name or names of custom management strategies to export to the cluster (otherwise parallel processing will fail).
 #' @importFrom grDevices dev.off png rainbow
 #' @importFrom graphics mtext points
 #' @importFrom snowfall sfInit sfLibrary sfLapply sfRemoveAll sfStop sfExport
@@ -263,7 +263,7 @@ evalMSE<-function(inputObject){
 
 
 runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryObj = NULL, StrategyObj = NULL, StochasticObj = NULL,
-                        wd, fileName, seed = 1, doPlot = FALSE, exportList = NULL){
+                        wd, fileName, seed = 1, doPlot = FALSE, customToCluster = NULL){
 
   #-----------------------
   #Build inputObject
@@ -331,7 +331,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       cores<-min(iterations, detectCores())
       sfInit(parallel=T, cpus=cores)
       sfLibrary(fishSimGTG)
-      if(!is.null(exportList)) sfExport(exportList)
+      if(!is.null(customToCluster)) sfExport(list = returnValue(customToCluster))
       input<-list()
       inputObject<-list()
       size<-floor(iterations/cores)
