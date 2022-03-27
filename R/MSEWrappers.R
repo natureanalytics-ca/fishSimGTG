@@ -311,8 +311,10 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                selPro = selPro,
                                LifeHistoryObj = LifeHistoryObj,
                                TimeAreaObj = TimeAreaObj,
-                               FisheryObj = FisheryObj,
+                               HistFisheryObj = HistFisheryObj,
+                               ProFisheryObj = ProFisheryObj,
                                StrategyObj = StrategyObj,
+                               StochasticObj = StochasticObj,
                                iterations=iterations)
       }
       mseParallel<-sfLapply(inputObject, evalMSE)
@@ -328,8 +330,10 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                     selPro = selPro,
                                     LifeHistoryObj = LifeHistoryObj,
                                     TimeAreaObj = TimeAreaObj,
-                                    FisheryObj = FisheryObj,
+                                    HistFisheryObj = HistFisheryObj,
+                                    ProFisheryObj = ProFisheryObj,
                                     StrategyObj = StrategyObj,
+                                    StochasticObj = StochasticObj,
                                     iterations=iterations
                                     )
                    )
