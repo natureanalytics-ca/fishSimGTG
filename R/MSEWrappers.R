@@ -1,13 +1,23 @@
 
 
-############################################################
-#Wrappers
-############################################################
+#---------------------------------------
+#Evaluate MSE
+#---------------------------------------
+
+#Roxygen header
+#'Population dynamics wrapper called by runProjection
+#'
+#'Contains population dynamics equations. Should not be run directly, instead called by runProjection
+#'
+#' @param inputObject  A list of objects passed from runProjection
+#' @export
+
 evalMSE<-function(inputObject){
 
   #------------------
   #Unpack dataObject
   #------------------
+  TimeAreaObj <- StrategyObj <- lh <- iterations <- iter <- selHist <- Ddev <- lh <- selHist <- selPro <- Cdev <- RdevMatrix <- NULL
   for(r in 1:NROW(inputObject)) assign(names(inputObject)[r], inputObject[[r]])
 
   controlRuleYear<-c(FALSE, rep(FALSE,(TimeAreaObj@historicalYears)), rep(TRUE, ifelse(class(StrategyObj) == "Strategy"  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)))
@@ -225,9 +235,35 @@ evalMSE<-function(inputObject){
 
 
 
+#---------------------------------------
+#Run the projection or MSE model
+#---------------------------------------
+
+#Roxygen header
+#'Run the projection or MSE model
+#'
+#'Function for running projections or MSE
+#'
+#' @param LifeHistoryObj  A LifeHistory object. Required
+#' @param TimeAreaObj A TimeArea object. Required
+#' @param HistFisheryObj A Fishery object that characterizes the historical dynamics. Required as it is used in initial equilibrium and historical time dynamics (if applicable)
+#' @param ProFisheryObj A Fishery object used in forward projection. Optional, only used when StrategyObj is supplied
+#' @param StrategyObj A Strategy object. Optional
+#' @param StochasticObj A Stochastic object. Optional
+#' @param wd A working directly to save output. Required
+#' @param fileName A file name for output. Required
+#' @param seed A value used in base::set.seed function for producing consistent set of stochastic elements. Optional
+#' @param doPlot Logical whether to produce diagnostic plots upon completing simulations. Default is FALSE (no plots)
+#' @param exportList A character vector containing name or names of management strategies to export to the cluster.
+#' @importFrom grDevices dev.off png rainbow
+#' @importFrom graphics mtext points
+#' @importFrom snowfall sfInit sfLibrary sfLapply sfRemoveAll sfStop
+#' @importFrom parallel detectCores
+#' @export
 
 
-runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryObj = NULL, StrategyObj = NULL, StochasticObj = NULL,  wd, fileName, seed = 1, doPlot = FALSE){
+runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryObj = NULL, StrategyObj = NULL, StochasticObj = NULL,
+                        wd, fileName, seed = 1, doPlot = FALSE, exportList = NULL){
 
   #-----------------------
   #Build inputObject
@@ -286,17 +322,16 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
   } else {
 
     ptm<-proc.time()
-    require(snowfall)
-    require(parallel)
+    #require(snowfall)
+    #require(parallel)
     iterations <- floor(TimeAreaObj@iterations)
 
     if(detectCores()>1 & iterations >= detectCores()) {
       print("Running on multiple cores")
       cores<-min(iterations, detectCores())
       sfInit(parallel=T, cpus=cores)
-      #sfLibrary(truncnorm)
       sfLibrary(fishSimGTG)
-      #sfExportAll()
+      if(!is.null(exportList)) sfExport(exportList)
       input<-list()
       inputObject<-list()
       size<-floor(iterations/cores)

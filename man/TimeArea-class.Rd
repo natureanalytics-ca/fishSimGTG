@@ -9,12 +9,25 @@
 
 \item{gtg}{Number of growth-type groups}
 
-\item{stepsPerYear}{Number of time steps per year (e.g., 1 for annual time step, 12 for monthly time step)}
+\item{areas}{Number of areas in the model, must be greater than 1.}
+
+\item{recArea}{A vector of length areas. Fraction of recruitment to each area with values summing to 1.}
+
+\item{move}{A matrix of migration rates of dimensions areas x areas}
+
+\item{iterations}{Number of iterations to run}
+
+\item{historicalYears}{Number of years to simulate historical dynamics}
+
+\item{historicalBio}{Number greater than 0 and less than 1. Model assumes we are dealing with an already exploited fish population}
+
+\item{historicalBioType}{String. The type of historical biomass state, options are: 'relB' or 'SPR'.}
+
+\item{historicalEffort}{A matrix of nrows = historicalYears and ncols = areas that contains value multipiers of initial equilibrium fishing effort}
 }
 \description{
 An S4 object that holds descriptions of time step, gtg, and area params
 }
 \details{
-This S4 object is used as input to a variety of functions, including various population dynamics simulation functions.
-Options for vulnerability and retention retention functions along with guidance on parameter specification is found in Sel documentation
+Inputs for number of gtg, time step, and areas
 }

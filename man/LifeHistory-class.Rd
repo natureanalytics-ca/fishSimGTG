@@ -65,5 +65,5 @@
 An S4 object that holds a description of a life history.
 }
 \details{
-This S4 object is used as input to a variety of functions, including various population dynamics simulation functions.
+This S4 object is used as to input a life history.
 }

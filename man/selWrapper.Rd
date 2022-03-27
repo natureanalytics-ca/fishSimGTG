@@ -4,22 +4,14 @@
 \alias{selWrapper}
 \title{Selectivity wrapper for sub-cohorts}
 \usage{
-selWrapper(
-  LifeHistoryObj,
-  TimeAreaObj,
-  FisheryObj,
-  doProjection = FALSE,
-  doPlot = FALSE
-)
+selWrapper(lh, TimeAreaObj, FisheryObj, doPlot = FALSE)
 }
 \arguments{
-\item{LifeHistoryObj}{A life history object.}
+\item{lh}{An object produced by LHWrapper.}
 
 \item{TimeAreaObj}{A time-area object}
 
 \item{FisheryObj}{A stock object}
-
-\item{doProjection}{calculate selectivity, discard, etc. for projection time period}
 
 \item{doPlot}{Creates a basic plot to visualize outcomes. Useful for ensuring parameter selections are sensible.}
 }

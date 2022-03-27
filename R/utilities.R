@@ -13,6 +13,7 @@
 #' @param digits Integer indicating the number of decimal places (round). Applied as significant digits (signif) to L-W alpha.
 #' @importFrom methods slot slotNames slot<-
 #' @importFrom stats setNames
+#' @importFrom tidyr gather
 #' @import tidyverse
 #' @export
 #' @examples

@@ -13,7 +13,9 @@
 #' @export
 
 fixedStrategy<-function(phase, dataObject){
+
   #Unpack dataObject
+  j <- areas <- k <- TimeAreaObj <- is <- NULL
   for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
 
   #Booking keeping for year for items in TimeAreaObj
@@ -42,11 +44,13 @@ fixedStrategy<-function(phase, dataObject){
 #' The second item in the list is a matrix of nrows = projectionYears and ncols = areas that contains value multipiers of initial equilibrium fishing effort. This allows projection of effort reduction and of marine reserves via setting effort to 0.
 #' @param phase Management procedures are coded in three phases: 1 - data collection, 2 - a decision making process, 3 - conversion of that process into annual F
 #' @param dataObject The needed inputs to the management procedure
+#' @importFrom stats dpois ppois
 #' @export
 
 projectionStrategy<-function(phase, dataObject){
 
   #Unpack dataObject
+  j <- TimeAreaObj <- areas <- StrategyObj <- is <- k <- StochasticObj <- lh <- N <- selHist <- Cdev <- selGroup <- NULL
   for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
 
   #Booking keeping for year for items in StrategyObj

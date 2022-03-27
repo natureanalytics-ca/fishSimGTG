@@ -11,13 +11,13 @@
 #'
 #' @param LifeHistoryObj  A life history object.
 #' @param TimeAreaObj A time-area object
+#' @param stepsPerYear Creates multiple time steps per year allowing finer scale length composition.
 #' @importFrom methods slot slotNames
 #' @importFrom stats dnorm plogis
 #' @export
 #' @examples
 #' ta<-new("TimeArea")
 #' ta@gtg<-13
-#' ta@stepsPerYear<-1
 #'LHwrapper(LifeHistoryObj = LifeHistoryExample, TimeAreaObj=ta)
 
 LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1){
@@ -271,14 +271,16 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE){
 #' @param D_in When doFit = TRUE, specifies value of equilibrium state. Currently this must be SSB depletion (value between 0 and 1)
 #' @param doPlot Equilibrium length composition
 #' @importFrom methods slot slotNames
-#' @import ggplot2 gridExtra dplyr
+#' @import ggplot2  dplyr
 #' @importFrom stats optimize
+#' @importFrom gridExtra grid.arrange
 #' @export
 #' @examples
 #' sim<-gtgYPRWrapper(LifeHistoryObj = LifeHistoryExample, gtg=21, stepsPerYear = 12)
 
 solveD<-function(lh, sel, doFit = FALSE, F_in = NULL, D_type = NULL, D_in = NULL, doPlot = FALSE){
 
+  l <- NULL
 
   if(is.null(lh) ||
      is.null(sel) ||
@@ -470,6 +472,7 @@ recruit<-function(LifeHistoryObj, B0=0, stock=0, forceR=FALSE, Rforced=0){
 #' @param TimeAreaObj A TimeArea object
 #' @param StrategyObj A Strategy object
 #' @importFrom methods slot slotNames
+#' @importFrom stats rnorm
 #' @export
 
 recDev<-function(LifeHistoryObj, TimeAreaObj, StrategyObj = NULL){
@@ -511,6 +514,7 @@ recDev<-function(LifeHistoryObj, TimeAreaObj, StrategyObj = NULL){
 #' @param TimeAreaObj A TimeArea object
 #' @param StochasticObj A Stochastic object
 #' @importFrom methods slot slotNames
+#' @importFrom stats runif
 #' @export
 
 bioDev<-function(TimeAreaObj, StochasticObj = NULL){

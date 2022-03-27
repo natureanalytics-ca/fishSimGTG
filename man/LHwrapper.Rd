@@ -4,12 +4,14 @@
 \alias{LHwrapper}
 \title{Life history wrapper for sub-cohorts}
 \usage{
-LHwrapper(LifeHistoryObj, TimeAreaObj)
+LHwrapper(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1)
 }
 \arguments{
 \item{LifeHistoryObj}{A life history object.}
 
 \item{TimeAreaObj}{A time-area object}
+
+\item{stepsPerYear}{Creates multiple time steps per year allowing finer scale length composition.}
 }
 \description{
 Creates the necessary age-based vectors describing life history of sub-cohorts
@@ -17,6 +19,5 @@ Creates the necessary age-based vectors describing life history of sub-cohorts
 \examples{
 ta<-new("TimeArea")
 ta@gtg<-13
-ta@stepsPerYear<-1
 LHwrapper(LifeHistoryObj = LifeHistoryExample, TimeAreaObj=ta)
 }

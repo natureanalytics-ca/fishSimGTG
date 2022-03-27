@@ -3,38 +3,25 @@
 \docType{class}
 \name{Fishery-class}
 \alias{Fishery-class}
-\title{Stock object}
+\title{Fishery object}
 \arguments{
 \item{title}{A title for the object, useful for displaying the contents of the object}
 
-\item{historicalVulType}{String. Vulnerability function for historical time period, see selWrapper for options}
+\item{vulType}{String. Vulnerability function for historical time period, see selWrapper for options}
 
-\item{historicalVulParams}{Numeric value or vector for vulnerability params for historical time period. See selWrapper for options}
+\item{vulParams}{Numeric value or vector for vulnerability params for historical time period. See selWrapper for options}
 
-\item{historicalRetType}{String. Retention function for historical time period. See selWrapper for options}
+\item{retType}{String. Retention function for historical time period. See selWrapper for options}
 
-\item{historicalRetParams}{Numeric value or vector for retention params for historical time period. See selWrapper for options}
+\item{retParams}{Numeric value or vector for retention params for historical time period. See selWrapper for options}
 
-\item{historicalRetMax}{Numeric value that defines the peak of the historical retention curve. A value between 0 and 1.}
+\item{retMax}{Numeric value that defines the peak of the historical retention curve. A value between 0 and 1.}
 
-\item{historicalDmort}{Historical tiem period discard mortality rate (not instantaneous rate, rather it is the fraction of discards killed e.g. 0.25 is 25\% killed). A value between 0 and 1.}
-
-\item{projectionVulType}{String. Vulnerability function for projection time period, see selWrapper for options}
-
-\item{projectionVulParams}{Numeric value or vector for vulnerability params for projection time period. See selWrapper for options}
-
-\item{projectionRetType}{String. Retention function for projection time period. See selWrapper for options}
-
-\item{projectionRetParams}{Numeric value or vector for retention params for projection time period. See selWrapper for options}
-
-\item{projectionRetMax}{Numeric value that defines the peak of the projection retention curve. A value between 0 and 1.}
-
-\item{projectionDmort}{Projection time period discard mortality rate (not instantaneous rate, rather it is the fraction of discards killed e.g. 0.25 is 25\% killed). A value between 0 and 1.}
+\item{Dmort}{Historical tiem period discard mortality rate (not instantaneous rate, rather it is the fraction of discards killed e.g. 0.25 is 25\% killed). A value between 0 and 1.}
 }
 \description{
 An S4 object that holds a description of a fish stock, including selectivity and discard information.
 }
 \details{
-This S4 object is used as input to a variety of functions, including various population dynamics simulation functions.
 Options for vulnerability and retention retention functions along with guidance on parameter specification is found in Sel documentation
 }
