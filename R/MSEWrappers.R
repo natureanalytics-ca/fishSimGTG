@@ -322,8 +322,8 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
   } else {
 
     ptm<-proc.time()
-    #require(snowfall)
-    #require(parallel)
+    require(snowfall)
+    require(parallel)
     iterations <- floor(TimeAreaObj@iterations)
 
     if(detectCores()>1 & iterations >= detectCores()) {
