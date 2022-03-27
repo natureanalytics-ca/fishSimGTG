@@ -283,7 +283,7 @@ solveD<-function(lh, sel, doFit = FALSE, F_in = NULL, D_type = NULL, D_in = NULL
   if(is.null(lh) ||
      is.null(sel) ||
      length(lh$LifeHistory@Steep) == 0 ||
-     lh$LifeHistory@Steep <= 0.2 ||
+     lh$LifeHistory@Steep < 0.21 ||
      lh$LifeHistory@Steep > 1 ||
      isTRUE(doFit & !(D_type %in%  c("relB", "SPR"))) ||
      isTRUE(doFit & is.null(D_in)) ||
@@ -484,7 +484,7 @@ recDev<-function(LifeHistoryObj, TimeAreaObj, StrategyObj = NULL){
   ) {
     return(NULL)
   } else {
-    years <- TimeAreaObj@historicalYears + ifelse(class(StrategyObj) == "Strategy"  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)
+    years <- 1 + TimeAreaObj@historicalYears + ifelse(class(StrategyObj) == "Strategy"  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)
     iterations <- floor(TimeAreaObj@iterations)
     recSD <- LifeHistoryObj@recSD
     recRho <- LifeHistoryObj@recRho
@@ -523,11 +523,13 @@ bioDev<-function(TimeAreaObj, StochasticObj = NULL){
     return(NULL)
   } else {
 
-    if(class(StochasticObj) == "Stochastic" && length(StochasticObj@historicalBio) > 1 && StochasticObj@historicalBio[2] > StochasticObj@historicalBio[1]) {
+    if(class(StochasticObj) == "Stochastic" && length(StochasticObj@historicalBio) > 1 && StochasticObj@historicalBio[2] >= StochasticObj@historicalBio[1]) {
       Dtmp <- StochasticObj@historicalBio[1:2]
     } else {
       Dtmp <- c(TimeAreaObj@historicalBio, TimeAreaObj@historicalBio)
     }
+    Dtmp<-ifelse(Dtmp < 0.01, 0.01, Dtmp) #Does your fishery even exist below 0.01?
+    Dtmp<-ifelse(Dtmp > 0.95, 0.95, Dtmp) #Must start in fished state - Need initial F > 0
     iterations <- floor(TimeAreaObj@iterations)
     Ddev <- runif(n=iterations, min=Dtmp[1], max=Dtmp[2])
     return(list(Ddev=Ddev))
@@ -552,7 +554,12 @@ cpueDev<-function(TimeAreaObj, StochasticObj = NULL){
    ) {
     return(NULL)
   } else {
-    if(class(StochasticObj) == "Stochastic" && length(StochasticObj@historicalCPUE) > 1 && StochasticObj@historicalCPUE[2] > StochasticObj@historicalCPUE[1]) {
+    if(class(StochasticObj) == "Stochastic" &&
+       length(StochasticObj@historicalCPUE) > 1 &&
+       StochasticObj@historicalCPUE[1] > 0 &&
+       StochasticObj@historicalCPUE[2] > 0 &&
+       StochasticObj@historicalCPUE[2] >= StochasticObj@historicalCPUE[1]
+    ) {
       Ctmp <- StochasticObj@historicalCPUE[1:2]
     } else {
       Ctmp <- c(1, 1)
