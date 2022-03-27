@@ -257,7 +257,7 @@ evalMSE<-function(inputObject){
 #' @param exportList A character vector containing name or names of management strategies to export to the cluster.
 #' @importFrom grDevices dev.off png rainbow
 #' @importFrom graphics mtext points
-#' @importFrom snowfall sfInit sfLibrary sfLapply sfRemoveAll sfStop
+#' @importFrom snowfall sfInit sfLibrary sfLapply sfRemoveAll sfStop sfExport
 #' @importFrom parallel detectCores
 #' @export
 
