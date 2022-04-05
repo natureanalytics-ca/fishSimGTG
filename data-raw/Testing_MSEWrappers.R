@@ -855,7 +855,7 @@ runProjection(LifeHistoryObj = LifeHistoryObj,
 
 devtools::load_all()
 library(here)
-
+library(fishSimGTG)
 LifeHistoryObj <- LifeHistoryExample
 LifeHistoryObj@recSD <- 0.6
 LifeHistoryObj@recRho <- 0

@@ -255,6 +255,7 @@ evalMSE<-function(inputObject){
 #' @param seed A value used in base::set.seed function for producing consistent set of stochastic elements. Optional
 #' @param doPlot Logical whether to produce diagnostic plots upon completing simulations. Default is FALSE (no plots)
 #' @param customToCluster A character vector containing name or names of custom management strategies to export to the cluster (otherwise parallel processing will fail).
+#' @param titleStrategy A title for management strategy being evaluated.
 #' @importFrom grDevices dev.off png rainbow
 #' @importFrom graphics mtext points
 #' @importFrom snowfall sfInit sfLibrary sfLapply sfRemoveAll sfStop sfExport
@@ -263,7 +264,7 @@ evalMSE<-function(inputObject){
 
 
 runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryObj = NULL, StrategyObj = NULL, StochasticObj = NULL,
-                        wd, fileName, seed = 1, doPlot = FALSE, customToCluster = NULL){
+                        wd, fileName, seed = 1, doPlot = FALSE, customToCluster = NULL, titleStrategy = "No name"){
 
   #-----------------------
   #Build inputObject
@@ -433,8 +434,8 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
     dynamics<-list(SB=SB, VB=VB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN)
     HCR<-list(decisionLocal=decisionLocal, decisionAnnual=decisionAnnual, decisionData=decisionData)
-    dt<-list(dynamics=dynamics, HCR=HCR, iterations=iterations, lh = lh,  LifeHistoryObj=LifeHistoryObj, TimeAreaObj=TimeAreaObj, HistFisheryObj=HistFisheryObj, ProFisheryObj=ProFisheryObj,  StrategyObj= StrategyObj, StochasticObj=StochasticObj)
-    saveRDS(dt, file=paste(wd, "/", fileName, "_MSE.rds", sep=""))
+    dt<-list(titleStrategy = titleStrategy, dynamics=dynamics, HCR=HCR, iterations=iterations, lh = lh,  LifeHistoryObj=LifeHistoryObj, TimeAreaObj=TimeAreaObj, HistFisheryObj=HistFisheryObj, ProFisheryObj=ProFisheryObj,  StrategyObj= StrategyObj, StochasticObj=StochasticObj)
+    saveRDS(dt, file=paste(wd, "/", fileName, ".rds", sep=""))
 
     #--------------------------------------------------------------------------------
     #Plot results (mostly for diagnostics, these are ugly - not publication quality)
@@ -444,7 +445,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       rb<-rainbow(iterations)
 
       #Population level plots
-      png(file=paste(wd, "/", fileName, "_MSE_SPR.png",sep=""), width=4, height=4, units="in", res=300, bg="white", pointsize=12)
+      png(file=paste(wd, "/", fileName, "_SPR.png",sep=""), width=4, height=4, units="in", res=300, bg="white", pointsize=12)
       par(mfrow=c(1,1), mar=c(4,4,3,1))
       plot(dt$dynamics$SPR[,1], type="l", las=1, ylab="", ylim=c(0,1), col=rb[1], main = "SPR")
       if(iterations > 1){
@@ -454,7 +455,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       }
       dev.off()
 
-      png(file=paste(wd, "/", fileName, "_MSE_SBrel.png",sep=""), width=4, height=4, units="in", res=300, bg="white",pointsize=12)
+      png(file=paste(wd, "/", fileName, "_SBrel.png",sep=""), width=4, height=4, units="in", res=300, bg="white",pointsize=12)
       par(mfrow=c(1,1), mar=c(4,4,3,1))
       plot(dt$dynamics$relSB[,1], type="l", las=1, ylab="", ylim=c(0,1), col=rb[1], main = "Relative spawning biomass")
       if(iterations > 1){
@@ -465,7 +466,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       dev.off()
 
       #Recruit over time
-      png(file=paste(wd, "/", fileName, "_MSE_recN.png",sep=""), width=4, height=4, units="in", res=300, bg="white", pointsize=12)
+      png(file=paste(wd, "/", fileName, "_recN.png",sep=""), width=4, height=4, units="in", res=300, bg="white", pointsize=12)
       par(mfrow=c(1,1), mar=c(4,4,3,1))
       plot(dt$dynamics$recN[,1], type="l", las=1, ylab="", ylim=c(min(dt$dynamics$recN),max(dt$dynamics$recN)), col=rb[1], main = "recruits N")
       if(iterations > 1){
@@ -477,7 +478,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
 
       #S-R
-      png(file=paste(wd, "/", fileName, "_MSE_SR.png",sep=""), width=4, height=4, units="in", res=300, bg="white", pointsize=12)
+      png(file=paste(wd, "/", fileName, "_SR.png",sep=""), width=4, height=4, units="in", res=300, bg="white", pointsize=12)
       par(mfrow=c(1,1), mar=c(4,4,3,1))
       plot(dt$dynamics$relSB[,1], dt$dynamics$recN[,1], type="p", las=1, ylim=c(min(dt$dynamics$recN),max(dt$dynamics$recN)), col=rb[1], ylab="Recruits", xlab = "Stock (rel SSB)", main = "Stock-recruit")
       if(iterations > 1){
@@ -492,7 +493,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       #---------------------
 
       #SSB
-      png(file=paste0(wd, "/", fileName, "_MSE_SB_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
+      png(file=paste0(wd, "/", fileName, "_SB_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
       par(mfrow=c(ceiling(dt$TimeAreaObj@areas/2+0.5),2), mar=c(4,4,3,1))
       for(m in 1:dt$TimeAreaObj@areas) {
         plot(dt$dynamics$SB[,1,m], type="l", las=1, ylab="", col=rb[1], ylim=c(min(dt$dynamics$SB[,,m]), max(dt$dynamics$SB[,,m])), main = "Spawning biomass")
@@ -507,7 +508,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
 
       #Catch
-      png(file=paste0(wd, "/", fileName, "_MSE_catchB_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
+      png(file=paste0(wd, "/", fileName, "_catchB_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
       par(mfrow=c(ceiling(dt$TimeAreaObj@areas/2+0.5),2), mar=c(4,4,3,1))
       for(m in 1:dt$TimeAreaObj@areas) {
         plot(dt$dynamics$catchB[,1,m], type="l", las=1, ylab="", col=rb[1], ylim=c(min(dt$dynamics$catchB[,,m]), max(dt$dynamics$catchB[,,m])), main = "catch in weight")
@@ -521,7 +522,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       dev.off()
 
       #F
-      png(file=paste0(wd, "/", fileName, "_MSE_F_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
+      png(file=paste0(wd, "/", fileName, "_F_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
       par(mfrow=c(ceiling(dt$TimeAreaObj@areas/2+0.5),2), mar=c(4,4,3,1))
       for(m in 1:dt$TimeAreaObj@areas) {
         plot(dt$dynamics$Ftotal[,1,m], type="l", las=1, ylab="", col=rb[1], ylim=c(min(dt$dynamics$Ftotal[,,m]), max(dt$dynamics$Ftotal[,,m])), main = "Fishing mortality")
@@ -536,7 +537,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
 
       #rel change in SSB
-      png(file=paste0(wd, "/", fileName, "_MSE_SBchange_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
+      png(file=paste0(wd, "/", fileName, "_SBchange_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
       par(mfrow=c(ceiling(dt$TimeAreaObj@areas/2+0.5),2), mar=c(4,4,3,1))
       for(m in 1:dt$TimeAreaObj@areas) {
         plot(dt$dynamics$SB[,1,m]/dt$dynamics$SB[1,1,m], type="l", las=1, ylab="", col=rb[1], ylim=c(0,2), main = "Relative spawning biomass")
