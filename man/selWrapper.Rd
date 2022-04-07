@@ -4,7 +4,15 @@
 \alias{selWrapper}
 \title{Selectivity wrapper for sub-cohorts}
 \usage{
-selWrapper(lh, TimeAreaObj, FisheryObj, doPlot = FALSE)
+selWrapper(
+  lh,
+  TimeAreaObj,
+  FisheryObj,
+  doPlot = FALSE,
+  wd = NULL,
+  imageName = NULL,
+  dpi = 300
+)
 }
 \arguments{
 \item{lh}{An object produced by LHWrapper.}
@@ -14,6 +22,12 @@ selWrapper(lh, TimeAreaObj, FisheryObj, doPlot = FALSE)
 \item{FisheryObj}{A stock object}
 
 \item{doPlot}{Creates a basic plot to visualize outcomes. Useful for ensuring parameter selections are sensible.}
+
+\item{wd}{A working directly where the output of runProjection is saved}
+
+\item{imageName}{Character. A name for the resulting plot(s)}
+
+\item{dpi}{Resolution in dots per inch of the resulting saved chart.}
 }
 \description{
 Creates the necessary age-based vectors describing selectivity of sub-cohorts

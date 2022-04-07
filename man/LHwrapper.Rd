@@ -4,7 +4,15 @@
 \alias{LHwrapper}
 \title{Life history wrapper for sub-cohorts}
 \usage{
-LHwrapper(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1)
+LHwrapper(
+  LifeHistoryObj,
+  TimeAreaObj,
+  stepsPerYear = 1,
+  doPlot = FALSE,
+  wd = NULL,
+  imageName = NULL,
+  dpi = 300
+)
 }
 \arguments{
 \item{LifeHistoryObj}{A life history object.}
@@ -12,6 +20,14 @@ LHwrapper(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1)
 \item{TimeAreaObj}{A time-area object}
 
 \item{stepsPerYear}{Creates multiple time steps per year allowing finer scale length composition.}
+
+\item{doPlot}{Creates a basic plot to visualize outcomes. Useful for ensuring parameter selections are sensible.}
+
+\item{wd}{A working directly where the output of runProjection is saved}
+
+\item{imageName}{Character. A name for the resulting plot(s)}
+
+\item{dpi}{Resolution in dots per inch of the resulting saved chart.}
 }
 \description{
 Creates the necessary age-based vectors describing life history of sub-cohorts

@@ -12,7 +12,8 @@ relSSBseries(
   percentile = c(0.025, 0.975),
   doHist = FALSE,
   dpi = 300,
-  imageName = "Relative_timeSeries"
+  imageName = "Relative_timeSeries",
+  scales = "fixed"
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ relSSBseries(
 \item{dpi}{Resolution in dots per inch of the resulting saved chart.}
 
 \item{imageName}{Character. A name for the resulting plot(s)}
+
+\item{scales}{From ggplot2::facet_wrap Should scales be fixed ("fixed", the default), free ("free"), or free in one dimension ("free_x", "free_y")?}
 }
 \description{
 Time series of changes in spawning stock biomass and catch weight (two separate plots produced) relative to the year prior to projection time period. Saves a chart to the wd. Examples can be found in data-raw/DAR_projection_example.R

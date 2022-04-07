@@ -12,15 +12,20 @@
 #' @param LifeHistoryObj  A life history object.
 #' @param TimeAreaObj A time-area object
 #' @param stepsPerYear Creates multiple time steps per year allowing finer scale length composition.
+#' @param doPlot Creates a basic plot to visualize outcomes. Useful for ensuring parameter selections are sensible.
+#' @param wd A working directly where the output of runProjection is saved
+#' @param imageName Character. A name for the resulting plot(s)
+#' @param dpi Resolution in dots per inch of the resulting saved chart.
 #' @importFrom methods slot slotNames
 #' @importFrom stats dnorm plogis
+#' @importFrom gridExtra grid.arrange
 #' @export
 #' @examples
 #' ta<-new("TimeArea")
 #' ta@gtg<-13
 #'LHwrapper(LifeHistoryObj = LifeHistoryExample, TimeAreaObj=ta)
 
-LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1){
+LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1, doPlot = FALSE, wd = NULL, imageName = NULL, dpi = 300){
 
   if(class(LifeHistoryObj) != "LifeHistory" ||
      length(LifeHistoryObj@Linf) == 0 ||
@@ -92,6 +97,64 @@ LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1){
       mat[[l]]<-plogis(L[[l]], location=LifeHistoryObj@L50, scale=s)*probFemale
     }
 
+    #----
+    #Plot
+    #----
+    if(doPlot){
+      md<-ceiling(gtg/2)
+      dt<-data.frame(
+        ages = ages,
+        mat = mat[[md]],
+        L = L[[md]],
+        W = W[[md]]
+      )
+      p1<- ggplot(dt, aes(x = ages, y = L)) +
+        geom_line(color = "cornflowerblue", size = 1.5) +
+        ylab("Length") +
+        xlab("Age") +
+        theme_classic() +
+        theme(strip.text.x=element_text(colour = "black", size=8, face="bold"),
+              strip.text.y=element_text(colour = "black", size=8, face="bold"),
+              strip.background = element_rect(fill ="lightgrey"),
+              axis.text=element_text(size=8),
+              panel.border = element_rect(linetype = "solid", colour = "black", fill=NA))
+      p2<- ggplot(dt, aes(x = ages, y = mat)) +
+        geom_line(color = "cornflowerblue", size = 1.5) +
+        ylab("Proportion mature females") +
+        xlab("Age") +
+        theme_classic() +
+        theme(strip.text.x=element_text(colour = "black", size=8, face="bold"),
+              strip.text.y=element_text(colour = "black", size=8, face="bold"),
+              strip.background = element_rect(fill ="lightgrey"),
+              axis.text=element_text(size=8),
+              panel.border = element_rect(linetype = "solid", colour = "black", fill=NA))
+      p3<- ggplot(dt, aes(x = ages, y = W)) +
+        geom_line(color = "cornflowerblue", size = 1.5) +
+        ylab("Weight") +
+        xlab("Age") +
+        theme_classic() +
+        theme(strip.text.x=element_text(colour = "black", size=8, face="bold"),
+              strip.text.y=element_text(colour = "black", size=8, face="bold"),
+              strip.background = element_rect(fill ="lightgrey"),
+              axis.text=element_text(size=8),
+              panel.border = element_rect(linetype = "solid", colour = "black", fill=NA))
+      p4<- ggplot(dt, aes(x = L, y = W)) +
+        geom_line(color = "cornflowerblue", size = 1.5) +
+        ylab("Weight") +
+        xlab("Length") +
+        theme_classic() +
+        theme(strip.text.x=element_text(colour = "black", size=8, face="bold"),
+              strip.text.y=element_text(colour = "black", size=8, face="bold"),
+              strip.background = element_rect(fill ="lightgrey"),
+              axis.text=element_text(size=8),
+              panel.border = element_rect(linetype = "solid", colour = "black", fill=NA))
+      if(is.null(wd) | is.null(imageName)) grid.arrange(p1, p2, p3, p4, ncol = 2)
+      if(!is.null(wd) & !is.null(imageName)) {
+        p5<-grid.arrange(p1, p2, p3, p4, ncol = 2)
+        ggsave(filename = paste0(wd, "/", imageName, "_LH.png"), plot = p5, device = "png", dpi = dpi, width = 6, height = 6, units = "in")
+      }
+    }
+
     return(list(
       LifeHistory = LifeHistoryObj,
       W=W,
@@ -135,12 +198,15 @@ LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1){
 #' @param TimeAreaObj A time-area object
 #' @param FisheryObj A stock object
 #' @param doPlot Creates a basic plot to visualize outcomes. Useful for ensuring parameter selections are sensible.
+#' @param wd A working directly where the output of runProjection is saved
+#' @param imageName Character. A name for the resulting plot(s)
+#' @param dpi Resolution in dots per inch of the resulting saved chart.
 #' @importFrom methods slot slotNames
 #' @importFrom graphics par lines legend
 #' @importFrom stats median
 #' @export
 
-selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE){
+selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, imageName = NULL, dpi = 300){
 
   #logistic
   logisticProb<-function(L, param, maxProb){
@@ -210,7 +276,7 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE){
 
     #Retention
     if(FisheryObj@retType == "logistic") {
-      historical$ret<-lapply(1:lh$gtg, FUN=function(x) logisticProb(L = lh$L[[x]], param = FisheryObj@retParams, maxProb = FisheryObj@retMax))
+      sel$ret<-lapply(1:lh$gtg, FUN=function(x) logisticProb(L = lh$L[[x]], param = FisheryObj@retParams, maxProb = FisheryObj@retMax))
     }
 
     if(FisheryObj@retType == "full") {
@@ -241,15 +307,33 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE){
 
   #doPlot
   if(doPlot){
-    if(!is.null(sel)){
-      par(mfcol=c(1,1), las = 1)
-      plot(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$vul)[order(unlist(lh$L))], type = "l", col = "purple", lwd =3, ylim = c(0,1), xlab = "Length", ylab = "Probability")
-      lines(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$ret)[order(unlist(lh$L))], lwd =3, col = "blue")
-      lines(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$keep)[order(unlist(lh$L))], lwd =3, col = "green", lty = 3)
-      lines(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$discard)[order(unlist(lh$L))], lwd =3, col = "red")
-      lines(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$removal)[order(unlist(lh$L))], lwd =3, col = "orange", lty = 2)
-      legend("topleft", legend = c("Vulnerability", "Retention", "Keep", "Dead discards", "Removals"), fill = c("purple", "blue", "green", "red", "orange"), border = "grey", bty = "n", inset=c(0, 0.1), cex = 0.8, x.intersp = 0.3)
+
+    if(is.null(wd) | is.null(imageName)){
+      if(!is.null(sel)){
+        par(mfcol=c(1,1), las = 1)
+        plot(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$vul)[order(unlist(lh$L))], type = "l", col = "purple", lwd =3, ylim = c(0,1), xlab = "Length", ylab = "Probability")
+        lines(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$ret)[order(unlist(lh$L))], lwd =3, col = "blue")
+        lines(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$keep)[order(unlist(lh$L))], lwd =3, col = "green", lty = 3)
+        lines(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$discard)[order(unlist(lh$L))], lwd =3, col = "red")
+        lines(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$removal)[order(unlist(lh$L))], lwd =3, col = "orange", lty = 2)
+        legend("topleft", legend = c("Vulnerability", "Retention", "Keep", "Dead discards", "Removals"), fill = c("purple", "blue", "green", "red", "orange"), border = "grey", bty = "n", inset=c(0, 0.1), cex = 0.8, x.intersp = 0.3)
+      }
     }
+    if(!is.null(wd) & !is.null(imageName)) {
+      if(!is.null(sel)){
+        png(file=paste0(wd, "/", imageName, ".png"), width=6, height=6, units="in", res=dpi, bg="white", pointsize=12)
+        par(mfcol=c(1,1), las = 1)
+        plot(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$vul)[order(unlist(lh$L))], type = "l", col = "purple", lwd =3, ylim = c(0,1), xlab = "Length", ylab = "Probability")
+        lines(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$ret)[order(unlist(lh$L))], lwd =3, col = "blue")
+        lines(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$keep)[order(unlist(lh$L))], lwd =3, col = "green", lty = 3)
+        lines(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$discard)[order(unlist(lh$L))], lwd =3, col = "red")
+        lines(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$removal)[order(unlist(lh$L))], lwd =3, col = "orange", lty = 2)
+        legend("topleft", legend = c("Vulnerability", "Retention", "Keep", "Dead discards", "Removals"), fill = c("purple", "blue", "green", "red", "orange"), border = "grey", bty = "n", inset=c(0, 0.1), cex = 0.8, x.intersp = 0.3)
+        dev.off()
+      }
+    }
+
+
   }
   return(sel)
 }

@@ -447,7 +447,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       #Population level plots
       png(file=paste(wd, "/", fileName, "_SPR.png",sep=""), width=4, height=4, units="in", res=300, bg="white", pointsize=12)
       par(mfrow=c(1,1), mar=c(4,4,3,1))
-      plot(dt$dynamics$SPR[,1], type="l", las=1, ylab="", ylim=c(0,1), col=rb[1], main = "SPR")
+      plot(dt$dynamics$SPR[,1], type="l", las=1, ylab="", xlab = "Year", ylim=c(0,1), col=rb[1], main = "SPR")
       if(iterations > 1){
         for(k in 2:iterations){
           lines(dt$dynamics$SPR[,k], col=rb[k])
@@ -457,7 +457,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
       png(file=paste(wd, "/", fileName, "_SBrel.png",sep=""), width=4, height=4, units="in", res=300, bg="white",pointsize=12)
       par(mfrow=c(1,1), mar=c(4,4,3,1))
-      plot(dt$dynamics$relSB[,1], type="l", las=1, ylab="", ylim=c(0,1), col=rb[1], main = "Relative spawning biomass")
+      plot(dt$dynamics$relSB[,1], type="l", las=1, ylab="", xlab = "Year", ylim=c(0,1), col=rb[1], main = "Relative spawning biomass")
       if(iterations > 1){
         for(k in 2:iterations){
           lines(dt$dynamics$relSB[,k], col=rb[k])
@@ -468,7 +468,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       #Recruit over time
       png(file=paste(wd, "/", fileName, "_recN.png",sep=""), width=4, height=4, units="in", res=300, bg="white", pointsize=12)
       par(mfrow=c(1,1), mar=c(4,4,3,1))
-      plot(dt$dynamics$recN[,1], type="l", las=1, ylab="", ylim=c(min(dt$dynamics$recN),max(dt$dynamics$recN)), col=rb[1], main = "recruits N")
+      plot(dt$dynamics$recN[,1], type="l", las=1, ylab="", xlab = "Year", ylim=c(min(dt$dynamics$recN),max(dt$dynamics$recN)), col=rb[1], main = "recruits N")
       if(iterations > 1){
         for(k in 2:iterations){
           lines(dt$dynamics$recN[,k], col=rb[k])
@@ -480,12 +480,21 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       #S-R
       png(file=paste(wd, "/", fileName, "_SR.png",sep=""), width=4, height=4, units="in", res=300, bg="white", pointsize=12)
       par(mfrow=c(1,1), mar=c(4,4,3,1))
-      plot(dt$dynamics$relSB[,1], dt$dynamics$recN[,1], type="p", las=1, ylim=c(min(dt$dynamics$recN),max(dt$dynamics$recN)), col=rb[1], ylab="Recruits", xlab = "Stock (rel SSB)", main = "Stock-recruit")
+
+      is<-solveD(lh, sel = selHist, doFit = FALSE, F_in = 0.01)
+      SRcurve<-t(sapply(seq(0, is$B0, length.out = 100), FUN=function(x){
+        c(x/is$B0, recruit(LifeHistoryObj=dt$LifeHistoryObj, B0=is$B0, stock=x, forceR=FALSE, Rforced=0))
+      }))
+      plot(dt$dynamics$relSB[,1], dt$dynamics$recN[,1], type="b", las=1, ylim=c(min(dt$dynamics$recN),max(dt$dynamics$recN)), col=rb[1], ylab="Recruits", xlab = "Stock (rel SSB)", main = "Stock-recruit")
+      #text(dt$dynamics$relSB[,1], dt$dynamics$recN[,1], labels=1:NROW(dt$dynamics$recN[,1]))
       if(iterations > 1){
         for(k in 2:iterations){
-          points(dt$dynamics$relSB[,1], dt$dynamics$recN[,k], col=rb[k])
+          lines(dt$dynamics$relSB[,k], dt$dynamics$recN[,k], type="b", col=rb[k])
+          #text(dt$dynamics$relSB[,k], dt$dynamics$recN[,k], labels=1:NROW(dt$dynamics$recN[,k]))
         }
       }
+      lines(SRcurve[,1], SRcurve[,2], type="l", col="black", las=1, ylab="Recruits", xlab = "Stock (rel SSB)", main = "Stock-recruit")
+
       dev.off()
 
       #----------------------
@@ -496,7 +505,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       png(file=paste0(wd, "/", fileName, "_SB_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
       par(mfrow=c(ceiling(dt$TimeAreaObj@areas/2+0.5),2), mar=c(4,4,3,1))
       for(m in 1:dt$TimeAreaObj@areas) {
-        plot(dt$dynamics$SB[,1,m], type="l", las=1, ylab="", col=rb[1], ylim=c(min(dt$dynamics$SB[,,m]), max(dt$dynamics$SB[,,m])), main = "Spawning biomass")
+        plot(dt$dynamics$SB[,1,m], type="l", las=1, ylab="", xlab = "Year", col=rb[1], ylim=c(min(dt$dynamics$SB[,,m]), max(dt$dynamics$SB[,,m])), main = "Spawning biomass")
         mtext(paste("Area", m), side=3, font=2, line=0.1, adj=0)
         if(iterations > 1){
           for(k in 2:iterations){
@@ -511,7 +520,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       png(file=paste0(wd, "/", fileName, "_catchB_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
       par(mfrow=c(ceiling(dt$TimeAreaObj@areas/2+0.5),2), mar=c(4,4,3,1))
       for(m in 1:dt$TimeAreaObj@areas) {
-        plot(dt$dynamics$catchB[,1,m], type="l", las=1, ylab="", col=rb[1], ylim=c(min(dt$dynamics$catchB[,,m]), max(dt$dynamics$catchB[,,m])), main = "catch in weight")
+        plot(dt$dynamics$catchB[,1,m], type="l", las=1, ylab="", xlab = "Year", col=rb[1], ylim=c(min(dt$dynamics$catchB[,,m]), max(dt$dynamics$catchB[,,m])), main = "catch in weight")
         mtext(paste("Area", m), side=3, font=2, line=0.1, adj=0)
         if(iterations > 1){
           for(k in 2:iterations){
@@ -525,7 +534,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       png(file=paste0(wd, "/", fileName, "_F_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
       par(mfrow=c(ceiling(dt$TimeAreaObj@areas/2+0.5),2), mar=c(4,4,3,1))
       for(m in 1:dt$TimeAreaObj@areas) {
-        plot(dt$dynamics$Ftotal[,1,m], type="l", las=1, ylab="", col=rb[1], ylim=c(min(dt$dynamics$Ftotal[,,m]), max(dt$dynamics$Ftotal[,,m])), main = "Fishing mortality")
+        plot(dt$dynamics$Ftotal[,1,m], type="l", las=1, ylab="", xlab = "Year", col=rb[1], ylim=c(min(dt$dynamics$Ftotal[,,m]), max(dt$dynamics$Ftotal[,,m])), main = "Fishing mortality")
         mtext(paste("Area", m), side=3, font=2, line=0.1, adj=0)
         if(iterations > 1){
           for(k in 2:iterations){
@@ -553,4 +562,22 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
     print("Simulation time in minutes: ")
     print((proc.time()-ptm)/60)
   }
+}
+
+
+#---------------------------------------
+#Read in data from existing projection or MSE model
+#---------------------------------------
+
+#Roxygen header
+#'Read in data from existing projection or MSE model
+#'
+#'Function for running projections or MSE
+#'
+#' @param wd A working directly where output is saved. Required
+#' @param fileName A file name previously used to create output. Required
+#' @export
+
+readProjection<-function(wd, fileName){
+  readRDS(file=paste(wd, "/", fileName, ".rds", sep=""))
 }

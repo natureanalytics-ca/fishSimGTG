@@ -97,11 +97,12 @@ relSSBscatter<-function(wd, fileName, facetName, chooseArea = 0, proYear, dpi = 
 #' @param doHist Should the historical time period be included in the plot?
 #' @param dpi Resolution in dots per inch of the resulting saved chart.
 #' @param imageName Character. A name for the resulting plot(s)
+#' @param scales From ggplot2::facet_wrap Should scales be fixed ("fixed", the default), free ("free"), or free in one dimension ("free_x", "free_y")?
 #' @import ggplot2 ggrepel
 #' @importFrom stats quantile
 #' @export
 
-relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentile = c(0.025, 0.975), doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries"){
+relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentile = c(0.025, 0.975), doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed"){
 
   year<-med<-lower<-upper<-NULL
 
@@ -156,7 +157,7 @@ relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentile = c(0
           strip.background = element_rect(fill ="lightgrey"),
           axis.text=element_text(size=6),
           panel.border = element_rect(linetype = "solid", colour = "black", fill=NA)) +
-    facet_wrap(~ fct + nm, ncol=NROW(unique(totalSSB$nm)), scale = "free_y")
+    facet_wrap(~ fct + nm, ncol=NROW(unique(totalSSB$nm)), scales = scales)
   ggsave(filename = paste0(wd, "/", imageName, "_SSB.png"), device = "png", dpi = dpi, width = 6, height = 3.5*NROW(unique(totalSSB$fct)), units = "in")
 
   #Total relative catch weight
@@ -171,6 +172,6 @@ relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentile = c(0
           strip.background = element_rect(fill ="lightgrey"),
           axis.text=element_text(size=6),
           panel.border = element_rect(linetype = "solid", colour = "black", fill=NA)) +
-    facet_wrap(~ fct + nm, ncol=NROW(unique(totalcatchB$nm)), scale = "free_y")
+    facet_wrap(~ fct + nm, ncol=NROW(unique(totalcatchB$nm)), scales = scales)
   ggsave(filename = paste0(wd, "/", imageName, "_catchB.png"), device = "png", dpi = dpi, width = 6, height = 3.5*NROW(unique(totalcatchB$fct)), units = "in")
 }
