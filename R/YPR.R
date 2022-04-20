@@ -436,9 +436,9 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
     #If certain params not provided, then assumptions are made.
     #Same assumptions are made as in LBSPRsim for compatability
     #-----------------------------------------------------------
-    if(length(LifeHistoryObj@Steep) == 0) LifeHistoryObj@Steep<-0.7
-    if(LifeHistoryObj@Steep < 0.2) LifeHistoryObj@Steep<-0.7
-    if(LifeHistoryObj@Steep > 1.0) LifeHistoryObj@Steep<-0.7
+    if(length(LifeHistoryObj@Steep) == 0) LifeHistoryObj@Steep<-0.99
+    if(LifeHistoryObj@Steep < 0.2) LifeHistoryObj@Steep<-0.99
+    if(LifeHistoryObj@Steep > 1.0) LifeHistoryObj@Steep<-0.99
     if(length(LifeHistoryObj@LW_A) == 0) LifeHistoryObj@LW_A<-1e-04
     if(length(LifeHistoryObj@LW_B) == 0) LifeHistoryObj@LW_B<-3
     if(length(LifeHistoryObj@R0) == 0) LifeHistoryObj@R0<-10000

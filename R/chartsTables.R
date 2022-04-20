@@ -175,3 +175,4 @@ relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentile = c(0
     facet_wrap(~ fct + nm, ncol=NROW(unique(totalcatchB$nm)), scales = scales)
   ggsave(filename = paste0(wd, "/", imageName, "_catchB.png"), device = "png", dpi = dpi, width = 6, height = 3.5*NROW(unique(totalcatchB$fct)), units = "in")
 }
+

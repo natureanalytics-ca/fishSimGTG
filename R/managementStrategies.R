@@ -53,8 +53,11 @@ projectionStrategy<-function(phase, dataObject){
   j <- TimeAreaObj <- areas <- StrategyObj <- is <- k <- StochasticObj <- lh <- N <- selHist <- Cdev <- selGroup <- NULL
   for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
 
-  #Booking keeping for year for items in StrategyObj
+  #Book keeping year for items in StrategyObj
   yr <- j - TimeAreaObj@historicalYears - 1
+
+  #Book keeping year for terminal year of historical period, if available
+  yrHist <- TimeAreaObj@historicalYears + 1
 
   if(phase==3){
 
@@ -66,7 +69,7 @@ projectionStrategy<-function(phase, dataObject){
       if(bag == -99){
 
         #Apply Flocal
-        Ftmp<-StrategyObj@projectionParams[[2]][yr,m]*is$Feq
+        Ftmp<-StrategyObj@projectionParams[[2]][yr,m]*Ftotal[yrHist,k,m]
         Flocal<-rbind(Flocal, c(j, k, m, Ftmp))
 
       } else {
@@ -90,7 +93,7 @@ projectionStrategy<-function(phase, dataObject){
           Fmult<-min(nm/lambda, 1.0)
 
           #Apply Flocal
-          Ftmp<-StrategyObj@projectionParams[[2]][yr,m]*is$Feq*Fmult
+          Ftmp<-StrategyObj@projectionParams[[2]][yr,m]*Ftotal[yrHist,k,m]*Fmult
           Flocal<-rbind(Flocal, c(j, k, m, Ftmp))
 
         }
@@ -114,7 +117,7 @@ projectionStrategy<-function(phase, dataObject){
           Fmult<-min(nm/lambda, 1.0)
 
           #Apply Flocal
-          Ftmp<-StrategyObj@projectionParams[[2]][yr,m]*is$Feq*Fmult
+          Ftmp<-StrategyObj@projectionParams[[2]][yr,m]*Ftotal[yrHist,k,m]*Fmult
           Flocal<-rbind(Flocal, c(j, k, m, Ftmp))
 
         }

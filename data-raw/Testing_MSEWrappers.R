@@ -38,7 +38,14 @@ TimeAreaObj@historicalBioType = "relB"
 TimeAreaObj@move <- matrix(c(1,0, 0,1), nrow=2, ncol=2, byrow=FALSE)
 TimeAreaObj@historicalEffort<-matrix(1:1, nrow=50, ncol=2)
 
-runProjection(LifeHistoryObj = LifeHistoryObj, TimeAreaObj = TimeAreaObj, HistFisheryObj = FisheryObj, wd = here("data-test"), fileName = "constantModel", doPlot = TRUE)
+runProjection(
+  LifeHistoryObj = LifeHistoryObj,
+  TimeAreaObj = TimeAreaObj,
+  HistFisheryObj = FisheryObj,
+  wd = here("data-test"),
+  fileName = "constantModel",
+  doPlot = TRUE
+)
 
 
 #------------------------
@@ -79,7 +86,15 @@ TimeAreaObj@historicalEffort<-matrix(1:1, nrow=50, ncol=2)
 StochasticObj<-new("Stochastic")
 StochasticObj@historicalBio = c(0.2, 0.8)
 
-runProjection(LifeHistoryObj = LifeHistoryObj, TimeAreaObj = TimeAreaObj, HistFisheryObj = FisheryObj, StochasticObj=StochasticObj, wd = here("data-test"), fileName = "constantModel", doPlot = TRUE)
+runProjection(
+  LifeHistoryObj = LifeHistoryObj,
+  TimeAreaObj = TimeAreaObj,
+  HistFisheryObj = FisheryObj,
+  StochasticObj=StochasticObj,
+  wd = here("data-test"),
+  fileName = "constantModel",
+  doPlot = TRUE
+)
 
 
 #------------------------------------
@@ -118,7 +133,15 @@ TimeAreaObj@historicalEffort<-matrix(0:0, nrow=50, ncol=2)
 StochasticObj<-new("Stochastic")
 StochasticObj@historicalBio = c(0.1, 0.9)
 
-runProjection(LifeHistoryObj = LifeHistoryObj, TimeAreaObj = TimeAreaObj, HistFisheryObj = FisheryObj, StochasticObj=StochasticObj, wd = here("data-test"), fileName = "constantModel", doPlot = TRUE)
+runProjection(
+  LifeHistoryObj = LifeHistoryObj,
+  TimeAreaObj = TimeAreaObj,
+  HistFisheryObj = FisheryObj,
+  StochasticObj=StochasticObj,
+  wd = here("data-test"),
+  fileName = "constantModel",
+  doPlot = TRUE
+)
 
 
 
@@ -286,12 +309,12 @@ TimeAreaObj@gtg = 13
 TimeAreaObj@areas = 2
 TimeAreaObj@recArea = c(0.99, 0.01)
 TimeAreaObj@iterations = 1
-TimeAreaObj@historicalYears = 0
+TimeAreaObj@historicalYears = 50
 TimeAreaObj@historicalBio = 0.5
 TimeAreaObj@historicalBioType = "relB"
 TimeAreaObj@move <- matrix(c(1,0, 0,1), nrow=2, ncol=2, byrow=FALSE)
-#TimeAreaObj@historicalEffort<-matrix(1:1, nrow=50, ncol=2)
-TimeAreaObj@historicalEffort<-matrix()
+TimeAreaObj@historicalEffort<-matrix(1:1, nrow=50, ncol=2)
+#TimeAreaObj@historicalEffort<-matrix()
 
 
 StrategyObj <- new("Strategy")
@@ -330,11 +353,14 @@ TimeAreaObj@gtg = 13
 TimeAreaObj@areas = 2
 TimeAreaObj@recArea = c(0.99, 0.01)
 TimeAreaObj@iterations = 5
-TimeAreaObj@historicalYears = 0
+TimeAreaObj@historicalYears = 50
 TimeAreaObj@historicalBio = 0.5
 TimeAreaObj@historicalBioType = "relB"
 TimeAreaObj@move <- matrix(c(1,0, 0,1), nrow=2, ncol=2, byrow=FALSE)
-TimeAreaObj@historicalEffort<-matrix()
+#TimeAreaObj@historicalEffort<-matrix(1:1, nrow=50, ncol=2)
+TimeAreaObj@historicalEffort<-matrix(seq(1,2,length.out = 50), nrow=50, ncol=2, byrow = FALSE)
+
+#TimeAreaObj@historicalEffort<-matrix()
 
 
 StrategyObj <- new("Strategy")
@@ -450,8 +476,8 @@ TimeAreaObj@historicalEffort<-matrix()
 StrategyObj <- new("Strategy")
 StrategyObj@projectionYears <- 100
 StrategyObj@projectionName<-"projectionStrategy"
-#StrategyObj@projectionParams<-list(bag = c(-99, -99), effort = matrix(c(seq(1,2,length.out = 50), rep(2, 50)), nrow=100, ncol=2, byrow = FALSE))
-StrategyObj@projectionParams<-list(bag = c(-99, -99), effort = matrix(rep(0.1, 100), nrow=100, ncol=2, byrow = FALSE))
+StrategyObj@projectionParams<-list(bag = c(-99, -99), effort = matrix(c(seq(1,2,length.out = 50), rep(2, 50)), nrow=100, ncol=2, byrow = FALSE))
+#StrategyObj@projectionParams<-list(bag = c(-99, -99), effort = matrix(rep(0.1, 100), nrow=100, ncol=2, byrow = FALSE))
 
 
 StochasticObj<-new("Stochastic")

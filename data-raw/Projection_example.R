@@ -3,6 +3,7 @@
 #---------------
 #Example
 #---------------
+#devtools::load_all()
 library(fishSimGTG)
 library(here)
 

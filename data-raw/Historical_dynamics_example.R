@@ -70,10 +70,11 @@ lhOut
 HistFisheryObj<-new("Fishery")
 HistFisheryObj@title<-"Example"
 HistFisheryObj@vulType<-"logistic"
-HistFisheryObj@vulParams<-c(40.1,40.2) #Approx. knife edge based on input value of 40.1. Must put slightly higher value for second parameter
-HistFisheryObj@retType<-"full"
+HistFisheryObj@vulParams<-c(40,48) #Approx. knife edge based on input value of 40.1. Must put slightly higher value for second parameter
+HistFisheryObj@retType<-"logistic"
+HistFisheryObj@retParams<-c(45, 45.1)
 HistFisheryObj@retMax <- 1
-HistFisheryObj@Dmort <- 0
+HistFisheryObj@Dmort <- 1
 
 #---Visualize fishery vulnerability. Does everything make sense?
 #---Optional, create a plot of life history that is useful for reports.

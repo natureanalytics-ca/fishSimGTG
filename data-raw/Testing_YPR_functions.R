@@ -68,8 +68,8 @@ Y$Feq
 #---------------------
 #LH
 lh<-LifeHistoryExample
-lh@MK<-0.5
-lh@M<-0.1
+lh@MK<-1.5
+lh@M<-0.3
 lh@K<-0.2
 lh@Tmax<-1 #Keeping this set at 1 will override Tmax and use -log(0.01)/M for max age
 
