@@ -119,7 +119,7 @@ ProFisheryObj@Dmort <- 0
 #---The Strategy object informs the simulation that you'd like to do a projection
 #---The stratgy object is used to specify effort changes (e.g. effort reduction strategies), bag limits, and spatial closures (e.g., by setting effort to 0 in a given area)
 #---Since we are not modifying any of these options, we just need to create a placeholder. We will assume effort will be constant into the foreseeable future
-#---The effort matrix is set as multipliers of initial equilibrium effort
+#---The effort matrix of a Strategy object is set as a multiplier of fishing mortality in the terminal year of the historical time period - or initial eq. if no historical period specified
 StrategyObj <- new("Strategy")
 StrategyObj@projectionYears <- 50
 StrategyObj@projectionName<-"projectionStrategy"

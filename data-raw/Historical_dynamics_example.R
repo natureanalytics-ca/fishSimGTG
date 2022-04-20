@@ -33,7 +33,7 @@ LifeHistoryObj@recSD<-0 #Run with no rec var'n to see deterministic trends
 
 #---Populate a TimeArea object
 #---Contains basic inputs about time and space needed to establish simulation bounds
-#---The effort matrix is set as multipliers of initial equilibrium effort
+#---The effort matrix is set as multipliers of initial equilibrium fishing mortality
 TimeAreaObj<-new("TimeArea")
 TimeAreaObj@title = "Example"
 TimeAreaObj@gtg = 13
