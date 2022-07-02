@@ -17,12 +17,11 @@ evalMSE<-function(inputObject){
   #------------------
   #Unpack dataObject
   #------------------
-  TimeAreaObj <- StrategyObj <- lh <- iterations <- iter <- selHist <- Ddev <- lh <- selHist <- selPro <- Cdev <- RdevMatrix <- NULL
+  TimeAreaObj <- StrategyObj <- lh <- iterations <- iter <- Ddev <- LHdev <- Sdev <- Cdev <- RdevMatrix <- NULL
   for(r in 1:NROW(inputObject)) assign(names(inputObject)[r], inputObject[[r]])
 
   controlRuleYear<-c(FALSE, rep(FALSE,(TimeAreaObj@historicalYears)), rep(TRUE, ifelse(class(StrategyObj) == "Strategy"  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)))
   years <- 1 + TimeAreaObj@historicalYears + ifelse(class(StrategyObj) == "Strategy"  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)
-  ageClasses <- lh$ageClasses
   areas <- TimeAreaObj@areas
 
   #--------------
@@ -30,6 +29,7 @@ evalMSE<-function(inputObject){
   #--------------
   SB<-array(dim=c(years, iterations, areas))
   VB<-array(dim=c(years, iterations, areas))
+  RB<-array(dim=c(years, iterations, areas))
   catchN<-array(dim=c(years, iterations, areas))
   catchB<-array(dim=c(years, iterations, areas))
   discN<-array(dim=c(years, iterations, areas))
@@ -46,6 +46,31 @@ evalMSE<-function(inputObject){
   decisionAnnual<-data.frame()
   decisionLocal<-data.frame()
 
+  #-------------------------------------------
+  #Setup capture of benchmarks
+  #-------------------------------------------
+  ref<-array(dim = c(iterations, 10))
+
+  #-------------------------------------------
+  #Deteministic LH and Sel, if present
+  #-------------------------------------------
+  LHList<-names(LHdev[!unlist(lapply(LHdev, is.null))])
+  selListHist<-names(Sdev$hist[!unlist(lapply(Sdev$hist, is.null))])
+  selListPro<-names(Sdev$pro[!unlist(lapply(Sdev$pro, is.null))])
+
+  #Is deterministic, so save time by make calculations only once.
+  if(NROW(LHList) == 0 & NROW(selListHist) == 0 & NROW(selListPro) == 0){
+    lh<-LHwrapper(LifeHistoryObj, TimeAreaObj)
+    ageClasses <- lh$ageClasses
+    if(!is.null(lh) & lh$LifeHistory@Steep < 0.21) lh$LifeHistory@Steep <- 0.21
+    if(!is.null(lh) & lh$LifeHistory@Steep > 1) lh$LifeHistory@Steep <- 1
+    selHist<-selWrapper(lh, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = FALSE)
+    selPro<-selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj, doPlot = FALSE)
+    refCalc<-gtgYPRWrapper_Fonly(lh=lh, sel=selHist)
+    for(k in iter[1]:iter[2]) ref[k, ]<-as.matrix(refCalc$sim)[1,]
+    colnames(ref)<-names(refCalc$sim)
+  }
+
   #------------------------------
   #Run simulator of k iterations
   #------------------------------
@@ -53,6 +78,36 @@ evalMSE<-function(inputObject){
   #step through iterations k
   for(k in iter[1]:iter[2]){
     #print(k)
+
+    #-----------------------------------------------------------------
+    #Setup iteration-specific life history & selectivity (if present)
+    #-----------------------------------------------------------------
+    if(NROW(LHList) > 0 | NROW(selListHist) > 0 | NROW(selListPro) > 0){
+      #LH
+      LifeHistoryObj_TMP<-LifeHistoryObj
+      if(NROW(LHList) > 0){
+        for(x in 1:NROW(LHList)) slot(LifeHistoryObj_TMP, LHList[x]) <- LHdev[[LHList[x]]][k]
+      }
+      #sel
+      HistFisheryObj_TMP<-HistFisheryObj
+      if(NROW(selListHist) > 0){
+        for(x in 1:NROW(selListHist)) slot(HistFisheryObj_TMP, selListHist[x]) <- Sdev$hist[[selListHist[x]]][k,]
+      }
+      ProFisheryObj_TMP<-ProFisheryObj
+      if(NROW(selListPro) > 0){
+        for(x in 1:NROW(selListPro)) slot(ProFisheryObj_TMP, selListPro[x]) <- Sdev$pro[[selListPro[x]]][k,]
+      }
+      #setup
+      lh<-LHwrapper(LifeHistoryObj_TMP, TimeAreaObj)
+      ageClasses <- lh$ageClasses
+      if(!is.null(lh) & lh$LifeHistory@Steep < 0.21) lh$LifeHistory@Steep <- 0.21
+      if(!is.null(lh) & lh$LifeHistory@Steep > 1) lh$LifeHistory@Steep <- 1
+      selHist<-selWrapper(lh, TimeAreaObj, FisheryObj = HistFisheryObj_TMP, doPlot = FALSE)
+      selPro<-selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj_TMP, doPlot = FALSE)
+      refCalc<-gtgYPRWrapper_Fonly(lh=lh, sel=selHist)
+      ref[k, ]<-as.matrix(refCalc$sim)[1,]
+      colnames(ref)<-names(refCalc$sim)
+    }
 
     #-----------------------------------------
     #Initial equilibrium - year 1
@@ -106,6 +161,7 @@ evalMSE<-function(inputObject){
     recN[1,k]<-is$Req
     for(m in 1:areas){
       VB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist$vul[[x]]*lh$W[[x]])))
+      RB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist$keep[[x]]*lh$W[[x]])))
       Ftotal[1,k,m] <- is$Feq
       catchN[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[1,k,m]*selHist$keep[[x]]/(Ftotal[1,k,m]*selHist$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
       catchB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[1,k,m]*selHist$keep[[x]]/(Ftotal[1,k,m]*selHist$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
@@ -178,6 +234,7 @@ evalMSE<-function(inputObject){
       #Arrays
       for(m in 1:areas){
         VB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,j,m]*selGroup$vul[[x]]*lh$W[[x]])))
+        RB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,j,m]*selGroup$keep[[x]]*lh$W[[x]])))
         xRow<-which(decisionLocal$year==j & decisionLocal$iteration==k & decisionLocal$area==m)
         Ftotal[j,k,m] <- decisionLocal$Flocal[xRow]
         catchN[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[j,k,m]*selGroup$keep[[x]]/(Ftotal[j,k,m]*selGroup$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
@@ -228,7 +285,7 @@ evalMSE<-function(inputObject){
   }
 
   #save
-  dynamics<-list(SB=SB, VB=VB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN)
+  dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref = ref)
   HCR<-list(decisionLocal=decisionLocal, decisionAnnual=decisionAnnual, decisionData=decisionData)
   return(list(dynamics=dynamics, HCR=HCR, iter=iter))
 }
@@ -270,15 +327,10 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
   #Build inputObject
   #-----------------------
   TimeAreaObj@recArea <- TimeAreaObj@recArea / sum(TimeAreaObj@recArea) #Make sure this sums to 1
-  lh<-LHwrapper(LifeHistoryObj, TimeAreaObj)
-  if(!is.null(lh) & lh$LifeHistory@Steep < 0.21) lh$LifeHistory@Steep <- 0.21
-  if(!is.null(lh) & lh$LifeHistory@Steep > 1) lh$LifeHistory@Steep <- 1
-  selHist<-selWrapper(lh, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = FALSE)
-  selPro<-selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj, doPlot = FALSE)
 
-  #----------------------------
-  #Build stochastic components
-  #----------------------------
+  #------------------------------------------------
+  #Build stochastic & uncertainty range parameters
+  #------------------------------------------------
   set.seed(seed = seed)
 
   #Rec devs
@@ -290,35 +342,211 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
   #Historical cpue
   Cdev<-cpueDev(TimeAreaObj, StochasticObj)$Cdev
 
+  #Life history parmeters
+  LHdev<-lifehistoryDev(TimeAreaObj, StochasticObj)
+
+  #Selectivity parameters
+  Sdev<-selDev(HistFisheryObj, ProFisheryObj, StochasticObj)
+
+
+  #---------------------------------------
+  #Initial checks that do not stop program
+  #---------------------------------------
+
+  #Check to see if uncertain initial bio created
+  if(!is.null(StochasticObj)){
+    if(length(StochasticObj@historicalBio) > 1)
+      print(paste("Uncertainty in initial biomass", StochasticObj@historicalBio[1], "to", StochasticObj@historicalBio[2], TimeAreaObj@historicalBioType, "created. Is this the correct range?"))
+  }
+
+  #Check to see if uncertain life history specified and created
+  if(!is.null(StochasticObj)){
+    #Find LH params that are not null
+    LHList<-names(LHdev[!unlist(lapply(LHdev, is.null))])
+    if(NROW(LHList) > 0)
+    print(paste("Uncertainty in life history parameters", LHList, "created. Is this the correct set?"))
+  }
+
+  #Check to see if uncertain fishery selectivity specified and created
+  #Historical
+  if(!is.null(StochasticObj)){
+    #Find LH params that are not null
+    selListHist<-names(Sdev$hist[!unlist(lapply(Sdev$hist, is.null))])
+    if(NROW(selListHist) > 0) print(paste("Uncertainty in historical fishery selectivity parameters", selListHist, "created. Is this the correct set?"))
+    if(NROW(selListHist) > 0 & is.null(HistFisheryObj)) print("Uncertainty in historical fishery selectivity cannot be specified with also specifying HistFisheryObj")
+  }
+  #Projection
+  if(!is.null(StochasticObj)){
+    #Find LH params that are not null
+    selListPro<-names(Sdev$pro[!unlist(lapply(Sdev$pro, is.null))])
+    if(NROW(selListPro) > 0) print(paste("Uncertainty in projection fishery selectivity parameters", selListPro, "created. Is this the correct set?"))
+    if(NROW(selListPro) > 0 & is.null(ProFisheryObj)) print("Uncertainty in projection fishery selectivity cannot be specified with also specifying ProFisheryObj")
+  }
+
+  #----------------------------------------------
+  #Input checks that stop the program
+  #----------------------------------------------
+  proceedMSE<-TRUE
+
+  #Is iterations specified correctly?
+  if(proceedMSE && length(TimeAreaObj@iterations) == 0 ||
+     TimeAreaObj@iterations < 1) {
+      proceedMSE<-FALSE
+      print("Iterations not specified correctly.")
+  }
+
+  #Can life history wrapper and sel wrapper be created for each iteration?
+  if(proceedMSE){
+    LHList<-names(LHdev[!unlist(lapply(LHdev, is.null))])
+    selListHist<-names(Sdev$hist[!unlist(lapply(Sdev$hist, is.null))])
+    selListPro<-names(Sdev$pro[!unlist(lapply(Sdev$pro, is.null))])
+
+    if(NROW(LHList) > 0 | NROW(selListHist) > 0 | NROW(selListPro) > 0) {
+      for(k in 1:floor(TimeAreaObj@iterations)){
+        #LH
+        LifeHistoryObj_TMP<-LifeHistoryObj
+        if(NROW(LHList) > 0) {
+          for(x in 1:NROW(LHList)) slot(LifeHistoryObj_TMP, LHList[x]) <- LHdev[[LHList[x]]][k]
+        }
+
+        #sel
+        HistFisheryObj_TMP<-HistFisheryObj
+        if(NROW(selListHist) > 0){
+          for(x in 1:NROW(selListHist)) slot(HistFisheryObj_TMP, selListHist[x]) <- Sdev$hist[[selListHist[x]]][k,]
+        }
+
+        ProFisheryObj_TMP<-ProFisheryObj
+        if(NROW(selListPro) > 0){
+          for(x in 1:NROW(selListPro)) slot(ProFisheryObj_TMP, selListPro[x]) <- Sdev$pro[[selListPro[x]]][k,]
+        }
+
+        lh<-LHwrapper(LifeHistoryObj_TMP, TimeAreaObj)
+        selHist<-selWrapper(lh, TimeAreaObj, FisheryObj = HistFisheryObj_TMP, doPlot = FALSE)
+        selPro<-selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj_TMP, doPlot = FALSE)
+        if(is.null(lh)) {
+          proceedMSE<-FALSE
+          print(paste("Life history cannot be created. Check inputs. Stopped at interation", j))
+        }
+        if(is.null(selHist)){
+          proceedMSE<-FALSE
+          print(paste("Historical selectivity cannot be created. Check inputs. Stopped at interation", j))
+        }
+        if(isTRUE(!is.null(StrategyObj) &  is.null(selPro))){
+          proceedMSE<-FALSE
+          print(paste("Projection selectivity cannot be created. Check inputs. Stopped at interation", j))
+        }
+      }
+    } else {
+      lh<-LHwrapper(LifeHistoryObj, TimeAreaObj)
+      selHist<-selWrapper(lh, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = FALSE)
+      selPro<-selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj, doPlot = FALSE)
+      if(is.null(lh)) {
+        proceedMSE<-FALSE
+        print("Life history cannot be created. Check inputs.")
+      }
+      if(is.null(selHist)){
+        proceedMSE<-FALSE
+        print("Historical selectivity cannot be created. Check inputs.")
+      }
+      if(isTRUE(!is.null(StrategyObj) &  is.null(selPro))){
+        proceedMSE<-FALSE
+        print("Projection selectivity cannot be created. Check inputs.")
+      }
+    }
+  }
+
+  #Rec devs failed
+  if(proceedMSE && is.null(RdevMatrix)) {
+    proceedMSE<-FALSE
+    print("Inter-annual recruitment variation cannot be created. Check inputs.")
+  }
+
+  #Ddev
+  if(proceedMSE && is.null(Ddev)) {
+    proceedMSE<-FALSE
+    print("Initial biomass variation cannot be created. Check inputs.")
+  }
+
+  #CDdev
+  if(proceedMSE && is.null(Cdev)) {
+    proceedMSE<-FALSE
+    print("Initial CPUE variation cannot be created. Check inputs.")
+  }
+
+  #Number of areas not in agreement with dimensions of the move matrix.
+  if(proceedMSE && isTRUE(TimeAreaObj@areas != dim(TimeAreaObj@move)[1] | TimeAreaObj@areas != dim(TimeAreaObj@move)[2])) {
+    proceedMSE<-FALSE
+    print("Number of areas not in agreement with dimensions of the move matrix. Check inputs.")
+  }
+
+  #Number of historical years does not match historical effort time series
+  if(proceedMSE && isTRUE(TimeAreaObj@historicalYears > 0  && isTRUE(TimeAreaObj@areas != dim(TimeAreaObj@historicalEffort)[2] | TimeAreaObj@historicalYears != dim(TimeAreaObj@historicalEffort)[1]))) {
+    proceedMSE<-FALSE
+    print("Number of historical years does not match historical effort time series. Check inputs.")
+  }
+
+  #Historical and/or projection years must be at least 1.
+  if(proceedMSE && isTRUE(TimeAreaObj@historicalYears + ifelse(class(StrategyObj) == "Strategy"  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0) < 1)) {
+    proceedMSE<-FALSE
+    print("Historical and/or projection years must be at least 1. Check inputs.")
+  }
+
+  #Project strategy function missing
+  if(proceedMSE && isTRUE(class(StrategyObj) == "Strategy" &&
+                             tryCatch({
+                               get(StrategyObj@projectionName)
+                               FALSE
+                             }, error = function(c) TRUE)
+  )) {
+    proceedMSE<-FALSE
+    print("Project strategy function missing. StrategyObj@projectionName must correspond to a named function.")
+  }
+
+  #When applying a management strategy, StrategyObj@projectionYears must be greater than 0
+  if(proceedMSE &&
+     isTRUE(class(StrategyObj) == "Strategy" && length(StrategyObj@projectionYears) == 0) ||
+     isTRUE(class(StrategyObj) == "Strategy" && StrategyObj@projectionYears < 1)
+  ){
+    proceedMSE<-FALSE
+    print("When applying a management strategy, StrategyObj@projectionYears must be greater than 0")
+  }
+
+  #Parameters associated with 'projectionStrategy' not specified correctly
+  if(proceedMSE && isTRUE(class(StrategyObj) == "Strategy" && StrategyObj@projectionName == "projectionStrategy" && length(StrategyObj@projectionParams) != 2)){
+    proceedMSE<-FALSE
+    print("When applying a management strategy, StrategyObj@projectionYears must be greater than 0")
+  }
+
+
   #---------------------------
   #Setup parallel processing
   #---------------------------
 
   #Test whether we can proceed to simulations
   if(
-    is.null(lh) ||
-    is.null(selHist) ||
-    is.null(RdevMatrix) ||
-    is.null(Ddev) ||
-    is.null(Cdev) ||
-    length(TimeAreaObj@iterations) == 0 ||
-    TimeAreaObj@iterations < 1 ||
-    isTRUE(!is.null(StrategyObj) &  is.null(selPro)) ||
-    isTRUE(TimeAreaObj@areas != dim(TimeAreaObj@move)[1] | TimeAreaObj@areas != dim(TimeAreaObj@move)[2]) ||
-    isTRUE(TimeAreaObj@historicalYears > 0  && isTRUE(TimeAreaObj@areas != dim(TimeAreaObj@historicalEffort)[2] | TimeAreaObj@historicalYears != dim(TimeAreaObj@historicalEffort)[1])) ||
-    isTRUE(TimeAreaObj@historicalYears + ifelse(class(StrategyObj) == "Strategy"  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0) < 1) ||
-    isTRUE(class(StrategyObj) == "Strategy" &&
-           tryCatch({
-             get(StrategyObj@projectionName)
-             FALSE
-            }, error = function(c) TRUE)
-          ) ||
-    isTRUE(class(StrategyObj) == "Strategy" && length(StrategyObj@projectionYears) == 0) ||
-    isTRUE(class(StrategyObj) == "Strategy" && length(StrategyObj@projectionYears) > 0 && StrategyObj@projectionYears < 1) ||
-    isTRUE(class(StrategyObj) == "Strategy" && StrategyObj@projectionName == "projectionStrategy" && length(StrategyObj@projectionParams) != 2)
-
+    #is.null(lh) ||
+    #is.null(selHist) ||
+    #is.null(RdevMatrix) ||
+    #is.null(Ddev) ||
+    #is.null(Cdev) ||
+    #length(TimeAreaObj@iterations) == 0 ||
+    #TimeAreaObj@iterations < 1 ||
+    #isTRUE(!is.null(StrategyObj) &  is.null(selPro)) ||
+    #isTRUE(TimeAreaObj@areas != dim(TimeAreaObj@move)[1] | TimeAreaObj@areas != dim(TimeAreaObj@move)[2]) ||
+    #isTRUE(TimeAreaObj@historicalYears > 0  && isTRUE(TimeAreaObj@areas != dim(TimeAreaObj@historicalEffort)[2] | TimeAreaObj@historicalYears != dim(TimeAreaObj@historicalEffort)[1])) ||
+    #isTRUE(TimeAreaObj@historicalYears + ifelse(class(StrategyObj) == "Strategy"  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0) < 1) ||
+    # isTRUE(class(StrategyObj) == "Strategy" &&
+    #        tryCatch({
+    #          get(StrategyObj@projectionName)
+    #          FALSE
+    #         }, error = function(c) TRUE)
+    #       ) ||
+    #isTRUE(class(StrategyObj) == "Strategy" && length(StrategyObj@projectionYears) == 0) ||
+    #isTRUE(class(StrategyObj) == "Strategy" && length(StrategyObj@projectionYears) > 0 && StrategyObj@projectionYears < 1) ||
+    #isTRUE(class(StrategyObj) == "Strategy" && StrategyObj@projectionName == "projectionStrategy" && length(StrategyObj@projectionParams) != 2)
+    isFALSE(proceedMSE)
   ) {
-    warning("One or more components contain incomplet or erroneous information. Cannot proceed to simulation.")
+    warning("One or more components contain incomplete or erroneous information. Cannot proceed to simulation.")
     return(NULL)
   } else {
 
@@ -342,9 +570,8 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                RdevMatrix = RdevMatrix,
                                Ddev = Ddev,
                                Cdev = Cdev,
-                               lh = lh,
-                               selHist = selHist,
-                               selPro = selPro,
+                               LHdev = LHdev,
+                               Sdev = Sdev,
                                LifeHistoryObj = LifeHistoryObj,
                                TimeAreaObj = TimeAreaObj,
                                HistFisheryObj = HistFisheryObj,
@@ -361,9 +588,8 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                     RdevMatrix=RdevMatrix,
                                     Ddev=Ddev,
                                     Cdev = Cdev,
-                                    lh = lh,
-                                    selHist = selHist,
-                                    selPro = selPro,
+                                    LHdev = LHdev,
+                                    Sdev = Sdev,
                                     LifeHistoryObj = LifeHistoryObj,
                                     TimeAreaObj = TimeAreaObj,
                                     HistFisheryObj = HistFisheryObj,
@@ -383,6 +609,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
       SB<-mseParallel[[1]]$dynamics$SB
       VB<-mseParallel[[1]]$dynamics$VB
+      RB<-mseParallel[[1]]$dynamics$RB
       catchB<-mseParallel[[1]]$dynamics$catchB
       catchN<-mseParallel[[1]]$dynamics$catchN
       Ftotal<-mseParallel[[1]]$dynamics$Ftotal
@@ -391,6 +618,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       SPR<-mseParallel[[1]]$dynamics$SPR
       relSB<-mseParallel[[1]]$dynamics$relSB
       recN<-mseParallel[[1]]$dynamics$recN
+      ref<-mseParallel[[1]]$dynamics$ref
       decisionAnnual<-mseParallel[[1]]$HCR$decisionAnnual
       decisionLocal<-mseParallel[[1]]$HCR$decisionLocal
       decisionData<-mseParallel[[1]]$HCR$decisionData
@@ -399,6 +627,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
         for(m in 1:TimeAreaObj@areas){
           SB[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$SB[,input[[i]][1]:input[[i]][2],m]
           VB[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$VB[,input[[i]][1]:input[[i]][2],m]
+          RB[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$RB[,input[[i]][1]:input[[i]][2],m]
           catchB[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$catchB[,input[[i]][1]:input[[i]][2],m]
           catchN[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$catchN[,input[[i]][1]:input[[i]][2],m]
           Ftotal[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$Ftotal[,input[[i]][1]:input[[i]][2],m]
@@ -408,6 +637,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
         SPR[,input[[i]][1]:input[[i]][2]]<-mseParallel[[i]]$dynamics$SPR[,input[[i]][1]:input[[i]][2]]
         relSB[,input[[i]][1]:input[[i]][2]]<-mseParallel[[i]]$dynamics$relSB[,input[[i]][1]:input[[i]][2]]
         recN[,input[[i]][1]:input[[i]][2]]<-mseParallel[[i]]$dynamics$recN[,input[[i]][1]:input[[i]][2]]
+        ref[input[[i]][1]:input[[i]][2],]<-mseParallel[[i]]$dynamics$ref[input[[i]][1]:input[[i]][2],]
         decisionAnnual<-rbind(decisionAnnual, mseParallel[[i]]$HCR$decisionAnnual)
         decisionLocal<-rbind(decisionLocal, mseParallel[[i]]$HCR$decisionLocal)
         decisionData<-rbind(decisionData, mseParallel[[i]]$HCR$decisionData)
@@ -415,6 +645,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
     } else {
       SB<-mse$dynamics$SB
       VB<-mse$dynamics$VB
+      RB<-mse$dynamics$RB
       catchB<-mse$dynamics$catchB
       catchN<-mse$dynamics$catchN
       Ftotal<-mse$dynamics$Ftotal
@@ -423,6 +654,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       SPR<-mse$dynamics$SPR
       relSB<-mse$dynamics$relSB
       recN<-mse$dynamics$recN
+      ref<-mse$dynamics$ref
       decisionAnnual<-mse$HCR$decisionAnnual
       decisionLocal<-mse$HCR$decisionLocal
       decisionData<-mse$HCR$decisionData
@@ -432,9 +664,9 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
     #Save results
     #---------------
 
-    dynamics<-list(SB=SB, VB=VB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN)
+    dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref = ref, Ddev=Ddev, LHdev=LHdev, Sdev = Sdev)
     HCR<-list(decisionLocal=decisionLocal, decisionAnnual=decisionAnnual, decisionData=decisionData)
-    dt<-list(titleStrategy = titleStrategy, dynamics=dynamics, HCR=HCR, iterations=iterations, lh = lh,  LifeHistoryObj=LifeHistoryObj, TimeAreaObj=TimeAreaObj, HistFisheryObj=HistFisheryObj, ProFisheryObj=ProFisheryObj,  StrategyObj= StrategyObj, StochasticObj=StochasticObj)
+    dt<-list(titleStrategy = titleStrategy, dynamics=dynamics, HCR=HCR, iterations=iterations, lh = lh,  LifeHistoryObj=LifeHistoryObj, LHdev=LHdev, TimeAreaObj=TimeAreaObj, HistFisheryObj=HistFisheryObj, ProFisheryObj=ProFisheryObj,  StrategyObj= StrategyObj, StochasticObj=StochasticObj)
     saveRDS(dt, file=paste(wd, "/", fileName, ".rds", sep=""))
 
     #--------------------------------------------------------------------------------

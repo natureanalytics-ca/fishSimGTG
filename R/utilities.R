@@ -26,7 +26,7 @@ LH_to_dataframe <- function(LifeHistoryObj, digits=3) {
   lst <- lapply(nms, function(nm) slot(LifeHistoryObj, nm))
   ind<-which(lengths(lst)!=0)
   data.frame(setNames(lst[ind], nms[ind])) %>%
-    mutate(across(any_of(c("Linf", "K", "t0", "L50", "L95", "M", "MK", "LW_B", "Steep", "H50", "H95", "recSD", "recRho")), round, digits))  %>%
+    mutate(across(any_of(c("Linf", "K", "t0", "L50", "L95delta", "M", "MK", "LW_B", "Steep", "H50", "H95delta", "recSD", "recRho")), round, digits))  %>%
     mutate(across(any_of(c("Tmax", "R0")), round, 1))  %>%
     mutate(across(any_of(c("LW_A")), signif, digits))  %>%
     rename_with(
@@ -41,7 +41,7 @@ LH_to_dataframe <- function(LifeHistoryObj, digits=3) {
         . == "K" ~ "von Bertalanffy K",
         . == "t0" ~ "von Bertalanffy t0",
         . == "L50" ~ "Length at 50% maturity",
-        . == "L95" ~ "Length at 95% maturity",
+        . == "L95delta" ~ "Length increment to 95% maturity",
         . == "M" ~ "Natural mortality",
         . == "MK" ~ "M/K",
         . == "LW_A" ~ "Length-weight alpha",
@@ -53,7 +53,7 @@ LH_to_dataframe <- function(LifeHistoryObj, digits=3) {
         . == "recRho" ~ "Recruitment inter-annual correlation",
         . == "isHermaph" ~ "Protogynous hermaphrodite",
         . == "H50" ~ "Length at which cohort is 50% male",
-        . == "H95" ~ "Length at which cohort is 95% male",
+        . == "H95delta" ~ "Length increment to 95% male",
         . == "author" ~ "Author",
         . == "authAffiliation" ~ "Author affiliation",
         . == "longDescription" ~ "Long description",

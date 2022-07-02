@@ -3,8 +3,8 @@
 #---------------
 #Example
 #---------------
-#devtools::load_all()
-library(fishSimGTG)
+devtools::load_all()
+#library(fishSimGTG)
 library(here)
 
 #----------------------------
@@ -29,7 +29,7 @@ LifeHistoryObj@LW_B<-3.109
 LifeHistoryObj@Steep<-0.6
 LifeHistoryObj@isHermaph<-TRUE
 LifeHistoryObj@H50<-46.2
-LifeHistoryObj@H95<-58
+LifeHistoryObj@H95delta<-11.8
 LifeHistoryObj@recSD<-0 #Run with no rec var'n to see deterministic trends
 
 #---Populate a TimeArea object
@@ -71,7 +71,7 @@ lhOut
 HistFisheryObj<-new("Fishery")
 HistFisheryObj@title<-"Example"
 HistFisheryObj@vulType<-"logistic"
-HistFisheryObj@vulParams<-c(40.1,40.2) #Approx. knife edge based on input value of 40.1. Must put slightly higher value for second parameter
+HistFisheryObj@vulParams<-c(40.1,0.1) #Approx. knife edge based on input value of 40.1. Must put slightly higher value for second parameter
 HistFisheryObj@retType<-"full"
 HistFisheryObj@retMax <- 1
 HistFisheryObj@Dmort <- 0
@@ -94,7 +94,10 @@ StochasticObj<-new("Stochastic")
 StochasticObj@historicalBio = c(0.3, 0.6)
 StochasticObj@historicalCPUE = c(1,2) #This is used in bag limit projection, see Batch_projection_example
 StochasticObj@historicalCPUEType = "vulN"
-
+StochasticObj@Linf<-c(43.2,63.2)
+StochasticObj@histFisheryDmort<-matrix(c(0,2), nrow=2, byrow = TRUE)
+StochasticObj@proFisheryDmort<-matrix(c(0,1), nrow=2, byrow = TRUE)
+StochasticObj@sameFisheryDmort<-FALSE
 
 #-------------------------------------------------------
 #Setup fishery characteristics for the projection period
@@ -106,9 +109,9 @@ StochasticObj@historicalCPUEType = "vulN"
 ProFisheryObj<-new("Fishery")
 ProFisheryObj@title<-"Example"
 ProFisheryObj@vulType<-"logistic"
-ProFisheryObj@vulParams<-c(40.1,40.2) #Approx. knife edge based on input value of 40.1. Must put slightly higher value for second parameter
+ProFisheryObj@vulParams<-c(40.1,0.1) #Approx. knife edge based on input value of 40.1. Must put slightly higher value for second parameter
 ProFisheryObj@retType<-"logistic"
-ProFisheryObj@retParams <- c(35.6, 35.7)
+ProFisheryObj@retParams <- c(35.6, 0.1)
 ProFisheryObj@retMax <- 1
 ProFisheryObj@Dmort <- 0
 

@@ -20,7 +20,7 @@
 #' @param K von Bertalanffy K parameter per year
 #' @param t0 von Bertalanffy t0 parameter
 #' @param L50 Length at 50% maturity.
-#' @param L95 Length at 95% maturity. Must be a value larger than L50
+#' @param L95delta Length increment between L50 and length at 95% maturity. Must be a value larger than 0.
 #' @param M Natural mortality rate per year
 #' @param MK Ratio of M to K
 #' @param LW_A Parameter for length-weight relationship W=aL^b
@@ -32,14 +32,13 @@
 #' @param recRho Inter-annual correlation in recruitment variation
 #' @param isHermaph Logical whether species is a protogynous hermaphrodite (TRUE). FALSE is gonochoristic species.
 #' @param H50 Length at 50% male.
-#' @param H95 Length at 95% male. Must be a value larger than H50
+#' @param H95delta Length increment between H50 and length 95% male. Must be a value larger than 0.
 #' @param author Author of the life history - do not include your email address as these life histories may be posted online
 #' @param authAffiliation A way to identify the author without relying on an email address
 #' @param longDescription Document the rational for choices made in creating the life history. Other users will rely on this information.
 #' @param appBuild A data frame that holds details when the life history is built using the Shiny app
 #' @param ID A user ID. Not required.
 #' @importFrom methods new
-
 
 setClass("LifeHistory",
          representation(
@@ -53,7 +52,7 @@ setClass("LifeHistory",
            K =  "numeric",
            t0 = "numeric",
            L50 = "numeric",
-           L95 = "numeric",
+           L95delta = "numeric",
            M =  "numeric",
            MK = "numeric",
            LW_A = "numeric",
@@ -65,7 +64,7 @@ setClass("LifeHistory",
            recRho = "numeric",
            isHermaph = "logical",
            H50 = "numeric",
-           H95 = "numeric",
+           H95delta = "numeric",
            author = "character",
            authAffiliation = "character",
            longDescription = "character",
@@ -83,7 +82,7 @@ setClass("LifeHistory",
            K =  0.2,
            t0 = 0,
            L50 = 66,
-           L95 = 67,
+           L95delta = 1,
            M =  0.3,
            MK = 1.5,
            LW_A = 0.01,
@@ -113,7 +112,7 @@ setClass("LifeHistory",
 #' @param retType String. Retention function for historical time period. See selWrapper for options
 #' @param retParams Numeric value or vector for retention params for historical time period. See selWrapper for options
 #' @param retMax Numeric value that defines the peak of the historical retention curve. A value between 0 and 1.
-#' @param Dmort Historical tiem period discard mortality rate (not instantaneous rate, rather it is the fraction of discards killed e.g. 0.25 is 25% killed). A value between 0 and 1.
+#' @param Dmort Discard mortality rate (not instantaneous rate, rather it is the fraction of discards killed e.g. 0.25 is 25% killed). A value between 0 and 1.
 #' @importFrom methods new
 #'
 setClass("Fishery",
@@ -228,13 +227,26 @@ setClass("Stochastic",
            title = "character",
            historicalBio = "numeric",
            historicalCPUE = 'numeric',
-           historicalCPUEType = "character"
-         ),
-         prototype(
-           title = "Stochastic corresponding to example fish",
-           historicalBio = c(0.2, 0.8),
-           historicalCPUE = c(5,8),
-           historicalCPUEType = "vulN"
+           historicalCPUEType = "character",
+           Linf = "numeric",
+           K = "numeric",
+           L50 = "numeric",
+           L95delta = "numeric",
+           M = "numeric",
+           Steep = "numeric",
+           recSD = "numeric",
+           recRho = "numeric",
+           H50 = "numeric",
+           H95delta = "numeric",
+           histFisheryVul = "matrix",
+           proFisheryVul = "matrix",
+           sameFisheryVul = "logical",
+           histFisheryRet = "matrix",
+           proFisheryRet = "matrix",
+           sameFisheryRet = "logical",
+           histFisheryDmort = "matrix",
+           proFisheryDmort = "matrix",
+           sameFisheryDmort = "logical"
          )
 )
 

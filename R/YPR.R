@@ -13,7 +13,7 @@
 #'This produces an array of values for each output, which is useful for surface plot, finding MSY, etc.
 #'Yield is presented in relative terms, with a maximum of 1. YPR is not presented in relative terms, but the user
 #'may want to re-calculate this quantity as relative YPR for presentation purposes.
-#'Required parameters of the LifeHistory object are: Linf, L50, L95, MK, Steep, LW_A, LW_B
+#'Required parameters of the LifeHistory object are: Linf, L50, L95delta, MK, Steep, LW_A, LW_B
 #' @param LifeHistoryObj  A life history object.
 #' @param binWidth LBSPR length bin width, default value is 1.
 #' @param binMin LBSPR binMin, default is 0
@@ -29,7 +29,7 @@
 #' lh<-new("LifeHistory")
 #' lh@Linf<-100
 #' lh@L50<-66
-#' lh@L95<-67
+#' lh@L95delta<-1
 #' lh@MK<-1.5
 #' lh@LW_A<-0.01
 #' lh@LW_B<-3
@@ -93,13 +93,13 @@ lbsprSimWrapper<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1, F_MS
      F_MStep < 0 ||
      length(LifeHistoryObj@Linf) == 0 ||
      length(LifeHistoryObj@L50) == 0 ||
-     length(LifeHistoryObj@L95) == 0 ||
+     length(LifeHistoryObj@L95delta) == 0 ||
      length(LifeHistoryObj@MK) == 0 ||
      LifeHistoryObj@Linf < 0 ||
      LifeHistoryObj@L50 < 0 ||
      LifeHistoryObj@MK < 0 ||
      LifeHistoryObj@L50 >= LifeHistoryObj@Linf ||
-     LifeHistoryObj@L50 >= LifeHistoryObj@L95
+     isFALSE(LifeHistoryObj@L95delta > 0)
   ) {
     return(new("LBSPRarray",
                LifeHistory = LifeHistoryObj,
@@ -114,7 +114,7 @@ lbsprSimWrapper<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1, F_MS
     MyPars <- new("LB_pars")
     MyPars@Linf <- LifeHistoryObj@Linf
     MyPars@L50 <- LifeHistoryObj@L50
-    MyPars@L95 <- LifeHistoryObj@L95
+    MyPars@L95 <- LifeHistoryObj@L50 + LifeHistoryObj@L95delta
     MyPars@MK <- LifeHistoryObj@MK
     MyPars@BinWidth <- binWidth
     MyPars@BinMin <- binMin
@@ -126,7 +126,7 @@ lbsprSimWrapper<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1, F_MS
 
     #Setup place holder values for these parameters, we will change these later
     MyPars@SL50 <- LifeHistoryObj@L50
-    MyPars@SL95 <- LifeHistoryObj@L95
+    MyPars@SL95 <- LifeHistoryObj@L50 + LifeHistoryObj@L95delta
     MyPars@FM<-1
 
     #------------------
@@ -230,13 +230,13 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
      F_MStep < 0 ||
      length(LifeHistoryObj@Linf) == 0 ||
      length(LifeHistoryObj@L50) == 0 ||
-     length(LifeHistoryObj@L95) == 0 ||
+     length(LifeHistoryObj@L95delta) == 0 ||
      length(LifeHistoryObj@MK) == 0 ||
      LifeHistoryObj@Linf < 0 ||
      LifeHistoryObj@L50 < 0 ||
      LifeHistoryObj@MK < 0 ||
      LifeHistoryObj@L50 >= LifeHistoryObj@Linf ||
-     LifeHistoryObj@L50 >= LifeHistoryObj@L95
+     isFALSE(LifeHistoryObj@L95delta > 0)
   ) {
     return(new("LBSPRarray",
                LifeHistory = LifeHistoryObj,
@@ -251,7 +251,7 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
     MyPars <- new("LB_pars")
     MyPars@Linf <- LifeHistoryObj@Linf
     MyPars@L50 <- LifeHistoryObj@L50
-    MyPars@L95 <- LifeHistoryObj@L95
+    MyPars@L95 <- LifeHistoryObj@L50 + LifeHistoryObj@L95delta
     MyPars@MK <- LifeHistoryObj@MK
     MyPars@BinWidth <- binWidth
     MyPars@BinMin <- binMin
@@ -263,7 +263,7 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
 
     #Setup place holder values for these parameters, we will change these later
     MyPars@SL50 <- LifeHistoryObj@L50
-    MyPars@SL95 <- LifeHistoryObj@L95
+    MyPars@SL95 <- LifeHistoryObj@L50 + LifeHistoryObj@L95delta
     MyPars@FM<-1
 
     #------------------
@@ -347,7 +347,7 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
 #'This produces an array of values for each output, which is useful for surface plot, finding MSY, etc.
 #'Yield is presented in relative terms, with a maximum of 1. YPR is not presented in relative terms, but the user
 #'may want to re-calculate this quantity as relative YPR for presentation purposes.
-#'Required parameters of the LifeHistory object are: Linf, L50, L95, M, K, Steep, LW_A, LW_B
+#'Required parameters of the LifeHistory object are: Linf, L50, L95delta, M, K, Steep, LW_A, LW_B
 #' @param LifeHistoryObj  A life history object.
 #' @param LcStep Length step size in cm for sequence of length at vulnerability. Approx. knife edge vul. SL50 = Lc, SL95 = Lc + 1
 #' @param F_MStep F/M ratio step size for sequence of F_M
@@ -362,7 +362,7 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
 #' lh<-new("LifeHistory")
 #' lh@Linf<-100
 #' lh@L50<-66
-#' lh@L95<-67
+#' lh@L95delta<-1
 #' lh@MK<-1.5
 #' lh@LW_A<-0.01
 #' lh@LW_B<-3
@@ -530,3 +530,101 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
   }
 }
 
+
+#------------------------------------
+#YPR fishSimGTG wrapper for F only
+#------------------------------------
+
+#Roxygen header
+#'YPR simulation using growth-type group model for sequence of F_M. Based on pre-specified LHWrapper and selWrapper objects.
+#'
+#'Produces YPR, Yield, and SPR arrays across combinations of F_M
+#'
+#'Utilizes the growth-type group model to calculate YPR, Yield, and SPR across sequency of F_M.
+#'Produces quantities of interest like MSY, etc.
+#'Required parameters of the LifeHistory object are: Linf, L50, L95delta, M, K, Steep, LW_A, LW_B
+#' @param lh  An object produced by LHWrapper.
+#' @param sel An object produced by selWrapper
+#' @param F_Step F step size for sequence of F_M
+#' @param gtg The number of growth-type groups. Default is 13.
+#' @param stepsPerYear The number of steps per year. Default is 1 as this function is used in the evalMSE.
+#' @importFrom methods new
+#' @export
+
+gtgYPRWrapper_Fonly<-function(lh, sel, F_Step = 0.02){
+
+  #-----------------------------
+  #Initial check of conditions
+  #-----------------------------
+  if(is.null(lh) ||
+     is.null(sel) ||
+     !is.numeric(F_Step) ||
+     F_Step < 0
+  ) {
+    return(new("YPRarray",
+               lh = NULL,
+               sim=list(stop = TRUE))
+    )
+  } else {
+
+    #------------------
+    #Analysis
+    #------------------
+    Fmort<-seq(0, 3, F_Step)
+    SPR<-vector()
+    YPR<-vector()
+    Yield<-vector()
+    SB<-vector()
+    VB<-vector()
+
+    show_condition <- function(code) {
+      tryCatch({
+        code
+      },
+      error = function(c) NULL
+      )
+    }
+
+    stop = FALSE
+    for (i in 1:NROW(Fmort)){
+
+      tmpSim<-show_condition(solveD(lh = lh, sel=sel, doFit = FALSE, F_in = Fmort[i]))
+
+      if(is.null(tmpSim)[1]) {
+        stop = TRUE
+        break
+      }
+
+      SPR[i]=tmpSim$SPR
+      YPR[i]=tmpSim$YPR
+      Yield[i]=tmpSim$catchB
+      SB[i]=tmpSim$SB
+      VB[i]=tmpSim$VB
+
+    }
+
+    #
+    tmpSim<-show_condition(solveD(lh = lh, sel=sel, doFit = FALSE, F_in = 0))
+    B0<-tmpSim$B0
+    VBunfished<-tmpSim$VB
+
+    #
+    MSY<-Yield[which.max(Yield)]
+    SB_MSY<-SB[which.max(Yield)]
+    VB_MSY<-VB[which.max(Yield)]
+    F_MSY<-Fmort[which.max(Yield)]
+
+    Y_SPR30<-Yield[which(abs(SPR-0.3)==min(abs(SPR-0.3)))]
+    SB_SPR30<-SB[which(abs(SPR-0.3)==min(abs(SPR-0.3)))]
+    VB_SPR30<-VB[which(abs(SPR-0.3)==min(abs(SPR-0.3)))]
+    F_SPR30<-Fmort[which(abs(SPR-0.3)==min(abs(SPR-0.3)))]
+
+    return(list(
+               lh = lh,
+               sel = sel,
+               F_Step = F_Step,
+               stop = stop,
+               sim=data.frame(B0 = B0, VBunfished = VBunfished, MSY = MSY, SB_MSY = SB_MSY, VB_MSY = VB_MSY, F_MSY =  F_MSY, Y_SPR30 = Y_SPR30, SB_SPR30 = SB_SPR30, VB_SPR30 = VB_SPR30, F_SPR30 = F_SPR30))
+    )
+  }
+}

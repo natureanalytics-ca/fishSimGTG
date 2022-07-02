@@ -30,7 +30,7 @@ LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1, doPlot = FALS
   if(class(LifeHistoryObj) != "LifeHistory" ||
      length(LifeHistoryObj@Linf) == 0 ||
      length(LifeHistoryObj@L50) == 0 ||
-     length(LifeHistoryObj@L95) == 0 ||
+     length(LifeHistoryObj@L95delta) == 0 ||
      length(LifeHistoryObj@K) == 0 ||
      length(LifeHistoryObj@M) == 0 ||
      length(LifeHistoryObj@LW_A) == 0 ||
@@ -40,7 +40,7 @@ LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1, doPlot = FALS
      LifeHistoryObj@M < 0 ||
      LifeHistoryObj@K < 0 ||
      LifeHistoryObj@L50 >= LifeHistoryObj@Linf ||
-     LifeHistoryObj@L50 >= LifeHistoryObj@L95 ||
+     isFALSE(LifeHistoryObj@L95delta > 0) ||
      class(TimeAreaObj) != "TimeArea" ||
      length(TimeAreaObj@gtg) == 0 ||
      stepsPerYear < 1
@@ -88,12 +88,12 @@ LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1, doPlot = FALS
     mat<-list()
     for (l in 1:gtg){
       if(length(LifeHistoryObj@isHermaph) != 0 && LifeHistoryObj@isHermaph){
-        s<--(LifeHistoryObj@H95-LifeHistoryObj@H50)/log(1/0.95-1)
+        s<--(LifeHistoryObj@H95delta)/log(1/0.95-1)
         probFemale<-(1-plogis(L[[l]], location=LifeHistoryObj@H50, scale=s))
       } else {
         probFemale<-0.5
       }
-      s<--(LifeHistoryObj@L95-LifeHistoryObj@L50)/log(1/0.95-1)
+      s<--(LifeHistoryObj@L95delta)/log(1/0.95-1)
       mat[[l]]<-plogis(L[[l]], location=LifeHistoryObj@L50, scale=s)*probFemale
     }
 
@@ -189,14 +189,14 @@ LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1, doPlot = FALS
 #'
 #'Total removals is: vul x (Ret + (1 - Ret) x D)
 #'
-#'Selectivity types: "logistic" with params vector c(length at 50% sel, length at 95% sel)
+#'Selectivity types: "logistic" with params vector c(length at 50% sel, length increment to 95% sel)
 #'
-#'Retention types: "full" with no params, assumes Keep = Ret, no discards, no discard mortality; "logistic" with params vector c(length at 50% ret, length at 95% ret); "slotLimit" with params vector c(min length, max length) where catches occur betweem min and max
+#'Retention types: "full" with no params, assumes Keep = Ret, no discards, no discard mortality; "logistic" with params vector c(length at 50% ret, length increment to 95% ret); "slotLimit" with params vector c(min length, max length) where catches occur betweem min and max
 #'
 #'Total dead is: Vul x (Ret + (1-Ret)D)
 #' @param lh  An object produced by LHWrapper.
 #' @param TimeAreaObj A time-area object
-#' @param FisheryObj A stock object
+#' @param FisheryObj A fishery object
 #' @param doPlot Creates a basic plot to visualize outcomes. Useful for ensuring parameter selections are sensible.
 #' @param wd A working directly where the output of runProjection is saved
 #' @param imageName Character. A name for the resulting plot(s)
@@ -213,7 +213,7 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
     if(
       length(param) != 2 ||
       param[1] < 0 ||
-      param[1] >= param[2] ||
+      param[2] < 0 ||
       length(maxProb) == 0 ||
       maxProb < 0 ||
       maxProb > 1
@@ -221,7 +221,7 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
      NULL
     } else {
       tryCatch({
-        plogis(L, location=param[1], scale= -(param[2]-param[1])/log(1/0.95-1))*maxProb
+        plogis(L, location=param[1], scale= -(param[2])/log(1/0.95-1))*maxProb
       },
       error = function(c) NULL,
       warning = function(c) NULL
@@ -359,8 +359,6 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
 #' @importFrom stats optimize
 #' @importFrom gridExtra grid.arrange
 #' @export
-#' @examples
-#' sim<-gtgYPRWrapper(LifeHistoryObj = LifeHistoryExample, gtg=21, stepsPerYear = 12)
 
 solveD<-function(lh, sel, doFit = FALSE, F_in = NULL, D_type = NULL, D_in = NULL, doPlot = FALSE){
 
@@ -388,11 +386,6 @@ solveD<-function(lh, sel, doFit = FALSE, F_in = NULL, D_type = NULL, D_in = NULL
     #----------------------------------------
     #Fitting functions
     #----------------------------------------
-
-    #FIX for loop so it runs fast
-    #FIX fact that this function assumes age 1 rec, fix to reflect age 0 rec
-    #FIX to include plus group
-
     min.Depletion<-function(logFmort){
       Fmort<-exp(logFmort)
       N<-lapply(1:lh$gtg, FUN=function(x) {
@@ -566,6 +559,7 @@ recDev<-function(LifeHistoryObj, TimeAreaObj, StrategyObj = NULL){
      length(TimeAreaObj@iterations) == 0 ||
      LifeHistoryObj@recSD < 0 ||
      LifeHistoryObj@recRho < 0 ||
+     LifeHistoryObj@recRho > 1 ||
      isTRUE(TimeAreaObj@historicalYears + ifelse(class(StrategyObj) == "Strategy" && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0) < 1) ||
      TimeAreaObj@iterations < 1
   ) {
@@ -657,6 +651,322 @@ cpueDev<-function(TimeAreaObj, StochasticObj = NULL){
     return(list(Cdev=Cdev))
   }
 }
+
+
+#-----------------------------------------
+#Set of life history params
+#-----------------------------------------
+
+#Roxygen header
+#'Set of life history params
+#'
+#' @param TimeAreaObj A TimeArea object
+#' @param StochasticObj A Stochastic object
+#' @importFrom methods slot slotNames
+#' @export
+
+lifehistoryDev<-function(TimeAreaObj, StochasticObj){
+  if(length(TimeAreaObj@iterations) == 0 ||
+     TimeAreaObj@iterations < 1
+  ) {
+    return(NULL)
+  } else {
+
+    #Any life history parameter can have uncertainty.
+    #For those parameters specified in Stochastic object, uniform sampling occurs (1 draw per iteration)
+    #Otherwise, constants are obtained from LifeHistory object.
+
+    iterations <- floor(TimeAreaObj@iterations)
+
+    #--------
+    #Linf
+    #--------
+    Linf<-NULL
+    if(class(StochasticObj) == "Stochastic" &&
+       length(StochasticObj@Linf) > 1 &&
+       StochasticObj@Linf[1] > 0 &&
+       StochasticObj@Linf[2] > 0 &&
+       StochasticObj@Linf[2] >= StochasticObj@Linf[1]
+    ) {
+      Linf<-runif(iterations, min = StochasticObj@Linf[1], max = StochasticObj@Linf[2])
+    }
+
+    #--------
+    #K
+    #--------
+    K<-NULL
+    if(class(StochasticObj) == "Stochastic" &&
+       length(StochasticObj@K) > 1 &&
+       StochasticObj@K[1] > 0 &&
+       StochasticObj@K[2] > 0 &&
+       StochasticObj@K[2] >= StochasticObj@K[1]
+    ) {
+      K<-runif(iterations, min = StochasticObj@K[1], max = StochasticObj@K[2])
+    }
+
+    #--------
+    #L50
+    #--------
+    L50<-NULL
+    if(class(StochasticObj) == "Stochastic" &&
+       length(StochasticObj@L50) > 1 &&
+       StochasticObj@L50[1] > 0 &&
+       StochasticObj@L50[2] > 0 &&
+       StochasticObj@L50[2] >= StochasticObj@L50[1]
+    ) {
+      L50<-runif(iterations, min = StochasticObj@L50[1], max = StochasticObj@L50[2])
+    }
+
+    #--------
+    #L95delta
+    #--------
+    L95delta<-NULL
+    if(class(StochasticObj) == "Stochastic" &&
+       length(StochasticObj@L95delta) > 1 &&
+       StochasticObj@L95delta[1] > 0 &&
+       StochasticObj@L95delta[2] > 0 &&
+       StochasticObj@L95delta[2] >= StochasticObj@L95delta[1]
+    ) {
+      L95delta<-runif(iterations, min = StochasticObj@L95delta[1], max = StochasticObj@L95delta[2])
+    }
+
+    #--------
+    #M
+    #--------
+    M<-NULL
+    if(class(StochasticObj) == "Stochastic" &&
+       length(StochasticObj@M) > 1 &&
+       StochasticObj@M[1] > 0 &&
+       StochasticObj@M[2] > 0 &&
+       StochasticObj@M[2] >= StochasticObj@M[1]
+    ) {
+      M<-runif(iterations, min = StochasticObj@M[1], max = StochasticObj@M[2])
+    }
+
+    #--------
+    #Steep
+    #--------
+    Steep<-NULL
+    if(class(StochasticObj) == "Stochastic" &&
+       length(StochasticObj@Steep) > 1 &&
+       StochasticObj@Steep[1] >= 0.21 &&
+       StochasticObj@Steep[1] < 1 &&
+       StochasticObj@Steep[2] >= 0.21 &&
+       StochasticObj@Steep[2] < 1 &&
+       StochasticObj@Steep[2] >= StochasticObj@Steep[1]
+    ) {
+      Steep<-runif(iterations, min = StochasticObj@Steep[1], max = StochasticObj@Steep[2])
+    }
+
+    #--------
+    #recSD
+    #--------
+    recSD<-NULL
+    if(class(StochasticObj) == "Stochastic" &&
+       length(StochasticObj@recSD) > 1 &&
+       StochasticObj@recSD[1] > 0 &&
+       StochasticObj@recSD[2] > 0 &&
+       StochasticObj@recSD[2] >= StochasticObj@recSD[1]
+    ) {
+      recSD<-runif(iterations, min = StochasticObj@recSD[1], max = StochasticObj@recSD[2])
+    }
+
+
+    #--------
+    #recRho
+    #--------
+    recRho<-NULL
+    if(class(StochasticObj) == "Stochastic" &&
+       length(StochasticObj@recRho) > 1 &&
+       StochasticObj@recRho[1] >= 0 &&
+       StochasticObj@recRho[1] <= 1 &&
+       StochasticObj@recRho[2] >= 0 &&
+       StochasticObj@recRho[2] <= 1 &&
+       StochasticObj@recRho[2] >= StochasticObj@recRho[1]
+    ) {
+      recRho<-runif(iterations, min = StochasticObj@recRho[1], max = StochasticObj@recRho[2])
+    }
+
+    #--------
+    #H50
+    #--------
+    H50<-NULL
+    if(class(StochasticObj) == "Stochastic" &&
+       length(StochasticObj@H50) > 1 &&
+       StochasticObj@H50[1] > 0 &&
+       StochasticObj@H50[2] > 0 &&
+       StochasticObj@H50[2] >= StochasticObj@H50[1]
+    ) {
+      H50<-runif(iterations, min = StochasticObj@H50[1], max = StochasticObj@H50[2])
+    }
+
+    #--------
+    #H95delta
+    #--------
+    H95delta<-NULL
+    if(class(StochasticObj) == "Stochastic" &&
+       length(StochasticObj@H95delta) > 1 &&
+       StochasticObj@H95delta[1] > 0 &&
+       StochasticObj@H95delta[2] > 0 &&
+       StochasticObj@H95delta[2] >= StochasticObj@H95delta[1]
+    ) {
+      H95delta<-runif(iterations, min = StochasticObj@H95delta[1], max = StochasticObj@H95delta[2])
+    }
+
+    return(list(Linf=Linf, K=K, L50=L50, L95delta=L95delta, M=M, Steep=Steep, recSD=recSD, recRho=recRho, H50=H50, H95delta=H95delta))
+  }
+}
+
+#-----------------------------------------
+#Set of selectivity params
+#-----------------------------------------
+
+#Roxygen header
+#'Set of selectivity params
+#'
+#' @param HistFisheryObj A fishery object for historical period
+#' @param ProFisheryObj A fishery object for projection period
+#' @param StochasticObj A Stochastic object
+#' @importFrom methods slot slotNames
+#' @export
+
+selDev<-function(HistFisheryObj, ProFisheryObj=NULL, StochasticObj){
+  if(length(TimeAreaObj@iterations) == 0 ||
+     TimeAreaObj@iterations < 1
+  ) {
+    return(NULL)
+  } else {
+
+    #Any life history parameter can have uncertainty.
+    #For those parameters specified in Stochastic object, uniform sampling occurs (1 draw per iteration)
+    #Otherwise, constants are obtained from LifeHistory object.
+
+    iterations <- floor(TimeAreaObj@iterations)
+
+    #------------------------------
+    #Historical period vulnerability
+    #------------------------------
+    historical_vul<-NULL
+    if(class(StochasticObj) == "Stochastic" &&
+       length(StochasticObj@histFisheryVul) > 0 &&
+       dim(StochasticObj@histFisheryVul)[1] == 2 &&
+       sum(sapply(1:dim(StochasticObj@histFisheryVul)[2], function(x){StochasticObj@histFisheryVul[2,x] >= StochasticObj@histFisheryVul[1,x]})) == dim(StochasticObj@histFisheryVul)[2]
+    ) {
+      historical_vul<-sapply(1:dim(StochasticObj@histFisheryVul)[2], function(x){
+        runif(iterations, min = StochasticObj@histFisheryVul[1,x], max = StochasticObj@histFisheryVul[2,x])
+      })
+    }
+
+    #------------------------------
+    #Projection period vulnerability
+    #------------------------------
+    projection_vul<-NULL
+    #Check to see if same selectivity elements should be applied to projection period
+    if(
+      class(StochasticObj) == "Stochastic" &&
+      length(StochasticObj@sameFisheryVul) > 0  &&
+      StochasticObj@sameFisheryVul
+    ) {
+      projection_vul<- historical_vul
+    #Otherwise calculate unique projection selectivity elements
+    } else {
+      if(class(StochasticObj) == "Stochastic" &&
+         length(StochasticObj@proFisheryVul) > 0 &&
+         dim(StochasticObj@proFisheryVul)[1] == 2 &&
+         sum(sapply(1:dim(StochasticObj@proFisheryVul)[2], function(x){StochasticObj@proFisheryVul[2,x] >= StochasticObj@proFisheryVul[1,x]})) == dim(StochasticObj@proFisheryVul)[2]
+      ) {
+        projection_vul<-sapply(1:dim(StochasticObj@proFisheryVul)[2], function(x){
+          runif(iterations, min = StochasticObj@proFisheryVul[1,x], max = StochasticObj@proFisheryVul[2,x])
+        })
+      }
+    }
+
+    #----------------------
+    #Historical retention
+    #----------------------
+    histical_retention<-NULL
+    if(class(StochasticObj) == "Stochastic" &&
+       length(StochasticObj@histFisheryRet) > 0 &&
+       dim(StochasticObj@histFisheryRet)[1] == 2 &&
+       sum(sapply(1:dim(StochasticObj@histFisheryRet)[2], function(x){StochasticObj@histFisheryRet[2,x] >= StochasticObj@histFisheryRet[1,x]})) == dim(StochasticObj@histFisheryRet)[2]
+    ) {
+      histical_retention<-sapply(1:dim(StochasticObj@histFisheryRet)[2], function(x){
+        runif(iterations, min = StochasticObj@histFisheryRet[1,x], max = StochasticObj@histFisheryRet[2,x])
+      })
+    }
+
+    #------------------------------
+    #Projection period retention
+    #------------------------------
+    projection_retention<-NULL
+    #Check to see if same retention elements should be applied to projection period
+    if(
+      class(StochasticObj) == "Stochastic" &&
+      length(StochasticObj@sameFisheryRet) > 0 &&
+      StochasticObj@sameFisheryRet
+    ) {
+      projection_retention<-histical_retention
+      #Otherwise calculate unique projection retention elements
+    } else {
+      if(class(StochasticObj) == "Stochastic" &&
+         length(StochasticObj@proFisheryRet) > 0 &&
+         dim(StochasticObj@proFisheryRet)[1] == 2 &&
+         sum(sapply(1:dim(StochasticObj@proFisheryRet)[2], function(x){StochasticObj@proFisheryRet[2,x] >= StochasticObj@proFisheryRet[1,x]})) == dim(StochasticObj@proFisheryRet)[2]
+      ) {
+        projection_retention<-sapply(1:dim(StochasticObj@proFisheryRet)[2], function(x){
+          runif(iterations, min = StochasticObj@proFisheryRet[1,x], max = StochasticObj@proFisheryRet[2,x])
+        })
+      }
+    }
+
+    #-----------------------
+    #Historical Dmort
+    #-----------------------
+    historical_Dmort<-NULL
+    if(class(StochasticObj) == "Stochastic" &&
+       length(StochasticObj@histFisheryDmort) > 0 &&
+       dim(StochasticObj@histFisheryDmort)[1] == 2 &&
+       sum(StochasticObj@histFisheryDmort <= 1) == (dim(StochasticObj@histFisheryDmort)[1]*dim(StochasticObj@histFisheryDmort)[2]) &&
+       sum(StochasticObj@histFisheryDmort >= 0) == (dim(StochasticObj@histFisheryDmort)[1]*dim(StochasticObj@histFisheryDmort)[2]) &&
+       sum(sapply(1:dim(StochasticObj@histFisheryDmort)[2], function(x){StochasticObj@histFisheryDmort[2,x] >= StochasticObj@histFisheryDmort[1,x]})) == dim(StochasticObj@histFisheryDmort)[2]
+    ) {
+      historical_Dmort<-sapply(1:dim(StochasticObj@histFisheryDmort)[2], function(x){
+        runif(iterations, min = StochasticObj@histFisheryDmort[1,x], max = StochasticObj@histFisheryDmort[2,x])
+      })
+    }
+
+    #-----------------------
+    #Projection Dmort
+    #-----------------------
+    projection_Dmort<-NULL
+    if(
+      class(StochasticObj) == "Stochastic" &&
+      length(StochasticObj@sameFisheryDmort) > 0 &&
+      StochasticObj@sameFisheryDmort
+    ) {
+      projection_Dmort<-historical_Dmort
+      #Otherwise calculate unique projection retention elements
+    } else {
+      if(class(StochasticObj) == "Stochastic" &&
+         length(StochasticObj@proFisheryDmort) > 0 &&
+         dim(StochasticObj@proFisheryDmort)[1] == 2 &&
+         sum(StochasticObj@proFisheryDmort <= 1) == (dim(StochasticObj@proFisheryDmort)[1]*dim(StochasticObj@proFisheryDmort)[2]) &&
+         sum(StochasticObj@proFisheryDmort >= 0) == (dim(StochasticObj@proFisheryDmort)[1]*dim(StochasticObj@proFisheryDmort)[2]) &&
+         sum(sapply(1:dim(StochasticObj@proFisheryDmort)[2], function(x){StochasticObj@proFisheryDmort[2,x] >= StochasticObj@proFisheryDmort[1,x]})) == dim(StochasticObj@proFisheryDmort)[2]
+      ) {
+        projection_Dmort<-sapply(1:dim(StochasticObj@proFisheryDmort)[2], function(x){
+          runif(iterations, min = StochasticObj@proFisheryDmort[1,x], max = StochasticObj@proFisheryDmort[2,x])
+        })
+      }
+    }
+
+    return(list(
+      hist = list(vulParams = historical_vul, retParams = histical_retention, Dmort = historical_Dmort),
+      pro = list(vulParams = projection_vul, retParams = projection_retention, Dmort = projection_Dmort)
+    ))
+  }
+}
+
 
 
 #-----------------------------------------

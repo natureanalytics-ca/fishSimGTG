@@ -3,7 +3,7 @@
 #---------------
 #Example
 #---------------
-#devtools::load_all()
+devtools::load_all()
 library(fishSimGTG)
 library(here)
 
@@ -242,6 +242,9 @@ relSSBseries(wd =  here(),
 
 X<-readProjection( wd = here(),
                    fileName = fileLabel[1])
+
+
+
 
 
 plot(diff(X$dynamics$recN[,1]), type = "l")
