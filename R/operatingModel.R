@@ -824,6 +824,7 @@ lifehistoryDev<-function(TimeAreaObj, StochasticObj){
 #Roxygen header
 #'Set of selectivity params
 #'
+#' @param TimeAreaObj A TimeArea object
 #' @param HistFisheryObj A fishery object for historical period
 #' @param ProFisheryObj A fishery object for projection period
 #' @param StochasticObj A Stochastic object

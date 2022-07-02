@@ -546,8 +546,6 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
 #' @param lh  An object produced by LHWrapper.
 #' @param sel An object produced by selWrapper
 #' @param F_Step F step size for sequence of F_M
-#' @param gtg The number of growth-type groups. Default is 13.
-#' @param stepsPerYear The number of steps per year. Default is 1 as this function is used in the evalMSE.
 #' @importFrom methods new
 #' @export
 

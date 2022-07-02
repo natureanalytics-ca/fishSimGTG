@@ -7,6 +7,8 @@
 selDev(TimeAreaObj, HistFisheryObj, ProFisheryObj = NULL, StochasticObj)
 }
 \arguments{
+\item{TimeAreaObj}{A TimeArea object}
+
 \item{HistFisheryObj}{A fishery object for historical period}
 
 \item{ProFisheryObj}{A fishery object for projection period}

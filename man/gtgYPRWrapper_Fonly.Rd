@@ -12,10 +12,6 @@ gtgYPRWrapper_Fonly(lh, sel, F_Step = 0.02)
 \item{sel}{An object produced by selWrapper}
 
 \item{F_Step}{F step size for sequence of F_M}
-
-\item{gtg}{The number of growth-type groups. Default is 13.}
-
-\item{stepsPerYear}{The number of steps per year. Default is 1 as this function is used in the evalMSE.}
 }
 \description{
 Produces YPR, Yield, and SPR arrays across combinations of F_M
