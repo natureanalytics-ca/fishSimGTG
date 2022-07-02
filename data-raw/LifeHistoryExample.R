@@ -7,7 +7,7 @@ library(LBSPR)
 LifeHistoryExample<-new("LifeHistory")
 LifeHistoryExample@Linf<-100
 LifeHistoryExample@L50<-66
-LifeHistoryExample@L95<-67
+LifeHistoryExample@L95delta<-1
 LifeHistoryExample@MK<-1.5
 LifeHistoryExample@LW_A<-0.01
 LifeHistoryExample@LW_B<-3
@@ -33,8 +33,8 @@ usethis::use_data(LifeHistoryExample, overwrite = TRUE)
 lbsprSimExample<-lbsprSimWrapper(LifeHistoryExample)
 usethis::use_data(lbsprSimExample, overwrite = TRUE)
 
-lbsprSimExample<-lbsprSimWrapper(LifeHistoryExample)
-usethis::use_data(lbsprSimExample, overwrite = TRUE)
+#lbsprSimExample<-lbsprSimWrapper(LifeHistoryExample)
+#usethis::use_data(lbsprSimExample, overwrite = TRUE)
 
 gtgSimExample<-gtgYPRWrapper(LifeHistoryExample)
 usethis::use_data(gtgSimExample, overwrite = TRUE)

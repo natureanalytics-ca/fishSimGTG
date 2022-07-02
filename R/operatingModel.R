@@ -321,7 +321,7 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
     }
     if(!is.null(wd) & !is.null(imageName)) {
       if(!is.null(sel)){
-        png(file=paste0(wd, "/", imageName, ".png"), width=6, height=6, units="in", res=dpi, bg="white", pointsize=12)
+        png(filename=paste0(wd, "/", imageName, ".png"), width=6, height=6, units="in", res=dpi, bg="white", pointsize=12)
         par(mfcol=c(1,1), las = 1)
         plot(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$vul)[order(unlist(lh$L))], type = "l", col = "purple", lwd =3, ylim = c(0,1), xlab = "Length", ylab = "Probability")
         lines(unlist(lh$L)[order(unlist(lh$L))], unlist(sel$ret)[order(unlist(lh$L))], lwd =3, col = "blue")
@@ -830,7 +830,7 @@ lifehistoryDev<-function(TimeAreaObj, StochasticObj){
 #' @importFrom methods slot slotNames
 #' @export
 
-selDev<-function(HistFisheryObj, ProFisheryObj=NULL, StochasticObj){
+selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj=NULL, StochasticObj){
   if(length(TimeAreaObj@iterations) == 0 ||
      TimeAreaObj@iterations < 1
   ) {

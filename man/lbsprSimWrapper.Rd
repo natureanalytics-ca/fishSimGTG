@@ -37,13 +37,13 @@ Utilizes the LBSPR library to calculate YPR, Yield, and SPR across factorial com
 This produces an array of values for each output, which is useful for surface plot, finding MSY, etc.
 Yield is presented in relative terms, with a maximum of 1. YPR is not presented in relative terms, but the user
 may want to re-calculate this quantity as relative YPR for presentation purposes.
-Required parameters of the LifeHistory object are: Linf, L50, L95, MK, Steep, LW_A, LW_B
+Required parameters of the LifeHistory object are: Linf, L50, L95delta, MK, Steep, LW_A, LW_B
 }
 \examples{
 lh<-new("LifeHistory")
 lh@Linf<-100
 lh@L50<-66
-lh@L95<-67
+lh@L95delta<-1
 lh@MK<-1.5
 lh@LW_A<-0.01
 lh@LW_B<-3

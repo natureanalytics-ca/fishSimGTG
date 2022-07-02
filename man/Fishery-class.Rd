@@ -17,7 +17,7 @@
 
 \item{retMax}{Numeric value that defines the peak of the historical retention curve. A value between 0 and 1.}
 
-\item{Dmort}{Historical tiem period discard mortality rate (not instantaneous rate, rather it is the fraction of discards killed e.g. 0.25 is 25\% killed). A value between 0 and 1.}
+\item{Dmort}{Discard mortality rate (not instantaneous rate, rather it is the fraction of discards killed e.g. 0.25 is 25\% killed). A value between 0 and 1.}
 }
 \description{
 An S4 object that holds a description of a fish stock, including selectivity and discard information.

@@ -17,7 +17,7 @@ evalMSE<-function(inputObject){
   #------------------
   #Unpack dataObject
   #------------------
-  TimeAreaObj <- StrategyObj <- lh <- iterations <- iter <- Ddev <- LHdev <- Sdev <- Cdev <- RdevMatrix <- NULL
+  TimeAreaObj <- StrategyObj <- LifeHistoryObj <- HistFisheryObj <- ProFisheryObj <- iterations <- iter <- Ddev <- LHdev <- Sdev <- Cdev <- RdevMatrix <- NULL
   for(r in 1:NROW(inputObject)) assign(names(inputObject)[r], inputObject[[r]])
 
   controlRuleYear<-c(FALSE, rep(FALSE,(TimeAreaObj@historicalYears)), rep(TRUE, ifelse(class(StrategyObj) == "Strategy"  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)))
@@ -346,7 +346,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
   LHdev<-lifehistoryDev(TimeAreaObj, StochasticObj)
 
   #Selectivity parameters
-  Sdev<-selDev(HistFisheryObj, ProFisheryObj, StochasticObj)
+  Sdev<-selDev(TimeAreaObj, HistFisheryObj, ProFisheryObj, StochasticObj)
 
 
   #---------------------------------------
@@ -425,15 +425,15 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
         selPro<-selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj_TMP, doPlot = FALSE)
         if(is.null(lh)) {
           proceedMSE<-FALSE
-          print(paste("Life history cannot be created. Check inputs. Stopped at interation", j))
+          print(paste("Life history cannot be created. Check inputs. Stopped at interation", k))
         }
         if(is.null(selHist)){
           proceedMSE<-FALSE
-          print(paste("Historical selectivity cannot be created. Check inputs. Stopped at interation", j))
+          print(paste("Historical selectivity cannot be created. Check inputs. Stopped at interation", k))
         }
         if(isTRUE(!is.null(StrategyObj) &  is.null(selPro))){
           proceedMSE<-FALSE
-          print(paste("Projection selectivity cannot be created. Check inputs. Stopped at interation", j))
+          print(paste("Projection selectivity cannot be created. Check inputs. Stopped at interation", k))
         }
       }
     } else {
@@ -677,7 +677,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       rb<-rainbow(iterations)
 
       #Population level plots
-      png(file=paste(wd, "/", fileName, "_SPR.png",sep=""), width=4, height=4, units="in", res=300, bg="white", pointsize=12)
+      png(filename=paste(wd, "/", fileName, "_SPR.png",sep=""), width=4, height=4, units="in", res=300, bg="white", pointsize=12)
       par(mfrow=c(1,1), mar=c(4,4,3,1))
       plot(dt$dynamics$SPR[,1], type="l", las=1, ylab="", xlab = "Year", ylim=c(0,1), col=rb[1], main = "SPR")
       if(iterations > 1){
@@ -687,7 +687,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       }
       dev.off()
 
-      png(file=paste(wd, "/", fileName, "_SBrel.png",sep=""), width=4, height=4, units="in", res=300, bg="white",pointsize=12)
+      png(filename=paste(wd, "/", fileName, "_SBrel.png",sep=""), width=4, height=4, units="in", res=300, bg="white",pointsize=12)
       par(mfrow=c(1,1), mar=c(4,4,3,1))
       plot(dt$dynamics$relSB[,1], type="l", las=1, ylab="", xlab = "Year", ylim=c(0,1), col=rb[1], main = "Relative spawning biomass")
       if(iterations > 1){
@@ -698,7 +698,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       dev.off()
 
       #Recruit over time
-      png(file=paste(wd, "/", fileName, "_recN.png",sep=""), width=4, height=4, units="in", res=300, bg="white", pointsize=12)
+      png(filename=paste(wd, "/", fileName, "_recN.png",sep=""), width=4, height=4, units="in", res=300, bg="white", pointsize=12)
       par(mfrow=c(1,1), mar=c(4,4,3,1))
       plot(dt$dynamics$recN[,1], type="l", las=1, ylab="", xlab = "Year", ylim=c(min(dt$dynamics$recN),max(dt$dynamics$recN)), col=rb[1], main = "recruits N")
       if(iterations > 1){
@@ -710,7 +710,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
 
       #S-R
-      png(file=paste(wd, "/", fileName, "_SR.png",sep=""), width=4, height=4, units="in", res=300, bg="white", pointsize=12)
+      png(filename=paste(wd, "/", fileName, "_SR.png",sep=""), width=4, height=4, units="in", res=300, bg="white", pointsize=12)
       par(mfrow=c(1,1), mar=c(4,4,3,1))
 
       is<-solveD(lh, sel = selHist, doFit = FALSE, F_in = 0.01)
@@ -734,7 +734,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       #---------------------
 
       #SSB
-      png(file=paste0(wd, "/", fileName, "_SB_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
+      png(filename=paste0(wd, "/", fileName, "_SB_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
       par(mfrow=c(ceiling(dt$TimeAreaObj@areas/2+0.5),2), mar=c(4,4,3,1))
       for(m in 1:dt$TimeAreaObj@areas) {
         plot(dt$dynamics$SB[,1,m], type="l", las=1, ylab="", xlab = "Year", col=rb[1], ylim=c(min(dt$dynamics$SB[,,m]), max(dt$dynamics$SB[,,m])), main = "Spawning biomass")
@@ -749,7 +749,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
 
       #Catch
-      png(file=paste0(wd, "/", fileName, "_catchB_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
+      png(filename=paste0(wd, "/", fileName, "_catchB_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
       par(mfrow=c(ceiling(dt$TimeAreaObj@areas/2+0.5),2), mar=c(4,4,3,1))
       for(m in 1:dt$TimeAreaObj@areas) {
         plot(dt$dynamics$catchB[,1,m], type="l", las=1, ylab="", xlab = "Year", col=rb[1], ylim=c(min(dt$dynamics$catchB[,,m]), max(dt$dynamics$catchB[,,m])), main = "catch in weight")
@@ -763,7 +763,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       dev.off()
 
       #F
-      png(file=paste0(wd, "/", fileName, "_F_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
+      png(filename=paste0(wd, "/", fileName, "_F_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
       par(mfrow=c(ceiling(dt$TimeAreaObj@areas/2+0.5),2), mar=c(4,4,3,1))
       for(m in 1:dt$TimeAreaObj@areas) {
         plot(dt$dynamics$Ftotal[,1,m], type="l", las=1, ylab="", xlab = "Year", col=rb[1], ylim=c(min(dt$dynamics$Ftotal[,,m]), max(dt$dynamics$Ftotal[,,m])), main = "Fishing mortality")
@@ -778,7 +778,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
 
       #rel change in SSB
-      png(file=paste0(wd, "/", fileName, "_SBchange_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
+      png(filename=paste0(wd, "/", fileName, "_SBchange_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
       par(mfrow=c(ceiling(dt$TimeAreaObj@areas/2+0.5),2), mar=c(4,4,3,1))
       for(m in 1:dt$TimeAreaObj@areas) {
         plot(dt$dynamics$SB[,1,m]/dt$dynamics$SB[1,1,m], type="l", las=1, ylab="", col=rb[1], ylim=c(0,2), main = "Relative spawning biomass")

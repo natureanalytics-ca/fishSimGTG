@@ -33,11 +33,6 @@
 #' @param isHermaph Logical whether species is a protogynous hermaphrodite (TRUE). FALSE is gonochoristic species.
 #' @param H50 Length at 50% male.
 #' @param H95delta Length increment between H50 and length 95% male. Must be a value larger than 0.
-#' @param author Author of the life history - do not include your email address as these life histories may be posted online
-#' @param authAffiliation A way to identify the author without relying on an email address
-#' @param longDescription Document the rational for choices made in creating the life history. Other users will rely on this information.
-#' @param appBuild A data frame that holds details when the life history is built using the Shiny app
-#' @param ID A user ID. Not required.
 #' @importFrom methods new
 
 setClass("LifeHistory",

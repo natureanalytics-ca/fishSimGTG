@@ -50,7 +50,7 @@ fixedStrategy<-function(phase, dataObject){
 projectionStrategy<-function(phase, dataObject){
 
   #Unpack dataObject
-  j <- TimeAreaObj <- areas <- StrategyObj <- is <- k <- StochasticObj <- lh <- N <- selHist <- Cdev <- selGroup <- NULL
+  j <- TimeAreaObj <- areas <- StrategyObj <- is <- k <- StochasticObj <- lh <- N <- selHist <- Cdev <- selGroup <- Ftotal <- NULL
   for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
 
   #Book keeping year for items in StrategyObj

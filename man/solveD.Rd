@@ -32,6 +32,3 @@ solveD(
 \description{
 Creates the necessary age-based vectors equilibrium abundance, biomass and catch for sub-cohorts
 }
-\examples{
-sim<-gtgYPRWrapper(LifeHistoryObj = LifeHistoryExample, gtg=21, stepsPerYear = 12)
-}

@@ -25,7 +25,7 @@
 
 \item{L50}{Length at 50\% maturity.}
 
-\item{L95}{Length at 95\% maturity. Must be a value larger than L50}
+\item{L95delta}{Length increment between L50 and length at 95\% maturity. Must be a value larger than 0.}
 
 \item{M}{Natural mortality rate per year}
 
@@ -49,17 +49,7 @@
 
 \item{H50}{Length at 50\% male.}
 
-\item{H95}{Length at 95\% male. Must be a value larger than H50}
-
-\item{author}{Author of the life history - do not include your email address as these life histories may be posted online}
-
-\item{authAffiliation}{A way to identify the author without relying on an email address}
-
-\item{longDescription}{Document the rational for choices made in creating the life history. Other users will rely on this information.}
-
-\item{appBuild}{A data frame that holds details when the life history is built using the Shiny app}
-
-\item{ID}{A user ID. Not required.}
+\item{H95delta}{Length increment between H50 and length 95\% male. Must be a value larger than 0.}
 }
 \description{
 An S4 object that holds a description of a life history.
