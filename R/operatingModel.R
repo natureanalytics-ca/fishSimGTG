@@ -619,36 +619,36 @@ bioDev<-function(TimeAreaObj, StochasticObj = NULL){
 }
 
 #-----------------------------------------
-#Initial cpue
+#Initial cpue - special function for projectionStrategy
 #-----------------------------------------
 
 #Roxygen header
-#'Initial cpue deviations
+#'Initial cpue deviations - special function for projectionStrategy
 #'
 #' @param TimeAreaObj A TimeArea object
-#' @param StochasticObj A Stochastic object
+#' @param StrategyObj A Stochastic object
 #' @importFrom methods slot slotNames
 #' @export
 
-cpueDev<-function(TimeAreaObj, StochasticObj = NULL){
+cpueDev<-function(TimeAreaObj, StrategyObj){
   if(length(TimeAreaObj@iterations) == 0 ||
      TimeAreaObj@iterations < 1
    ) {
     return(NULL)
   } else {
-    if(class(StochasticObj) == "Stochastic" &&
-       length(StochasticObj@historicalCPUE) > 1 &&
-       StochasticObj@historicalCPUE[1] > 0 &&
-       StochasticObj@historicalCPUE[2] > 0 &&
-       StochasticObj@historicalCPUE[2] >= StochasticObj@historicalCPUE[1]
+    if(class(StrategyObj) == "Strategy" &&
+       length(StrategyObj@projectionParams[['CPUE']]) > 1 &&
+       StrategyObj@projectionParams[['CPUE']][1] > 0 &&
+       StrategyObj@projectionParams[['CPUE']][2] > 0 &&
+       StrategyObj@projectionParams[['CPUE']][2] >= StrategyObj@projectionParams[['CPUE']][1]
     ) {
-      Ctmp <- StochasticObj@historicalCPUE[1:2]
+      Ctmp <- StrategyObj@projectionParams[['CPUE']][1:2]
+      iterations <- floor(TimeAreaObj@iterations)
+      Cdev <- runif(iterations, min = Ctmp[1], max = Ctmp[2])
+      return(list(Cdev=Cdev))
     } else {
-      Ctmp <- c(1, 1)
+      return(NULL)
     }
-    iterations <- floor(TimeAreaObj@iterations)
-    Cdev <- runif(iterations, min = Ctmp[1], max = Ctmp[2])
-    return(list(Cdev=Cdev))
   }
 }
 

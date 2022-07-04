@@ -92,12 +92,7 @@ selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = TRUE, 
 #-----------------------------
 StochasticObj<-new("Stochastic")
 StochasticObj@historicalBio = c(0.3, 0.6)
-StochasticObj@historicalCPUE = c(1,2) #This is used in bag limit projection, see Batch_projection_example
-StochasticObj@historicalCPUEType = "vulN"
-StochasticObj@Linf<-c(43.2,63.2)
-StochasticObj@histFisheryDmort<-matrix(c(0,2), nrow=2, byrow = TRUE)
-StochasticObj@proFisheryDmort<-matrix(c(0,1), nrow=2, byrow = TRUE)
-StochasticObj@sameFisheryDmort<-FALSE
+
 
 #-------------------------------------------------------
 #Setup fishery characteristics for the projection period
@@ -123,10 +118,11 @@ ProFisheryObj@Dmort <- 0
 #---The stratgy object is used to specify effort changes (e.g. effort reduction strategies), bag limits, and spatial closures (e.g., by setting effort to 0 in a given area)
 #---Since we are not modifying any of these options, we just need to create a placeholder. We will assume effort will be constant into the foreseeable future
 #---The effort matrix of a Strategy object is set as a multiplier of fishing mortality in the terminal year of the historical time period - or initial eq. if no historical period specified
+
 StrategyObj <- new("Strategy")
 StrategyObj@projectionYears <- 50
 StrategyObj@projectionName<-"projectionStrategy"
-StrategyObj@projectionParams<-list(bag = c(-99, -99), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE))
+StrategyObj@projectionParams<-list(bag = c(2, 2), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(1,2), CPUEtype = "retN")
 
 
 #----------------

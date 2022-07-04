@@ -182,10 +182,13 @@ evalMSE<-function(inputObject){
       dataObject<-c(list(j=j,
                          k=k,
                          is=is,
+                         lh = lh,
                          areas = areas,
                          ageClasses = ageClasses,
                          N=N,
                          selGroup = selGroup,
+                         selHist = selHist,
+                         selPro = selPro,
                          SB=SB,
                          SPR=SPR,
                          catchN=catchN,
@@ -204,9 +207,12 @@ evalMSE<-function(inputObject){
       dataObject<-c(list(j=j,
                          k=k,
                          is=is,
+                         lh=lh,
                          areas = areas,
                          ageClasses = ageClasses,
                          selGroup = selGroup,
+                         selHist = selHist,
+                         selPro = selPro,
                          N=N,
                          SB=SB,
                          SPR=SPR,
@@ -263,10 +269,13 @@ evalMSE<-function(inputObject){
         dataObject<-c(list(j=j,
                            k=k,
                            is=is,
+                           lh = lh,
                            areas = areas,
                            ageClasses = ageClasses,
                            N=N,
                            selGroup = selGroup,
+                           selHist = selHist,
+                           selPro = selPro,
                            SB=SB,
                            SPR=SPR,
                            catchN=catchN,
@@ -339,8 +348,11 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
   #Initial depletion (SSB rel)
   Ddev<-bioDev(TimeAreaObj, StochasticObj)$Ddev
 
-  #Historical cpue
-  Cdev<-cpueDev(TimeAreaObj, StochasticObj)$Cdev
+  #Historical cpue used only in projectionStrategy
+  Cdev<-NULL
+  if(class(StrategyObj) == "Strategy" &&
+     StrategyObj@projectionName == "projectionStrategy"
+  ) Cdev<-cpueDev(TimeAreaObj, StrategyObj)$Cdev
 
   #Life history parmeters
   LHdev<-lifehistoryDev(TimeAreaObj, StochasticObj)
@@ -353,18 +365,30 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
   #Initial checks that do not stop program
   #---------------------------------------
 
+  print("
+  #---------------
+  #Initial checks
+  #---------------
+  ")
+
   #Check to see if uncertain initial bio created
   if(!is.null(StochasticObj)){
-    if(length(StochasticObj@historicalBio) > 1)
-      print(paste("Uncertainty in initial biomass", StochasticObj@historicalBio[1], "to", StochasticObj@historicalBio[2], TimeAreaObj@historicalBioType, "created. Is this the correct range?"))
+    if(length(StochasticObj@historicalBio) > 1) {
+      print(paste("Uncertainty in initial biomass:", StochasticObj@historicalBio[1], "to", StochasticObj@historicalBio[2], TimeAreaObj@historicalBioType, "created."))
+    } else {
+      print(paste("Uncertainty in initial biomass:", "none"))
+    }
   }
 
   #Check to see if uncertain life history specified and created
   if(!is.null(StochasticObj)){
     #Find LH params that are not null
     LHList<-names(LHdev[!unlist(lapply(LHdev, is.null))])
-    if(NROW(LHList) > 0)
-    print(paste("Uncertainty in life history parameters", LHList, "created. Is this the correct set?"))
+    if(NROW(LHList) > 0) {
+      print(paste("Uncertainty in life history parameters:", LHList))
+    } else {
+      print(paste("Uncertainty in life history parameters:", "none"))
+    }
   }
 
   #Check to see if uncertain fishery selectivity specified and created
@@ -372,15 +396,23 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
   if(!is.null(StochasticObj)){
     #Find LH params that are not null
     selListHist<-names(Sdev$hist[!unlist(lapply(Sdev$hist, is.null))])
-    if(NROW(selListHist) > 0) print(paste("Uncertainty in historical fishery selectivity parameters", selListHist, "created. Is this the correct set?"))
-    if(NROW(selListHist) > 0 & is.null(HistFisheryObj)) print("Uncertainty in historical fishery selectivity cannot be specified with also specifying HistFisheryObj")
+    if(NROW(selListHist) > 0) {
+      print(paste("Uncertainty in historical fishery selectivity parameters:", selListHist))
+    } else {
+      print(paste("Uncertainty in historical fishery selectivity parameters:", "none"))
+    }
+    if(NROW(selListHist) > 0 & is.null(HistFisheryObj)) print("Uncertainty in historical fishery selectivity cannot be specified without also specifying HistFisheryObj")
   }
   #Projection
   if(!is.null(StochasticObj)){
     #Find LH params that are not null
     selListPro<-names(Sdev$pro[!unlist(lapply(Sdev$pro, is.null))])
-    if(NROW(selListPro) > 0) print(paste("Uncertainty in projection fishery selectivity parameters", selListPro, "created. Is this the correct set?"))
-    if(NROW(selListPro) > 0 & is.null(ProFisheryObj)) print("Uncertainty in projection fishery selectivity cannot be specified with also specifying ProFisheryObj")
+    if(NROW(selListPro) > 0) {
+      print(paste("Uncertainty in projection fishery selectivity parameters:", selListPro))
+    } else {
+      print(paste("Uncertainty in projection fishery selectivity parameters:", "none"))
+    }
+    if(NROW(selListPro) > 0 & is.null(ProFisheryObj)) print("Uncertainty in projection fishery selectivity cannot be specified without also specifying ProFisheryObj")
   }
 
   #----------------------------------------------
@@ -467,8 +499,11 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
     print("Initial biomass variation cannot be created. Check inputs.")
   }
 
-  #CDdev
-  if(proceedMSE && is.null(Cdev)) {
+  #Cdev
+  if(proceedMSE &&
+     class(StrategyObj) == "Strategy"  &&
+     StrategyObj@projectionName == "projectionStrategy" &&
+     is.null(Cdev)) {
     proceedMSE<-FALSE
     print("Initial CPUE variation cannot be created. Check inputs.")
   }
@@ -507,12 +542,6 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
      isTRUE(class(StrategyObj) == "Strategy" && length(StrategyObj@projectionYears) == 0) ||
      isTRUE(class(StrategyObj) == "Strategy" && StrategyObj@projectionYears < 1)
   ){
-    proceedMSE<-FALSE
-    print("When applying a management strategy, StrategyObj@projectionYears must be greater than 0")
-  }
-
-  #Parameters associated with 'projectionStrategy' not specified correctly
-  if(proceedMSE && isTRUE(class(StrategyObj) == "Strategy" && StrategyObj@projectionName == "projectionStrategy" && length(StrategyObj@projectionParams) != 2)){
     proceedMSE<-FALSE
     print("When applying a management strategy, StrategyObj@projectionYears must be greater than 0")
   }

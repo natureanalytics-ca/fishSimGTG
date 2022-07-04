@@ -64,17 +64,17 @@ projectionStrategy<-function(phase, dataObject){
     Flocal<-data.frame()
     for (m in 1:areas){
 
-      bag <- StrategyObj@projectionParams[[1]][m]
+      bag <- StrategyObj@projectionParams[['bag']][m]
 
       if(bag == -99){
 
         #Apply Flocal
-        Ftmp<-StrategyObj@projectionParams[[2]][yr,m]*Ftotal[yrHist,k,m]
+        Ftmp<-StrategyObj@projectionParams[['effort']][yr,m]*Ftotal[yrHist,k,m]
         Flocal<-rbind(Flocal, c(j, k, m, Ftmp))
 
       } else {
 
-        if(StochasticObj@historicalCPUEType == "vulN") {
+        if(StrategyObj@projectionParams[['CPUEtype']] == "retN") {
 
           #Initial equilibrium vulnerable N
           Nvul<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist$keep[[x]])))
@@ -93,12 +93,12 @@ projectionStrategy<-function(phase, dataObject){
           Fmult<-min(nm/lambda, 1.0)
 
           #Apply Flocal
-          Ftmp<-StrategyObj@projectionParams[[2]][yr,m]*Ftotal[yrHist,k,m]*Fmult
+          Ftmp<-StrategyObj@projectionParams[['effort']][yr,m]*Ftotal[yrHist,k,m]*Fmult
           Flocal<-rbind(Flocal, c(j, k, m, Ftmp))
 
         }
 
-        if(StochasticObj@historicalCPUEType == "vulB") {
+        if(StrategyObj@projectionParams[['CPUEtype']] == "retB") {
 
           #Initial equilibrium vulnerable N
           Nvul<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist$keep[[x]]*lh$W[[x]])))
@@ -117,7 +117,7 @@ projectionStrategy<-function(phase, dataObject){
           Fmult<-min(nm/lambda, 1.0)
 
           #Apply Flocal
-          Ftmp<-StrategyObj@projectionParams[[2]][yr,m]*Ftotal[yrHist,k,m]*Fmult
+          Ftmp<-StrategyObj@projectionParams[['effort']][yr,m]*Ftotal[yrHist,k,m]*Fmult
           Flocal<-rbind(Flocal, c(j, k, m, Ftmp))
 
         }

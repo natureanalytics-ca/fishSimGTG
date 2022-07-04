@@ -212,17 +212,32 @@ setClass("Strategy",
 #'
 #'Details of stochastic components of the population dynamics. This list creates additional inputs as well as overrides for parameters specified elsewhere, allowing corresponding model components to become stochastic. Exception is recruitment variation, which is entered in the LifeHistory object
 #' @param title A title for the object, useful for describing the scenario under exploration
-#' @param historicalBio A vector of length 2 that contains a min and a max for historical equilibrium biomass. Replaces TimeArea@historicalBio. Continues to rely on TimeArea@historicalBioType. Range sampled at each iteration using a uniform distribution.
-#' @param historicalCPUE A vector of length 2 that contains a min and a max for historical equilibrium fishery CPUE. Used to calculate a scaling coefficient, q, which allows results to be scaled to observed levels of CPUE. Range sampled at each iteration using a uniform distribution.
-#' @param historicalCPUEType String. The type of fishery dependent CPUE, options are: 'vulB' or 'vulN'. Choice is used to calculating scaling coefficient relative to vulnerable biomass or vulnerable abundance.
+#' @param historicalBio A vector of length 2 that contains a min and a max for historical equilibrium biomass. If entered, replaces TimeArea@historicalBio. Continues to rely on TimeArea@historicalBioType. Range sampled at each iteration using a uniform distribution.
+#' @param Linf A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.
+#' @param K A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.
+#' @param L50 A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.
+#' @param L95delta A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.
+#' @param M A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.
+#' @param Steep A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.
+#' @param recSD A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.
+#' @param recRho A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.
+#' @param H50 A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.
+#' @param H95delta A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.
+#' @param histFisheryVul A matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces HistFisheryObj@vulParams. Columns correspond to needed inputs of HistFisheryObj@vulType. Range sampled at each iteration using a uniform distribution.
+#' @param proFisheryVul A matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@vulParams. Columns correspond to needed inputs of ProFisheryObj@vulType. Range sampled at each iteration using a uniform distribution.
+#' @param sameFisheryVul Logical. Indicates whether values generated for histFisheryVul should be applied to proFisheryVul so that historical and projection parameter values are identical. TRUE overrides any input in proFisheryVul
+#' @param histFisheryRet A matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces HistFisheryObj@retParams. Columns correspond to needed inputs of HistFisheryObj@retType. Range sampled at each iteration using a uniform distribution.
+#' @param proFisheryRet  matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@retParams. Columns correspond to needed inputs of ProFisheryObj@retType. Range sampled at each iteration using a uniform distribution.
+#' @param sameFisheryRet Logical. Indicates whether values generated for histFisheryRet should be applied to proFisheryRet so that historical and projection parameter values are identical. TRUE overrides any input in proFisheryRet
+#' @param histFisheryDmort A matrix 1 cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces HistFisheryObj@Dmort. Range sampled at each iteration using a uniform distribution.
+#' @param proFisheryDmort A matrix 1 cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@Dmort. Range sampled at each iteration using a uniform distribution.
+#' @param sameFisheryDmort Logical. Indicates whether values generated for histFisheryDmort should be applied to proFisheryDmort so that historical and projection parameter values are identical. TRUE overrides any input in proFisheryDmort
 #' @importFrom methods new
 
 setClass("Stochastic",
          representation(
            title = "character",
            historicalBio = "numeric",
-           historicalCPUE = 'numeric',
-           historicalCPUEType = "character",
            Linf = "numeric",
            K = "numeric",
            L50 = "numeric",

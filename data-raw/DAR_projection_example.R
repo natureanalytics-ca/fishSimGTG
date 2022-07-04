@@ -1,8 +1,8 @@
 
 
 
-library(fishSimGTG)
-#devtools::load_all()
+#library(fishSimGTG)
+devtools::load_all()
 library(here)
 
 #-----------------------------------------
@@ -16,7 +16,7 @@ LifeHistoryObj@Linf<-17.7
 LifeHistoryObj@K<-0.423
 LifeHistoryObj@t0<- -0.51
 LifeHistoryObj@L50<-8.4
-LifeHistoryObj@L95<-8.4*1.15
+LifeHistoryObj@L95delta<-1.26
 LifeHistoryObj@M<-0.08
 LifeHistoryObj@L_type<-"FL"
 LifeHistoryObj@L_units<-"cm"
@@ -28,7 +28,7 @@ LifeHistoryObj@recSD<-0 #Run with no rec var'n to see deterministic trends
 HistFisheryObj<-new("Fishery")
 HistFisheryObj@title<-"Test"
 HistFisheryObj@vulType<-"logistic"
-HistFisheryObj@vulParams<-c(10.2,10.3) #Approx. knife edge
+HistFisheryObj@vulParams<-c(10.2,0.1) #Approx. knife edge
 HistFisheryObj@retType<-"full"
 HistFisheryObj@retMax <- 1
 HistFisheryObj@Dmort <- 0
@@ -50,22 +50,20 @@ TimeAreaObj@historicalEffort<-matrix(1:1, nrow = 10, ncol = 2, byrow = FALSE)
 #-----------------
 StochasticObj<-new("Stochastic")
 StochasticObj@historicalBio = c(0.3, 0.6)
-StochasticObj@historicalCPUE = c(7,11)
-StochasticObj@historicalCPUEType = "vulN"
 
 ProFisheryObj<-new("Fishery")
 ProFisheryObj@title<-"Test"
 ProFisheryObj@vulType<-"logistic"
-ProFisheryObj@vulParams<-c(10.2,10.3)
+ProFisheryObj@vulParams<-c(10.2,0.1)
 ProFisheryObj@retType<-"logistic"
-ProFisheryObj@retParams <- c(10.2, 10.3)
+ProFisheryObj@retParams <- c(10.2, 0.1)
 ProFisheryObj@retMax <- 1
 ProFisheryObj@Dmort <- 0
 
 StrategyObj <- new("Strategy")
 StrategyObj@projectionYears <- 50
 StrategyObj@projectionName<-"projectionStrategy"
-StrategyObj@projectionParams<-list(bag = c(5, 5), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE))
+StrategyObj@projectionParams<-list(bag = c(5, 5), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(7,11), CPUEtype = 'retN')
 
 #Batch processing - 3 management strategies
 stateLmin<-c(10.2, 12.7,  12.7)
@@ -76,10 +74,10 @@ projectionLabel<-c("Bag 20", "Min size 5 inch", "Bag 20 & min size 5 inch")
 for(sc in 1:NROW(stateLmin)){
 
   #Size limit - changes retention, not selectivity
-  ProFisheryObj@retParams<-c(stateLmin[sc],stateLmin[sc]+0.1)
+  ProFisheryObj@retParams<-c(stateLmin[sc],0.1)
 
   #Bag limit
-  StrategyObj@projectionParams<-list(bag = c(stateBag[sc], stateBag[sc]), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE))
+  StrategyObj@projectionParams<-list(bag = c(stateBag[sc], stateBag[sc]), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(7,11), CPUEtype = 'retN')
 
   runProjection(LifeHistoryObj = LifeHistoryObj,
                 TimeAreaObj = TimeAreaObj,
@@ -115,7 +113,7 @@ ProFisheryObj@Dmort <- 0
 StrategyObj <- new("Strategy")
 StrategyObj@projectionYears <- 50
 StrategyObj@projectionName<-"projectionStrategy"
-StrategyObj@projectionParams<-list(bag = c(5, 5), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE))
+StrategyObj@projectionParams<-list(bag = c(5, 5), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(7,11))
 
 #Batch processing - 3 management strategies
 stateLmin<-c(10.2, 12.7,  12.7)
