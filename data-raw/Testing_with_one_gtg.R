@@ -2,7 +2,7 @@
 #---------------
 #Example
 #---------------
-#devtools::load_all()
+devtools::load_all()
 library(fishSimGTG)
 library(here)
 
@@ -39,7 +39,7 @@ TimeAreaObj@title = "Test"
 TimeAreaObj@gtg = 1
 TimeAreaObj@areas = 2
 TimeAreaObj@recArea = c(0.99, 0.01)
-TimeAreaObj@iterations = 100
+TimeAreaObj@iterations = 1
 TimeAreaObj@historicalYears = 10
 TimeAreaObj@historicalBio = 0.5
 TimeAreaObj@historicalBioType = "relB"
