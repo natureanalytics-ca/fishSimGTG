@@ -51,6 +51,7 @@ LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1, doPlot = FALS
     #----------------
     #How many gtg?
     #----------------
+    gtg <- TimeAreaObj@gtg
     if(gtg == 1){
       gtg_Linf <- LifeHistoryObj@Linf
     } else {

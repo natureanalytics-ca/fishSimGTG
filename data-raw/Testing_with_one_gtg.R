@@ -1,4 +1,10 @@
 
+#---------------
+#Example
+#---------------
+#devtools::load_all()
+library(fishSimGTG)
+library(here)
 
 #-----------------------------------------
 #Kala
@@ -75,8 +81,8 @@ for(sc in 1:NROW(stateLower)){
   #Bag limit
   StrategyObj@projectionParams<-list(bag = c(-99, -99), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(1,2), CPUEtype='retN')
 
-  lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj, doPlot = FALSE)
-  selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = ProFisheryObj, doPlot = TRUE)
+  #lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj, doPlot = FALSE)
+  #selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = ProFisheryObj, doPlot = TRUE)
 
 
   runProjection(LifeHistoryObj = LifeHistoryObj,
