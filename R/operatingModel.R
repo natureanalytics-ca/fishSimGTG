@@ -51,12 +51,16 @@ LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1, doPlot = FALS
     #----------------
     #How many gtg?
     #----------------
-    gtg<-ceiling(ifelse(TimeAreaObj@gtg < 3, 3, TimeAreaObj@gtg))
-    gtg<-ifelse((gtg %% 2) == 0, gtg+1, gtg)
-    CVLinf<-0.1
-    maxsd<-2 #number of standard deviations from mean Linf
-    SDLinf<-LifeHistoryObj@Linf*CVLinf
-    gtg_Linf <- seq(from = LifeHistoryObj@Linf - maxsd * SDLinf, to = LifeHistoryObj@Linf + maxsd * SDLinf, length.out = gtg)
+    if(gtg == 1){
+      gtg_Linf <- LifeHistoryObj@Linf
+    } else {
+      #gtg<-ceiling(ifelse(TimeAreaObj@gtg < 7, 7, TimeAreaObj@gtg))
+      gtg<-ifelse((gtg %% 2) == 0, gtg+1, gtg)
+      CVLinf<-0.1
+      maxsd<-2 #number of standard deviations from mean Linf
+      SDLinf<-LifeHistoryObj@Linf*CVLinf
+      gtg_Linf <- seq(from = LifeHistoryObj@Linf - maxsd * SDLinf, to = LifeHistoryObj@Linf + maxsd * SDLinf, length.out = gtg)
+    }
 
     #---------------
     #Rec proportions

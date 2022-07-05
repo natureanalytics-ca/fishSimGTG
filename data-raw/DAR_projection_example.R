@@ -1,7 +1,7 @@
 
 
 
-#library(fishSimGTG)
+library(fishSimGTG)
 devtools::load_all()
 library(here)
 
@@ -98,22 +98,20 @@ for(sc in 1:NROW(stateLmin)){
 #-----------------
 StochasticObj<-new("Stochastic")
 StochasticObj@historicalBio = c(0.1, 0.3)
-StochasticObj@historicalCPUE = c(7,11)
-StochasticObj@historicalCPUEType = "vulN"
 
 ProFisheryObj<-new("Fishery")
 ProFisheryObj@title<-"Test"
 ProFisheryObj@vulType<-"logistic"
-ProFisheryObj@vulParams<-c(10.2,10.3)
+ProFisheryObj@vulParams<-c(10.2,0.1)
 ProFisheryObj@retType<-"logistic"
-ProFisheryObj@retParams <- c(10.2, 10.3)
+ProFisheryObj@retParams <- c(10.2, 0.1)
 ProFisheryObj@retMax <- 1
 ProFisheryObj@Dmort <- 0
 
 StrategyObj <- new("Strategy")
 StrategyObj@projectionYears <- 50
 StrategyObj@projectionName<-"projectionStrategy"
-StrategyObj@projectionParams<-list(bag = c(5, 5), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(7,11))
+StrategyObj@projectionParams<-list(bag = c(5, 5), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(7,11), CPUEtype = "retN")
 
 #Batch processing - 3 management strategies
 stateLmin<-c(10.2, 12.7,  12.7)
@@ -124,10 +122,10 @@ projectionLabel<-c("Bag 20", "Min size 5 inch", "Bag 20 & min size 5 inch")
 for(sc in 1:NROW(stateLmin)){
 
   #Size limit - changes retention, not selectivity
-  ProFisheryObj@retParams<-c(stateLmin[sc],stateLmin[sc]+0.1)
+  ProFisheryObj@retParams<-c(stateLmin[sc],0.1)
 
   #Bag limit
-  StrategyObj@projectionParams<-list(bag = c(stateBag[sc], stateBag[sc]), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE))
+  StrategyObj@projectionParams<-list(bag = c(stateBag[sc], stateBag[sc]), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(7,11), CPUEtype = "retN")
 
   runProjection(LifeHistoryObj = LifeHistoryObj,
                 TimeAreaObj = TimeAreaObj,
@@ -190,7 +188,7 @@ LifeHistoryObj@Linf<-48
 LifeHistoryObj@K<-0.43
 LifeHistoryObj@t0<- -0.14
 LifeHistoryObj@L50<-35.5
-LifeHistoryObj@L95<-35.5*1.15
+LifeHistoryObj@L95delta<-5.325
 LifeHistoryObj@M<-0.06
 LifeHistoryObj@L_type<-"FL"
 LifeHistoryObj@L_units<-"cm"
@@ -202,14 +200,14 @@ LifeHistoryObj@recSD<-0 #Run with no rec var'n to see deterministic trends
 HistFisheryObj<-new("Fishery")
 HistFisheryObj@title<-"Test"
 HistFisheryObj@vulType<-"logistic"
-HistFisheryObj@vulParams<-c(25.1,25.2) #Approx. knife edge
+HistFisheryObj@vulParams<-c(25.1,0.1) #Approx. knife edge
 HistFisheryObj@retType<-"full"
 HistFisheryObj@retMax <- 1
 HistFisheryObj@Dmort <- 0
 
 TimeAreaObj<-new("TimeArea")
 TimeAreaObj@title = "Test"
-TimeAreaObj@gtg = 13
+TimeAreaObj@gtg = 1
 TimeAreaObj@areas = 2
 TimeAreaObj@recArea = c(0.99, 0.01)
 TimeAreaObj@iterations = 100
@@ -219,18 +217,18 @@ TimeAreaObj@historicalBioType = "relB"
 TimeAreaObj@move <- matrix(c(1,0, 0,1), nrow=2, ncol=2, byrow=FALSE)
 TimeAreaObj@historicalEffort<-matrix(1:1, nrow = 10, ncol = 2, byrow = FALSE)
 
+
+
 #------------------
 #Higher SSB Scenario
 #-----------------
 StochasticObj<-new("Stochastic")
 StochasticObj@historicalBio = c(0.3, 0.6)
-StochasticObj@historicalCPUE = c(1,2)
-StochasticObj@historicalCPUEType = "vulN"
 
 ProFisheryObj<-new("Fishery")
 ProFisheryObj@title<-"Test"
 ProFisheryObj@vulType<-"logistic"
-ProFisheryObj@vulParams<-c(25.1,25.2)
+ProFisheryObj@vulParams<-c(25.1,0.1)
 ProFisheryObj@retType<-"full"
 ProFisheryObj@retMax <- 1
 ProFisheryObj@Dmort <- 0
@@ -238,16 +236,16 @@ ProFisheryObj@Dmort <- 0
 StrategyObj <- new("Strategy")
 StrategyObj@projectionYears <- 50
 StrategyObj@projectionName<-"projectionStrategy"
-StrategyObj@projectionParams<-list(bag = c(5, 5), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE))
+StrategyObj@projectionParams<-list(bag = c(5, 5), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(1,2), CPUEtype='retN')
 
 #Batch processing - 3 management strategies
 stateLower<-c(-99, 35.6, 35.6)
 stateUpper<-c(-99, 50.8, 50.8)
-stateBag<-c(2, -99, 2)
+stateBag<-c(2, -99, 2, -99)
 fileLabel<-c("Higher_option1", "Higher_option2", "Higher_option3")
 projectionLabel<-c("Bag 2", "Slot 14 - 20 inch", "Bag 2 & Slot 14 - 20 inch")
 
-for(sc in 1:NROW(stateLmin)){
+for(sc in 1:NROW(stateLower)){
 
   #Size limit - changes retention, not selectivity
   if(stateLower[sc] == -99){
@@ -258,7 +256,7 @@ for(sc in 1:NROW(stateLmin)){
   }
 
   #Bag limit
-  StrategyObj@projectionParams<-list(bag = c(stateBag[sc], stateBag[sc]), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE))
+  StrategyObj@projectionParams<-list(bag = c(stateBag[sc], stateBag[sc]), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(1,2), CPUEtype='retN')
 
   runProjection(LifeHistoryObj = LifeHistoryObj,
                 TimeAreaObj = TimeAreaObj,
@@ -279,13 +277,11 @@ for(sc in 1:NROW(stateLmin)){
 #-----------------
 StochasticObj<-new("Stochastic")
 StochasticObj@historicalBio = c(0.1, 0.3)
-StochasticObj@historicalCPUE = c(7,11)
-StochasticObj@historicalCPUEType = "vulN"
 
 ProFisheryObj<-new("Fishery")
 ProFisheryObj@title<-"Test"
 ProFisheryObj@vulType<-"logistic"
-ProFisheryObj@vulParams<-c(10.2,10.3)
+ProFisheryObj@vulParams<-c(10.2,0.1)
 ProFisheryObj@retType<-"full"
 ProFisheryObj@retMax <- 1
 ProFisheryObj@Dmort <- 0
@@ -293,16 +289,16 @@ ProFisheryObj@Dmort <- 0
 StrategyObj <- new("Strategy")
 StrategyObj@projectionYears <- 50
 StrategyObj@projectionName<-"projectionStrategy"
-StrategyObj@projectionParams<-list(bag = c(5, 5), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE))
+StrategyObj@projectionParams<-list(bag = c(5, 5), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(1,2), CPUEtype = 'retN')
 
 #Batch processing - 3 management strategies
 stateLower<-c(-99, 35.6, 35.6)
 stateUpper<-c(-99, 50.8, 50.8)
 stateBag<-c(2, -99, 2)
-fileLabel<-c("Higher_option1", "Higher_option2", "Higher_option3")
+fileLabel<-c("Lower_option1", "Lower_option2", "Lower_option3")
 projectionLabel<-c("Bag 2", "Slot 14 - 20 inch", "Bag 2 & Slot 14 - 20 inch")
 
-for(sc in 1:NROW(stateLmin)){
+for(sc in 1:NROW(stateLower)){
 
   #Size limit - changes retention, not selectivity
   if(stateLower[sc] == -99){
@@ -313,7 +309,7 @@ for(sc in 1:NROW(stateLmin)){
   }
 
   #Bag limit
-  StrategyObj@projectionParams<-list(bag = c(stateBag[sc], stateBag[sc]), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE))
+  StrategyObj@projectionParams<-list(bag = c(stateBag[sc], stateBag[sc]), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(1,2), CPUEtype = 'retN')
 
   runProjection(LifeHistoryObj = LifeHistoryObj,
                 TimeAreaObj = TimeAreaObj,
@@ -337,16 +333,16 @@ relSSBscatter(wd =  here("data-test", "Kala"),
                 "Higher_option1",
                 "Higher_option2",
                 "Higher_option3",
+                "Higher_option3",
                 "Lower_option1",
                 "Lower_option2",
-                "Lower_option3",
-                "Higher_option1",
-                "Higher_option2",
-                "Higher_option3"
+                "Lower_option3"
               ),
-              facetName = c(as.list(rep("Higher biomass scenario", 3)), as.list(rep("Lower biomass scenario", 3)), as.list(rep("Other biomass scenario", 3))),
+              facetName = c(as.list(rep("Higher biomass scenario", 3)), as.list(rep("Lower biomass scenario", 3))),
               chooseArea = 0,
-              proYear = 10)
+              proYear = 50)
+
+
 
 
 relSSBseries(wd =  here("data-test", "Kala"),
@@ -356,12 +352,9 @@ relSSBseries(wd =  here("data-test", "Kala"),
                "Higher_option3",
                "Lower_option1",
                "Lower_option2",
-               "Lower_option3",
-               "Higher_option1",
-               "Higher_option2",
-               "Higher_option3"
+               "Lower_option3"
              ),
-             facetName = c(as.list(rep("Higher biomass scenario", 3)), as.list(rep("Lower biomass scenario", 3)), as.list(rep("Other biomass scenario", 3))),
+             facetName = c(as.list(rep("Higher biomass scenario", 3)), as.list(rep("Lower biomass scenario", 3))),
              chooseArea = 0,
              percentile = c(0.025, 0.975),
              doHist = TRUE,

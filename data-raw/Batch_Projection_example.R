@@ -66,7 +66,7 @@ lhOut
 #Setup fishery characteristics
 #-----------------------------
 
-#---Pupulate a Fishery object
+#---Populate a Fishery object
 #---Contains selectivity, retention and discard characteristics
 #---Not sure how to set this up? Type ?selWrapper
 HistFisheryObj<-new("Fishery")

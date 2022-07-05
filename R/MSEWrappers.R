@@ -693,9 +693,9 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
     #Save results
     #---------------
 
-    dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref = ref, Ddev=Ddev, LHdev=LHdev, Sdev = Sdev)
+    dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref = ref)
     HCR<-list(decisionLocal=decisionLocal, decisionAnnual=decisionAnnual, decisionData=decisionData)
-    dt<-list(titleStrategy = titleStrategy, dynamics=dynamics, HCR=HCR, iterations=iterations, lh = lh,  LifeHistoryObj=LifeHistoryObj, LHdev=LHdev, TimeAreaObj=TimeAreaObj, HistFisheryObj=HistFisheryObj, ProFisheryObj=ProFisheryObj,  StrategyObj= StrategyObj, StochasticObj=StochasticObj)
+    dt<-list(titleStrategy = titleStrategy, dynamics=dynamics, HCR=HCR, iterations=iterations, LifeHistoryObj=LifeHistoryObj, LHdev=LHdev, Sdev = Sdev, Ddev=Ddev, TimeAreaObj=TimeAreaObj, HistFisheryObj=HistFisheryObj, ProFisheryObj=ProFisheryObj,  StrategyObj= StrategyObj, StochasticObj=StochasticObj)
     saveRDS(dt, file=paste(wd, "/", fileName, ".rds", sep=""))
 
     #--------------------------------------------------------------------------------
