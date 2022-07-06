@@ -39,7 +39,7 @@ TimeAreaObj@title = "Test"
 TimeAreaObj@gtg = 1
 TimeAreaObj@areas = 2
 TimeAreaObj@recArea = c(0.99, 0.01)
-TimeAreaObj@iterations = 1
+TimeAreaObj@iterations = 100
 TimeAreaObj@historicalYears = 10
 TimeAreaObj@historicalBio = 0.5
 TimeAreaObj@historicalBioType = "relB"
@@ -66,23 +66,24 @@ StrategyObj@projectionName<-"projectionStrategy"
 StrategyObj@projectionParams<-list(bag = c(5, 5), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(1,2), CPUEtype='retN')
 
 #Batch processing - 3 management strategies
-stateLower<-c(35.6, 35.6, 35.6)
-stateUpper<-c(0.001, 51, 200)
-stateType<-c('logistic', 'slotLimit', 'slotLimit')
+stateLower<-c(-99, 35.6, 35.6)
+stateUpper<-c(-99, 50.8, 50.8)
+stateBag<-c(2, -99, 2, -99)
 fileLabel<-c("Higher_option1", "Higher_option2", "Higher_option3")
-projectionLabel<-c("Min", "Slot 14 - 20 inch", "Slot large")
+projectionLabel<-c("Bag 2", "Slot 14 - 20 inch", "Bag 2 & Slot 14 - 20 inch")
 
 for(sc in 1:NROW(stateLower)){
 
   #Size limit - changes retention, not selectivity
-  ProFisheryObj@retType<-stateType[sc]
-  ProFisheryObj@retParams<-c(stateLower[sc], stateUpper[sc])
+  if(stateLower[sc] == -99){
+    ProFisheryObj@retType<-"full"
+  } else {
+    ProFisheryObj@retType<-"slotLimit"
+    ProFisheryObj@retParams<-c(stateLower[sc],stateUpper[sc])
+  }
 
   #Bag limit
-  StrategyObj@projectionParams<-list(bag = c(-99, -99), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(1,2), CPUEtype='retN')
-
-  #lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj, doPlot = FALSE)
-  #selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = ProFisheryObj, doPlot = TRUE)
+  StrategyObj@projectionParams<-list(bag = c(stateBag[sc], stateBag[sc]), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(1,2), CPUEtype='retN')
 
 
   runProjection(LifeHistoryObj = LifeHistoryObj,

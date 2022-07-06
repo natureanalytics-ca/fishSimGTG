@@ -77,7 +77,7 @@ projectionStrategy<-function(phase, dataObject){
         if(StrategyObj@projectionParams[['CPUEtype']] == "retN") {
 
           #Initial equilibrium vulnerable N
-          Nvul<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist$keep[[x]])))
+          Nvul<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist[[m]]$keep[[x]])))
 
           #Specify assumed initial lambda
           lambdaInitial <- Cdev[k]
@@ -86,7 +86,7 @@ projectionStrategy<-function(phase, dataObject){
           q<-lambdaInitial/Nvul
 
           #Get current F multiplier
-          lambda<-q*sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,j,m]*selGroup$keep[[x]])))
+          lambda<-q*sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,j,m]*selGroup[[m]]$keep[[x]])))
           probs<-c(dpois(0:(bag-1), lambda), 1-ppois(bag-1,lambda))
           probs<-probs/sum(probs)
           nm<-sum(0:bag*probs)
@@ -101,7 +101,7 @@ projectionStrategy<-function(phase, dataObject){
         if(StrategyObj@projectionParams[['CPUEtype']] == "retB") {
 
           #Initial equilibrium vulnerable N
-          Nvul<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist$keep[[x]]*lh$W[[x]])))
+          Nvul<-sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist[[m]]$keep[[x]]*lh$W[[x]])))
 
           #Specify assumed initial lambda
           lambdaInitial <- Cdev[k]
@@ -110,7 +110,7 @@ projectionStrategy<-function(phase, dataObject){
           q<-lambdaInitial/Nvul
 
           #Get current F multiplier
-          lambda<-q*sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,j,m]*selGroup$keep[[x]]*lh$W[[x]])))
+          lambda<-q*sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,j,m]*selGroup[[m]]$keep[[x]]*lh$W[[x]])))
           probs<-c(dpois(0:(bag-1), lambda), 1-ppois(bag-1,lambda))
           probs<-probs/sum(probs)
           nm<-sum(0:bag*probs)

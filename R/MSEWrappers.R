@@ -56,17 +56,22 @@ evalMSE<-function(inputObject){
   #-------------------------------------------
   LHList<-names(LHdev[!unlist(lapply(LHdev, is.null))])
   selListHist<-names(Sdev$hist[!unlist(lapply(Sdev$hist, is.null))])
-  selListPro<-names(Sdev$pro[!unlist(lapply(Sdev$pro, is.null))])
-
+  selListPro<-lapply(1:TimeAreaObj@areas, function(x){
+    names(Sdev$pro[[x]][!unlist(lapply(Sdev$pro[[x]], is.null))])
+  })
   #Is deterministic, so save time by make calculations only once.
-  if(NROW(LHList) == 0 & NROW(selListHist) == 0 & NROW(selListPro) == 0){
+  if(NROW(LHList) == 0 & NROW(selListHist) == 0 & NROW(unlist(selListPro)) == 0){
     lh<-LHwrapper(LifeHistoryObj, TimeAreaObj)
     ageClasses <- lh$ageClasses
     if(!is.null(lh) & lh$LifeHistory@Steep < 0.21) lh$LifeHistory@Steep <- 0.21
     if(!is.null(lh) & lh$LifeHistory@Steep > 1) lh$LifeHistory@Steep <- 1
-    selHist<-selWrapper(lh, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = FALSE)
-    selPro<-selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj, doPlot = FALSE)
-    refCalc<-gtgYPRWrapper_Fonly(lh=lh, sel=selHist)
+    selHist<-lapply(1:TimeAreaObj@areas, function(x){
+      selWrapper(lh, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = FALSE)
+    })
+    selPro<-lapply(1:TimeAreaObj@areas, function(x){
+      selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj_list[[x]], doPlot = FALSE)
+    })
+    refCalc<-gtgYPRWrapper_Fonly(lh=lh, sel=selHist[[1]])
     for(k in iter[1]:iter[2]) ref[k, ]<-as.matrix(refCalc$sim)[1,]
     colnames(ref)<-names(refCalc$sim)
   }
@@ -82,29 +87,37 @@ evalMSE<-function(inputObject){
     #-----------------------------------------------------------------
     #Setup iteration-specific life history & selectivity (if present)
     #-----------------------------------------------------------------
-    if(NROW(LHList) > 0 | NROW(selListHist) > 0 | NROW(selListPro) > 0){
+    if(NROW(LHList) > 0 | NROW(selListHist) > 0 | NROW(unlist(selListPro)) > 0){
       #LH
       LifeHistoryObj_TMP<-LifeHistoryObj
       if(NROW(LHList) > 0){
         for(x in 1:NROW(LHList)) slot(LifeHistoryObj_TMP, LHList[x]) <- LHdev[[LHList[x]]][k]
       }
-      #sel
+      #Hist sel
       HistFisheryObj_TMP<-HistFisheryObj
       if(NROW(selListHist) > 0){
         for(x in 1:NROW(selListHist)) slot(HistFisheryObj_TMP, selListHist[x]) <- Sdev$hist[[selListHist[x]]][k,]
       }
-      ProFisheryObj_TMP<-ProFisheryObj
-      if(NROW(selListPro) > 0){
-        for(x in 1:NROW(selListPro)) slot(ProFisheryObj_TMP, selListPro[x]) <- Sdev$pro[[selListPro[x]]][k,]
-      }
+      #Pro sel
+      ProFisheryObj_TMP<-lapply(1:TimeAreaObj@areas, function(x){
+        TMP<-ProFisheryObj_list[[x]]
+        if(NROW(selListPro[[x]]) > 0){
+          for(y in 1:NROW(selListPro[[x]])) slot(TMP, selListPro[[x]][y]) <- Sdev$pro[[x]][[selListPro[[x]][y]]][k,]
+        }
+        TMP
+      })
       #setup
       lh<-LHwrapper(LifeHistoryObj_TMP, TimeAreaObj)
       ageClasses <- lh$ageClasses
       if(!is.null(lh) & lh$LifeHistory@Steep < 0.21) lh$LifeHistory@Steep <- 0.21
       if(!is.null(lh) & lh$LifeHistory@Steep > 1) lh$LifeHistory@Steep <- 1
-      selHist<-selWrapper(lh, TimeAreaObj, FisheryObj = HistFisheryObj_TMP, doPlot = FALSE)
-      selPro<-selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj_TMP, doPlot = FALSE)
-      refCalc<-gtgYPRWrapper_Fonly(lh=lh, sel=selHist)
+      selHist<-lapply(1:TimeAreaObj@areas, function(x){
+        selWrapper(lh, TimeAreaObj, FisheryObj = HistFisheryObj_TMP, doPlot = FALSE)
+      })
+      selPro<-lapply(1:TimeAreaObj@areas, function(x){
+        selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj_TMP[[x]], doPlot = FALSE)
+      })
+      refCalc<-gtgYPRWrapper_Fonly(lh=lh, sel=selHist[[1]])
       ref[k, ]<-as.matrix(refCalc$sim)[1,]
       colnames(ref)<-names(refCalc$sim)
     }
@@ -112,11 +125,10 @@ evalMSE<-function(inputObject){
     #-----------------------------------------
     #Initial equilibrium - year 1
     #-----------------------------------------
-    is<-solveD(lh, sel = selHist, doFit = TRUE, D_type = TimeAreaObj@historicalBioType, D_in = Ddev[k])
+    is<-solveD(lh, sel = selHist[[1]], doFit = TRUE, D_type = TimeAreaObj@historicalBioType, D_in = Ddev[k])
 
     #Burn-in to calibrate N by area, noting effect of movement
     Ntmp <- list()
-    selGroup <- 1
     yrsTmp <- (ageClasses*4)
     for (l in 1:lh$gtg){
       Ntmp[[l]]<-array(dim=c(ageClasses, yrsTmp, areas))
@@ -130,7 +142,7 @@ evalMSE<-function(inputObject){
         if(j< yrsTmp){
           P<-matrix(nrow=ageClasses*areas, ncol=ageClasses*areas)
           for(m in 1:areas){
-            S<-SurvMat(ageClasses = ageClasses, M_in=lh$LifeHistory@M, F_in=is$Feq, S_in=selHist$removal[[l]] )
+            S<-SurvMat(ageClasses = ageClasses, M_in=lh$LifeHistory@M, F_in=is$Feq, S_in=selHist[[m]]$removal[[l]] )
             rows<-c((m-1)*dim(Ntmp[[l]])[1]+1,m*dim(Ntmp[[l]])[1])
             cols<-c(1,(dim(Ntmp[[l]])[1]*areas))
             P[rows[1]:rows[2],cols[1]:cols[2]]<- MoveMat(Surv_in=S, Move_in=TimeAreaObj@move, area_in=m)
@@ -160,13 +172,13 @@ evalMSE<-function(inputObject){
     relSB[1,k]<-sum(SB[1,k,])/is$B0
     recN[1,k]<-is$Req
     for(m in 1:areas){
-      VB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist$vul[[x]]*lh$W[[x]])))
-      RB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist$keep[[x]]*lh$W[[x]])))
+      VB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist[[m]]$vul[[x]]*lh$W[[x]])))
+      RB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist[[m]]$keep[[x]]*lh$W[[x]])))
       Ftotal[1,k,m] <- is$Feq
-      catchN[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[1,k,m]*selHist$keep[[x]]/(Ftotal[1,k,m]*selHist$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
-      catchB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[1,k,m]*selHist$keep[[x]]/(Ftotal[1,k,m]*selHist$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
-      discN[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[1,k,m]*selHist$discard[[x]]/(Ftotal[1,k,m]*selHist$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
-      discB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[1,k,m]*selHist$discard[[x]]/(Ftotal[1,k,m]*selHist$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
+      catchN[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[1,k,m]*selHist[[m]]$keep[[x]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
+      catchB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[1,k,m]*selHist[[m]]$keep[[x]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
+      discN[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[1,k,m]*selHist[[m]]$discard[[x]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
+      discB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[1,k,m]*selHist[[m]]$discard[[x]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
     }
 
     #--------------------
@@ -239,14 +251,14 @@ evalMSE<-function(inputObject){
 
       #Arrays
       for(m in 1:areas){
-        VB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,j,m]*selGroup$vul[[x]]*lh$W[[x]])))
-        RB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,j,m]*selGroup$keep[[x]]*lh$W[[x]])))
+        VB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,j,m]*selGroup[[m]]$vul[[x]]*lh$W[[x]])))
+        RB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,j,m]*selGroup[[m]]$keep[[x]]*lh$W[[x]])))
         xRow<-which(decisionLocal$year==j & decisionLocal$iteration==k & decisionLocal$area==m)
         Ftotal[j,k,m] <- decisionLocal$Flocal[xRow]
-        catchN[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[j,k,m]*selGroup$keep[[x]]/(Ftotal[j,k,m]*selGroup$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
-        catchB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[j,k,m]*selGroup$keep[[x]]/(Ftotal[j,k,m]*selGroup$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
-        discN[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[j,k,m]*selGroup$discard[[x]]/(Ftotal[j,k,m]*selGroup$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
-        discB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[j,k,m]*selGroup$discard[[x]]/(Ftotal[j,k,m]*selGroup$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
+        catchN[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[j,k,m]*selGroup[[m]]$keep[[x]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
+        catchB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[j,k,m]*selGroup[[m]]$keep[[x]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
+        discN[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[j,k,m]*selGroup[[m]]$discard[[x]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
+        discB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[j,k,m]*selGroup[[m]]$discard[[x]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
       }
 
       #Next year abundance, move through each gtg
@@ -254,7 +266,7 @@ evalMSE<-function(inputObject){
         if(j<years){
           P<-matrix(nrow=ageClasses*areas, ncol=ageClasses*areas)
           for(m in 1:areas){
-            S<-SurvMat(ageClasses = ageClasses, M_in=lh$LifeHistory@M, F_in=Ftotal[j,k,m], S_in=selGroup$removal[[l]])
+            S<-SurvMat(ageClasses = ageClasses, M_in=lh$LifeHistory@M, F_in=Ftotal[j,k,m], S_in=selGroup[[m]]$removal[[l]])
             rows<-c((m-1)*dim(N[[l]])[1]+1,m*dim(N[[l]])[1])
             cols<-c(1,(dim(N[[l]])[1]*areas))
             P[rows[1]:rows[2],cols[1]:cols[2]]<- MoveMat(Surv_in=S, Move_in=TimeAreaObj@move, area_in=m)
@@ -329,7 +341,7 @@ evalMSE<-function(inputObject){
 #' @export
 
 
-runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryObj = NULL, StrategyObj = NULL, StochasticObj = NULL,
+runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryObj_list = NULL, StrategyObj = NULL, StochasticObj = NULL,
                         wd, fileName, seed = 1, doPlot = FALSE, customToCluster = NULL, titleStrategy = "No name"){
 
   #-----------------------
@@ -358,7 +370,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
   LHdev<-lifehistoryDev(TimeAreaObj, StochasticObj)
 
   #Selectivity parameters
-  Sdev<-selDev(TimeAreaObj, HistFisheryObj, ProFisheryObj, StochasticObj)
+  Sdev<-selDev(TimeAreaObj, HistFisheryObj, ProFisheryObj_list, StochasticObj)
 
 
   #---------------------------------------
@@ -431,9 +443,11 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
   if(proceedMSE){
     LHList<-names(LHdev[!unlist(lapply(LHdev, is.null))])
     selListHist<-names(Sdev$hist[!unlist(lapply(Sdev$hist, is.null))])
-    selListPro<-names(Sdev$pro[!unlist(lapply(Sdev$pro, is.null))])
+    selListPro<-lapply(1:TimeAreaObj@areas, function(x){
+      names(Sdev$pro[[x]][!unlist(lapply(Sdev$pro[[x]], is.null))])
+    })
 
-    if(NROW(LHList) > 0 | NROW(selListHist) > 0 | NROW(selListPro) > 0) {
+    if(NROW(LHList) > 0 | NROW(selListHist) > 0 | NROW(unlist(selListPro)) > 0) {
       for(k in 1:floor(TimeAreaObj@iterations)){
         #LH
         LifeHistoryObj_TMP<-LifeHistoryObj
@@ -441,48 +455,69 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
           for(x in 1:NROW(LHList)) slot(LifeHistoryObj_TMP, LHList[x]) <- LHdev[[LHList[x]]][k]
         }
 
-        #sel
+        #Hist sel
         HistFisheryObj_TMP<-HistFisheryObj
         if(NROW(selListHist) > 0){
           for(x in 1:NROW(selListHist)) slot(HistFisheryObj_TMP, selListHist[x]) <- Sdev$hist[[selListHist[x]]][k,]
         }
 
-        ProFisheryObj_TMP<-ProFisheryObj
-        if(NROW(selListPro) > 0){
-          for(x in 1:NROW(selListPro)) slot(ProFisheryObj_TMP, selListPro[x]) <- Sdev$pro[[selListPro[x]]][k,]
-        }
+        #Pro sel
+        ProFisheryObj_TMP<-lapply(1:TimeAreaObj@areas, function(x){
+          TMP<-ProFisheryObj_list[[x]]
+          if(NROW(selListPro[[x]]) > 0){
+            for(y in 1:NROW(selListPro[[x]])) slot(TMP, selListPro[[x]][y]) <- Sdev$pro[[x]][[selListPro[[x]][y]]][k,]
+          }
+          TMP
+        })
 
+        #Setup
         lh<-LHwrapper(LifeHistoryObj_TMP, TimeAreaObj)
-        selHist<-selWrapper(lh, TimeAreaObj, FisheryObj = HistFisheryObj_TMP, doPlot = FALSE)
-        selPro<-selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj_TMP, doPlot = FALSE)
+        selHist<-lapply(1:TimeAreaObj@areas, function(x){
+          selWrapper(lh, TimeAreaObj, FisheryObj = HistFisheryObj_TMP, doPlot = FALSE)
+        })
+        selPro<-lapply(1:TimeAreaObj@areas, function(x){
+          selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj_TMP[[x]], doPlot = FALSE)
+        })
         if(is.null(lh)) {
           proceedMSE<-FALSE
           print(paste("Life history cannot be created. Check inputs. Stopped at interation", k))
         }
-        if(is.null(selHist)){
-          proceedMSE<-FALSE
-          print(paste("Historical selectivity cannot be created. Check inputs. Stopped at interation", k))
+        for(x in 1:TimeAreaObj@areas){
+          if(is.null(selHist[[x]])){
+            proceedMSE<-FALSE
+            print(paste("Historical selectivity cannot be created. Check inputs. Stopped at interation", k))
+          }
         }
-        if(isTRUE(!is.null(StrategyObj) &  is.null(selPro))){
-          proceedMSE<-FALSE
-          print(paste("Projection selectivity cannot be created. Check inputs. Stopped at interation", k))
+        for(x in 1:TimeAreaObj@areas){
+          if(isTRUE(!is.null(StrategyObj) &  is.null(selPro[[x]]))){
+            proceedMSE<-FALSE
+            print(paste("Projection selectivity cannot be created. Check inputs. Stopped at interation", k))
+          }
         }
       }
     } else {
       lh<-LHwrapper(LifeHistoryObj, TimeAreaObj)
-      selHist<-selWrapper(lh, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = FALSE)
-      selPro<-selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj, doPlot = FALSE)
+      selHist<-lapply(1:TimeAreaObj@areas, function(x){
+        selWrapper(lh, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = FALSE)
+      })
+      selPro<-lapply(1:TimeAreaObj@areas, function(x){
+        selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj_list[[x]], doPlot = FALSE)
+      })
       if(is.null(lh)) {
         proceedMSE<-FALSE
         print("Life history cannot be created. Check inputs.")
       }
-      if(is.null(selHist)){
-        proceedMSE<-FALSE
-        print("Historical selectivity cannot be created. Check inputs.")
+      for(x in 1:TimeAreaObj@areas){
+        if(is.null(selHist[[x]])){
+          proceedMSE<-FALSE
+          print("Historical selectivity cannot be created. Check inputs.")
+        }
       }
-      if(isTRUE(!is.null(StrategyObj) &  is.null(selPro))){
-        proceedMSE<-FALSE
-        print("Projection selectivity cannot be created. Check inputs.")
+      for(x in 1:TimeAreaObj@areas){
+        if(isTRUE(!is.null(StrategyObj) &  is.null(selPro[[x]]))){
+          proceedMSE<-FALSE
+          print("Projection selectivity cannot be created. Check inputs.")
+        }
       }
     }
   }
@@ -604,7 +639,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                LifeHistoryObj = LifeHistoryObj,
                                TimeAreaObj = TimeAreaObj,
                                HistFisheryObj = HistFisheryObj,
-                               ProFisheryObj = ProFisheryObj,
+                               ProFisheryObj_list = ProFisheryObj_list,
                                StrategyObj = StrategyObj,
                                StochasticObj = StochasticObj,
                                iterations=iterations)
@@ -622,7 +657,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                     LifeHistoryObj = LifeHistoryObj,
                                     TimeAreaObj = TimeAreaObj,
                                     HistFisheryObj = HistFisheryObj,
-                                    ProFisheryObj = ProFisheryObj,
+                                    ProFisheryObj_list = ProFisheryObj_list,
                                     StrategyObj = StrategyObj,
                                     StochasticObj = StochasticObj,
                                     iterations=iterations
@@ -695,7 +730,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
     dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref = ref)
     HCR<-list(decisionLocal=decisionLocal, decisionAnnual=decisionAnnual, decisionData=decisionData)
-    dt<-list(titleStrategy = titleStrategy, dynamics=dynamics, HCR=HCR, iterations=iterations, LifeHistoryObj=LifeHistoryObj, LHdev=LHdev, Sdev = Sdev, Ddev=Ddev, TimeAreaObj=TimeAreaObj, HistFisheryObj=HistFisheryObj, ProFisheryObj=ProFisheryObj,  StrategyObj= StrategyObj, StochasticObj=StochasticObj)
+    dt<-list(titleStrategy = titleStrategy, dynamics=dynamics, HCR=HCR, iterations=iterations, LifeHistoryObj=LifeHistoryObj, LHdev=LHdev, Sdev = Sdev, Ddev=Ddev, TimeAreaObj=TimeAreaObj, HistFisheryObj=HistFisheryObj, ProFisheryObj_list=ProFisheryObj_list,  StrategyObj= StrategyObj, StochasticObj=StochasticObj)
     saveRDS(dt, file=paste(wd, "/", fileName, ".rds", sep=""))
 
     #--------------------------------------------------------------------------------

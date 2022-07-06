@@ -224,13 +224,13 @@ setClass("Strategy",
 #' @param H50 A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.
 #' @param H95delta A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.
 #' @param histFisheryVul A matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces HistFisheryObj@vulParams. Columns correspond to needed inputs of HistFisheryObj@vulType. Range sampled at each iteration using a uniform distribution.
-#' @param proFisheryVul A matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@vulParams. Columns correspond to needed inputs of ProFisheryObj@vulType. Range sampled at each iteration using a uniform distribution.
+#' @param proFisheryVul_list A list containing number of objects equal to areas. Each object is a matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@vulParams. Columns correspond to needed inputs of ProFisheryObj@vulType. Range sampled at each iteration using a uniform distribution.
 #' @param sameFisheryVul Logical. Indicates whether values generated for histFisheryVul should be applied to proFisheryVul so that historical and projection parameter values are identical. TRUE overrides any input in proFisheryVul
 #' @param histFisheryRet A matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces HistFisheryObj@retParams. Columns correspond to needed inputs of HistFisheryObj@retType. Range sampled at each iteration using a uniform distribution.
-#' @param proFisheryRet  matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@retParams. Columns correspond to needed inputs of ProFisheryObj@retType. Range sampled at each iteration using a uniform distribution.
+#' @param proFisheryRet_list  A list containing number of objects equal to areas. Each object is a matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@retParams. Columns correspond to needed inputs of ProFisheryObj@retType. Range sampled at each iteration using a uniform distribution.
 #' @param sameFisheryRet Logical. Indicates whether values generated for histFisheryRet should be applied to proFisheryRet so that historical and projection parameter values are identical. TRUE overrides any input in proFisheryRet
 #' @param histFisheryDmort A matrix 1 cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces HistFisheryObj@Dmort. Range sampled at each iteration using a uniform distribution.
-#' @param proFisheryDmort A matrix 1 cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@Dmort. Range sampled at each iteration using a uniform distribution.
+#' @param proFisheryDmort_list A list containing number of objects equal to areas. Each object is a matrix 1 cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@Dmort. Range sampled at each iteration using a uniform distribution.
 #' @param sameFisheryDmort Logical. Indicates whether values generated for histFisheryDmort should be applied to proFisheryDmort so that historical and projection parameter values are identical. TRUE overrides any input in proFisheryDmort
 #' @importFrom methods new
 
@@ -249,13 +249,13 @@ setClass("Stochastic",
            H50 = "numeric",
            H95delta = "numeric",
            histFisheryVul = "matrix",
-           proFisheryVul = "matrix",
+           proFisheryVul_list = "list",
            sameFisheryVul = "logical",
            histFisheryRet = "matrix",
-           proFisheryRet = "matrix",
+           proFisheryRet_list = "list",
            sameFisheryRet = "logical",
            histFisheryDmort = "matrix",
-           proFisheryDmort = "matrix",
+           proFisheryDmort_list = "list",
            sameFisheryDmort = "logical"
          )
 )

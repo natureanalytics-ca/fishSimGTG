@@ -831,14 +831,16 @@ lifehistoryDev<-function(TimeAreaObj, StochasticObj){
 #'
 #' @param TimeAreaObj A TimeArea object
 #' @param HistFisheryObj A fishery object for historical period
-#' @param ProFisheryObj A fishery object for projection period
+#' @param ProFisheryObj_list A fishery object list for projection period
 #' @param StochasticObj A Stochastic object
 #' @importFrom methods slot slotNames
 #' @export
 
-selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj=NULL, StochasticObj){
+selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj_list=NULL, StochasticObj){
   if(length(TimeAreaObj@iterations) == 0 ||
-     TimeAreaObj@iterations < 1
+     TimeAreaObj@iterations < 1 ||
+     length(TimeAreaObj@areas) == 0 ||
+     TimeAreaObj@areas < 2
   ) {
     return(NULL)
   } else {
@@ -866,24 +868,33 @@ selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj=NULL, StochasticObj)
     #------------------------------
     #Projection period vulnerability
     #------------------------------
-    projection_vul<-NULL
+    projection_vul<-lapply(1:TimeAreaObj@areas, function(x){
+      NULL
+    })
     #Check to see if same selectivity elements should be applied to projection period
     if(
       class(StochasticObj) == "Stochastic" &&
       length(StochasticObj@sameFisheryVul) > 0  &&
       StochasticObj@sameFisheryVul
     ) {
-      projection_vul<- historical_vul
+      projection_vul<-lapply(1:TimeAreaObj@areas, function(x){
+        historical_vul
+      })
     #Otherwise calculate unique projection selectivity elements
     } else {
       if(class(StochasticObj) == "Stochastic" &&
-         length(StochasticObj@proFisheryVul) > 0 &&
-         dim(StochasticObj@proFisheryVul)[1] == 2 &&
-         sum(sapply(1:dim(StochasticObj@proFisheryVul)[2], function(x){StochasticObj@proFisheryVul[2,x] >= StochasticObj@proFisheryVul[1,x]})) == dim(StochasticObj@proFisheryVul)[2]
+         length(StochasticObj@proFisheryVul_list) > 0
       ) {
-        projection_vul<-sapply(1:dim(StochasticObj@proFisheryVul)[2], function(x){
-          runif(iterations, min = StochasticObj@proFisheryVul[1,x], max = StochasticObj@proFisheryVul[2,x])
-        })
+        for(i in 1:TimeAreaObj@areas){
+          if(
+            dim(StochasticObj@proFisheryVul_list[[i]])[1] == 2 &&
+            sum(sapply(1:dim(StochasticObj@proFisheryVul_list[[i]])[2], function(x){StochasticObj@proFisheryVul_list[[i]][2,x] >= StochasticObj@proFisheryVul_list[[i]][1,x]})) == dim(StochasticObj@proFisheryVul_list[[i]])[2]
+          ) {
+            projection_vul[[i]]<-sapply(1:dim(StochasticObj@proFisheryVul_list[[i]])[2], function(x){
+              runif(iterations, min = StochasticObj@proFisheryVul_list[[i]][1,x], max = StochasticObj@proFisheryVul_list[[i]][2,x])
+            })
+          }
+        }
       }
     }
 
@@ -904,24 +915,33 @@ selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj=NULL, StochasticObj)
     #------------------------------
     #Projection period retention
     #------------------------------
-    projection_retention<-NULL
+    projection_retention<-lapply(1:TimeAreaObj@areas, function(x){
+      NULL
+    })
     #Check to see if same retention elements should be applied to projection period
     if(
       class(StochasticObj) == "Stochastic" &&
       length(StochasticObj@sameFisheryRet) > 0 &&
       StochasticObj@sameFisheryRet
     ) {
-      projection_retention<-histical_retention
+      projection_retention<-lapply(1:TimeAreaObj@areas, function(x){
+        histical_retention
+      })
       #Otherwise calculate unique projection retention elements
     } else {
       if(class(StochasticObj) == "Stochastic" &&
-         length(StochasticObj@proFisheryRet) > 0 &&
-         dim(StochasticObj@proFisheryRet)[1] == 2 &&
-         sum(sapply(1:dim(StochasticObj@proFisheryRet)[2], function(x){StochasticObj@proFisheryRet[2,x] >= StochasticObj@proFisheryRet[1,x]})) == dim(StochasticObj@proFisheryRet)[2]
+         length(StochasticObj@proFisheryRet_list) > 0
       ) {
-        projection_retention<-sapply(1:dim(StochasticObj@proFisheryRet)[2], function(x){
-          runif(iterations, min = StochasticObj@proFisheryRet[1,x], max = StochasticObj@proFisheryRet[2,x])
-        })
+        for(i in 1:TimeAreaObj@areas){
+          if(
+            dim(StochasticObj@proFisheryRet_list[[i]])[1] == 2 &&
+            sum(sapply(1:dim(StochasticObj@proFisheryRet_list[[i]])[2], function(x){StochasticObj@proFisheryRet_list[[i]][2,x] >= StochasticObj@proFisheryRet_list[[i]][1,x]})) == dim(StochasticObj@proFisheryRet_list[[i]])[2]
+          ) {
+            projection_retention[[i]]<-sapply(1:dim(StochasticObj@proFisheryRet_list[[i]])[2], function(x){
+              runif(iterations, min = StochasticObj@proFisheryRet_list[[i]][1,x], max = StochasticObj@proFisheryRet_list[[i]][2,x])
+            })
+          }
+        }
       }
     }
 
@@ -944,31 +964,42 @@ selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj=NULL, StochasticObj)
     #-----------------------
     #Projection Dmort
     #-----------------------
-    projection_Dmort<-NULL
+    projection_Dmort<-lapply(1:TimeAreaObj@areas, function(x){
+      NULL
+    })
     if(
       class(StochasticObj) == "Stochastic" &&
       length(StochasticObj@sameFisheryDmort) > 0 &&
       StochasticObj@sameFisheryDmort
     ) {
-      projection_Dmort<-historical_Dmort
+      projection_Dmort<-lapply(1:TimeAreaObj@areas, function(x){
+        historical_Dmort
+      })
       #Otherwise calculate unique projection retention elements
     } else {
       if(class(StochasticObj) == "Stochastic" &&
-         length(StochasticObj@proFisheryDmort) > 0 &&
-         dim(StochasticObj@proFisheryDmort)[1] == 2 &&
-         sum(StochasticObj@proFisheryDmort <= 1) == (dim(StochasticObj@proFisheryDmort)[1]*dim(StochasticObj@proFisheryDmort)[2]) &&
-         sum(StochasticObj@proFisheryDmort >= 0) == (dim(StochasticObj@proFisheryDmort)[1]*dim(StochasticObj@proFisheryDmort)[2]) &&
-         sum(sapply(1:dim(StochasticObj@proFisheryDmort)[2], function(x){StochasticObj@proFisheryDmort[2,x] >= StochasticObj@proFisheryDmort[1,x]})) == dim(StochasticObj@proFisheryDmort)[2]
+         length(StochasticObj@proFisheryDmort_list) > 0
       ) {
-        projection_Dmort<-sapply(1:dim(StochasticObj@proFisheryDmort)[2], function(x){
-          runif(iterations, min = StochasticObj@proFisheryDmort[1,x], max = StochasticObj@proFisheryDmort[2,x])
-        })
+        for(i in 1:TimeAreaObj@areas){
+          if(
+            dim(StochasticObj@proFisheryDmort_list[[i]])[1] == 2 &&
+            sum(StochasticObj@proFisheryDmort_list[[i]] <= 1) == (dim(StochasticObj@proFisheryDmort_list[[i]])[1]*dim(StochasticObj@proFisheryDmort_list[[i]])[2]) &&
+            sum(StochasticObj@proFisheryDmort_list[[i]] >= 0) == (dim(StochasticObj@proFisheryDmort_list[[i]])[1]*dim(StochasticObj@proFisheryDmort_list[[i]])[2]) &&
+            sum(sapply(1:dim(StochasticObj@proFisheryDmort_list[[i]])[2], function(x){StochasticObj@proFisheryDmort_list[[i]][2,x] >= StochasticObj@proFisheryDmort_list[[i]][1,x]})) == dim(StochasticObj@proFisheryDmort_list[[i]])[2]
+          ) {
+            projection_Dmort[[i]]<-sapply(1:dim(StochasticObj@proFisheryDmort_list[[i]])[2], function(x){
+              runif(iterations, min = StochasticObj@proFisheryDmort_list[[i]][1,x], max = StochasticObj@proFisheryDmort_list[[i]][2,x])
+            })
+          }
+        }
       }
     }
 
     return(list(
       hist = list(vulParams = historical_vul, retParams = histical_retention, Dmort = historical_Dmort),
-      pro = list(vulParams = projection_vul, retParams = projection_retention, Dmort = projection_Dmort)
+      pro = lapply(1:TimeAreaObj@areas, function(x){
+        list(vulParams = projection_vul[[x]], retParams = projection_retention[[x]], Dmort = projection_Dmort[[x]])
+      })
     ))
   }
 }

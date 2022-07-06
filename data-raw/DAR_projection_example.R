@@ -82,7 +82,7 @@ for(sc in 1:NROW(stateLmin)){
   runProjection(LifeHistoryObj = LifeHistoryObj,
                 TimeAreaObj = TimeAreaObj,
                 HistFisheryObj = HistFisheryObj,
-                ProFisheryObj = ProFisheryObj,
+                ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj),
                 StrategyObj = StrategyObj,
                 StochasticObj = StochasticObj,
                 wd = here("data-test", "Kole"),
@@ -130,7 +130,7 @@ for(sc in 1:NROW(stateLmin)){
   runProjection(LifeHistoryObj = LifeHistoryObj,
                 TimeAreaObj = TimeAreaObj,
                 HistFisheryObj = HistFisheryObj,
-                ProFisheryObj = ProFisheryObj,
+                ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj),
                 StrategyObj = StrategyObj,
                 StochasticObj = StochasticObj,
                 wd = here("data-test", "Kole"),
@@ -207,7 +207,7 @@ HistFisheryObj@Dmort <- 0
 
 TimeAreaObj<-new("TimeArea")
 TimeAreaObj@title = "Test"
-TimeAreaObj@gtg = 1
+TimeAreaObj@gtg = 13
 TimeAreaObj@areas = 2
 TimeAreaObj@recArea = c(0.99, 0.01)
 TimeAreaObj@iterations = 100
@@ -261,7 +261,7 @@ for(sc in 1:NROW(stateLower)){
   runProjection(LifeHistoryObj = LifeHistoryObj,
                 TimeAreaObj = TimeAreaObj,
                 HistFisheryObj = HistFisheryObj,
-                ProFisheryObj = ProFisheryObj,
+                ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj),
                 StrategyObj = StrategyObj,
                 StochasticObj = StochasticObj,
                 wd = here("data-test", "Kala"),
@@ -314,7 +314,7 @@ for(sc in 1:NROW(stateLower)){
   runProjection(LifeHistoryObj = LifeHistoryObj,
                 TimeAreaObj = TimeAreaObj,
                 HistFisheryObj = HistFisheryObj,
-                ProFisheryObj = ProFisheryObj,
+                ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj),
                 StrategyObj = StrategyObj,
                 StochasticObj = StochasticObj,
                 wd = here("data-test", "Kala"),
