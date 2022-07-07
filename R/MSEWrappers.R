@@ -17,7 +17,7 @@ evalMSE<-function(inputObject){
   #------------------
   #Unpack dataObject
   #------------------
-  TimeAreaObj <- StrategyObj <- LifeHistoryObj <- HistFisheryObj <- ProFisheryObj <- iterations <- iter <- Ddev <- LHdev <- Sdev <- Cdev <- RdevMatrix <- NULL
+  TimeAreaObj <- StrategyObj <- LifeHistoryObj <- HistFisheryObj <- ProFisheryObj_list <- iterations <- iter <- Ddev <- LHdev <- Sdev <- Cdev <- RdevMatrix <- NULL
   for(r in 1:NROW(inputObject)) assign(names(inputObject)[r], inputObject[[r]])
 
   controlRuleYear<-c(FALSE, rep(FALSE,(TimeAreaObj@historicalYears)), rep(TRUE, ifelse(class(StrategyObj) == "Strategy"  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)))
@@ -325,7 +325,7 @@ evalMSE<-function(inputObject){
 #' @param LifeHistoryObj  A LifeHistory object. Required
 #' @param TimeAreaObj A TimeArea object. Required
 #' @param HistFisheryObj A Fishery object that characterizes the historical dynamics. Required as it is used in initial equilibrium and historical time dynamics (if applicable)
-#' @param ProFisheryObj A Fishery object used in forward projection. Optional, only used when StrategyObj is supplied
+#' @param ProFisheryObj_list A Fishery object used in forward projection. Optional, only used when StrategyObj is supplied
 #' @param StrategyObj A Strategy object. Optional
 #' @param StochasticObj A Stochastic object. Optional
 #' @param wd A working directly to save output. Required
@@ -424,7 +424,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
     } else {
       print(paste("Uncertainty in projection fishery selectivity parameters:", "none"))
     }
-    if(NROW(selListPro) > 0 & is.null(ProFisheryObj)) print("Uncertainty in projection fishery selectivity cannot be specified without also specifying ProFisheryObj")
+    if(NROW(selListPro) > 0 & is.null(ProFisheryObj_list)) print("Uncertainty in projection fishery selectivity cannot be specified without also specifying ProFisheryObj")
   }
 
   #----------------------------------------------
