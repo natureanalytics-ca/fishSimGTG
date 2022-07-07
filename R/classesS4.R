@@ -59,35 +59,30 @@ setClass("LifeHistory",
            recRho = "numeric",
            isHermaph = "logical",
            H50 = "numeric",
-           H95delta = "numeric",
-           author = "character",
-           authAffiliation = "character",
-           longDescription = "character",
-           appBuild = "data.frame",
-           ID = "character"
-         ),
-         prototype(
-           title = "Example fish",
-           speciesName = "Example fish",
-           shortDescription = "Simulated life history of a fish based on B-H invariants",
-           L_type = "TL",
-           L_units = "cm",
-           Walpha_units = "g",
-           Linf = 100,
-           K =  0.2,
-           t0 = 0,
-           L50 = 66,
-           L95delta = 1,
-           M =  0.3,
-           MK = 1.5,
-           LW_A = 0.01,
-           LW_B = 3,
-           Steep = 0.99,
-           R0 = 1000,
-           recSD = 0.6,
-           recRho = 0,
-           isHermaph = FALSE
+           H95delta = "numeric"
          )
+         # prototype(
+         #   title = "Example fish",
+         #   speciesName = "Example fish",
+         #   shortDescription = "Simulated life history of a fish based on B-H invariants",
+         #   L_type = "TL",
+         #   L_units = "cm",
+         #   Walpha_units = "g",
+         #   Linf = 100,
+         #   K =  0.2,
+         #   t0 = 0,
+         #   L50 = 66,
+         #   L95delta = 1,
+         #   M =  0.3,
+         #   MK = 1.5,
+         #   LW_A = 0.01,
+         #   LW_B = 3,
+         #   Steep = 0.99,
+         #   R0 = 1000,
+         #   recSD = 0.6,
+         #   recRho = 0,
+         #   isHermaph = FALSE
+         # )
 )
 
 
@@ -119,15 +114,15 @@ setClass("Fishery",
            retParams = "numeric",
            retMax = "numeric",
            Dmort = "numeric"
-         ),
-         prototype (
-           title = "Fishery corresponding to example fish",
-           vulType = "logistic",
-           vulParams = c(50,75),
-           retType = "full",
-           retMax = 1,
-           Dmort = 0
          )
+         # prototype (
+         #   title = "Fishery corresponding to example fish",
+         #   vulType = "logistic",
+         #   vulParams = c(50,75),
+         #   retType = "full",
+         #   retMax = 1,
+         #   Dmort = 0
+         # )
 )
 
 #----------------------
@@ -163,19 +158,19 @@ setClass("TimeArea",
            historicalBio = "numeric",
            historicalBioType = "character",
            historicalEffort = "matrix"
-         ),
-         prototype(
-           title = "TimeArea corresponding to example fish",
-           gtg = 13,
-           areas = 2,
-           recArea = c(0.99, 0.01),
-           move = matrix(c(1,0, 0,1), nrow=2, ncol=2, byrow=FALSE),
-           iterations = 5,
-           historicalYears = 50,
-           historicalBio = 0.5,
-           historicalBioType = "relB",
-           historicalEffort = matrix(1:1, nrow=50, ncol=2)
          )
+         # prototype(
+         #   title = "TimeArea corresponding to example fish",
+         #   gtg = 13,
+         #   areas = 2,
+         #   recArea = c(0.99, 0.01),
+         #   move = matrix(c(1,0, 0,1), nrow=2, ncol=2, byrow=FALSE),
+         #   iterations = 5,
+         #   historicalYears = 50,
+         #   historicalBio = 0.5,
+         #   historicalBioType = "relB",
+         #   historicalEffort = matrix(1:1, nrow=50, ncol=2)
+         # )
 )
 
 #----------------------
