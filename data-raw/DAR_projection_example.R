@@ -2,7 +2,7 @@
 
 
 library(fishSimGTG)
-devtools::load_all()
+#devtools::load_all()
 library(here)
 
 #-----------------------------------------
@@ -241,7 +241,7 @@ StrategyObj@projectionParams<-list(bag = c(5, 5), effort = matrix(1:1, nrow=50, 
 #Batch processing - 3 management strategies
 stateLower<-c(-99, 35.6, 35.6)
 stateUpper<-c(-99, 50.8, 50.8)
-stateBag<-c(2, -99, 2, -99)
+stateBag<-c(2, -99, 2)
 fileLabel<-c("Higher_option1", "Higher_option2", "Higher_option3")
 projectionLabel<-c("Bag 2", "Slot 14 - 20 inch", "Bag 2 & Slot 14 - 20 inch")
 
@@ -281,7 +281,7 @@ StochasticObj@historicalBio = c(0.1, 0.3)
 ProFisheryObj<-new("Fishery")
 ProFisheryObj@title<-"Test"
 ProFisheryObj@vulType<-"logistic"
-ProFisheryObj@vulParams<-c(10.2,0.1)
+ProFisheryObj@vulParams<-c(25.1,0.1)
 ProFisheryObj@retType<-"full"
 ProFisheryObj@retMax <- 1
 ProFisheryObj@Dmort <- 0
@@ -332,7 +332,6 @@ relSSBscatter(wd =  here("data-test", "Kala"),
               fileName = list(
                 "Higher_option1",
                 "Higher_option2",
-                "Higher_option3",
                 "Higher_option3",
                 "Lower_option1",
                 "Lower_option2",
