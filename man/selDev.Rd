@@ -4,14 +4,14 @@
 \alias{selDev}
 \title{Set of selectivity params}
 \usage{
-selDev(TimeAreaObj, HistFisheryObj, ProFisheryObj = NULL, StochasticObj)
+selDev(TimeAreaObj, HistFisheryObj, ProFisheryObj_list = NULL, StochasticObj)
 }
 \arguments{
 \item{TimeAreaObj}{A TimeArea object}
 
 \item{HistFisheryObj}{A fishery object for historical period}
 
-\item{ProFisheryObj}{A fishery object for projection period}
+\item{ProFisheryObj_list}{A fishery object list for projection period}
 
 \item{StochasticObj}{A Stochastic object}
 }

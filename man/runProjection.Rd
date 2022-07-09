@@ -8,7 +8,7 @@ runProjection(
   LifeHistoryObj,
   TimeAreaObj,
   HistFisheryObj,
-  ProFisheryObj = NULL,
+  ProFisheryObj_list = NULL,
   StrategyObj = NULL,
   StochasticObj = NULL,
   wd,
@@ -26,7 +26,7 @@ runProjection(
 
 \item{HistFisheryObj}{A Fishery object that characterizes the historical dynamics. Required as it is used in initial equilibrium and historical time dynamics (if applicable)}
 
-\item{ProFisheryObj}{A Fishery object used in forward projection. Optional, only used when StrategyObj is supplied}
+\item{ProFisheryObj_list}{A Fishery object used in forward projection. Optional, only used when StrategyObj is supplied}
 
 \item{StrategyObj}{A Strategy object. Optional}
 

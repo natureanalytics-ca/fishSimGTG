@@ -7,11 +7,45 @@
 \arguments{
 \item{title}{A title for the object, useful for describing the scenario under exploration}
 
-\item{historicalBio}{A vector of length 2 that contains a min and a max for historical equilibrium biomass. Replaces TimeArea@historicalBio. Continues to rely on TimeArea@historicalBioType. Range sampled at each iteration using a uniform distribution.}
+\item{historicalBio}{A vector of length 2 that contains a min and a max for historical equilibrium biomass. If entered, replaces TimeArea@historicalBio. Continues to rely on TimeArea@historicalBioType. Range sampled at each iteration using a uniform distribution.}
 
-\item{historicalCPUE}{A vector of length 2 that contains a min and a max for historical equilibrium fishery CPUE. Used to calculate a scaling coefficient, q, which allows results to be scaled to observed levels of CPUE. Range sampled at each iteration using a uniform distribution.}
+\item{Linf}{A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.}
 
-\item{historicalCPUEType}{String. The type of fishery dependent CPUE, options are: 'vulB' or 'vulN'. Choice is used to calculating scaling coefficient relative to vulnerable biomass or vulnerable abundance.}
+\item{K}{A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.}
+
+\item{L50}{A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.}
+
+\item{L95delta}{A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.}
+
+\item{M}{A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.}
+
+\item{Steep}{A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.}
+
+\item{recSD}{A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.}
+
+\item{recRho}{A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.}
+
+\item{H50}{A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.}
+
+\item{H95delta}{A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.}
+
+\item{histFisheryVul}{A matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces HistFisheryObj@vulParams. Columns correspond to needed inputs of HistFisheryObj@vulType. Range sampled at each iteration using a uniform distribution.}
+
+\item{proFisheryVul_list}{A list containing number of objects equal to areas. Each object is a matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@vulParams. Columns correspond to needed inputs of ProFisheryObj@vulType. Range sampled at each iteration using a uniform distribution.}
+
+\item{sameFisheryVul}{Logical. Indicates whether values generated for histFisheryVul should be applied to proFisheryVul so that historical and projection parameter values are identical. TRUE overrides any input in proFisheryVul}
+
+\item{histFisheryRet}{A matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces HistFisheryObj@retParams. Columns correspond to needed inputs of HistFisheryObj@retType. Range sampled at each iteration using a uniform distribution.}
+
+\item{proFisheryRet_list}{A list containing number of objects equal to areas. Each object is a matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@retParams. Columns correspond to needed inputs of ProFisheryObj@retType. Range sampled at each iteration using a uniform distribution.}
+
+\item{sameFisheryRet}{Logical. Indicates whether values generated for histFisheryRet should be applied to proFisheryRet so that historical and projection parameter values are identical. TRUE overrides any input in proFisheryRet}
+
+\item{histFisheryDmort}{A matrix 1 cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces HistFisheryObj@Dmort. Range sampled at each iteration using a uniform distribution.}
+
+\item{proFisheryDmort_list}{A list containing number of objects equal to areas. Each object is a matrix 1 cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@Dmort. Range sampled at each iteration using a uniform distribution.}
+
+\item{sameFisheryDmort}{Logical. Indicates whether values generated for histFisheryDmort should be applied to proFisheryDmort so that historical and projection parameter values are identical. TRUE overrides any input in proFisheryDmort}
 }
 \description{
 An S4 object that holds parameters for stochastic components of the population dynamics.

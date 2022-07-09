@@ -2,15 +2,15 @@
 % Please edit documentation in R/operatingModel.R
 \name{cpueDev}
 \alias{cpueDev}
-\title{Initial cpue deviations}
+\title{Initial cpue deviations - special function for projectionStrategy}
 \usage{
-cpueDev(TimeAreaObj, StochasticObj = NULL)
+cpueDev(TimeAreaObj, StrategyObj)
 }
 \arguments{
 \item{TimeAreaObj}{A TimeArea object}
 
-\item{StochasticObj}{A Stochastic object}
+\item{StrategyObj}{A Stochastic object}
 }
 \description{
-Initial cpue deviations
+Initial cpue deviations - special function for projectionStrategy
 }
