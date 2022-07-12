@@ -423,7 +423,7 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
      !is.numeric(F_MStep) ||
      LcStep < 0 ||
      F_MStep < 0 ||
-     class(LifeHistoryObj) != "LifeHistory"
+     !is(LifeHistoryObj, "LifeHistory")
   ) {
     return(new("YPRarray",
                lh = NULL,

@@ -20,8 +20,8 @@ evalMSE<-function(inputObject){
   TimeAreaObj <- StrategyObj <- LifeHistoryObj <- HistFisheryObj <- ProFisheryObj_list <- iterations <- iter <- Ddev <- LHdev <- Sdev <- Cdev <- RdevMatrix <- NULL
   for(r in 1:NROW(inputObject)) assign(names(inputObject)[r], inputObject[[r]])
 
-  controlRuleYear<-c(FALSE, rep(FALSE,(TimeAreaObj@historicalYears)), rep(TRUE, ifelse(class(StrategyObj) == "Strategy"  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)))
-  years <- 1 + TimeAreaObj@historicalYears + ifelse(class(StrategyObj) == "Strategy"  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)
+  controlRuleYear<-c(FALSE, rep(FALSE,(TimeAreaObj@historicalYears)), rep(TRUE, ifelse(is(StrategyObj, "Strategy")  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)))
+  years <- 1 + TimeAreaObj@historicalYears + ifelse(is(StrategyObj, "Strategy")  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)
   areas <- TimeAreaObj@areas
 
   #--------------
@@ -338,6 +338,7 @@ evalMSE<-function(inputObject){
 #' @importFrom graphics mtext points
 #' @importFrom snowfall sfInit sfLibrary sfLapply sfRemoveAll sfStop sfExport
 #' @importFrom parallel detectCores
+#' @importFrom methods is
 #' @export
 
 
@@ -362,7 +363,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
   #Historical cpue used only in projectionStrategy
   Cdev<-NULL
-  if(class(StrategyObj) == "Strategy" &&
+  if(is(StrategyObj, "Strategy") &&
      StrategyObj@projectionName == "projectionStrategy"
   ) Cdev<-cpueDev(TimeAreaObj, StrategyObj)$Cdev
 
@@ -536,7 +537,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
   #Cdev
   if(proceedMSE &&
-     class(StrategyObj) == "Strategy"  &&
+     is(StrategyObj,"Strategy")  &&
      StrategyObj@projectionName == "projectionStrategy" &&
      is.null(Cdev)) {
     proceedMSE<-FALSE
@@ -556,13 +557,13 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
   }
 
   #Historical and/or projection years must be at least 1.
-  if(proceedMSE && isTRUE(TimeAreaObj@historicalYears + ifelse(class(StrategyObj) == "Strategy"  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0) < 1)) {
+  if(proceedMSE && isTRUE(TimeAreaObj@historicalYears + ifelse(is(StrategyObj, "Strategy")  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0) < 1)) {
     proceedMSE<-FALSE
     print("Historical and/or projection years must be at least 1. Check inputs.")
   }
 
   #Project strategy function missing
-  if(proceedMSE && isTRUE(class(StrategyObj) == "Strategy" &&
+  if(proceedMSE && isTRUE(is(StrategyObj, "Strategy") &&
                              tryCatch({
                                get(StrategyObj@projectionName)
                                FALSE
@@ -574,8 +575,8 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
   #When applying a management strategy, StrategyObj@projectionYears must be greater than 0
   if(proceedMSE &&
-     isTRUE(class(StrategyObj) == "Strategy" && length(StrategyObj@projectionYears) == 0) ||
-     isTRUE(class(StrategyObj) == "Strategy" && StrategyObj@projectionYears < 1)
+     isTRUE(is(StrategyObj, "Strategy") && length(StrategyObj@projectionYears) == 0) ||
+     isTRUE(is(StrategyObj, "Strategy") && StrategyObj@projectionYears < 1)
   ){
     proceedMSE<-FALSE
     print("When applying a management strategy, StrategyObj@projectionYears must be greater than 0")
@@ -615,8 +616,8 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
   } else {
 
     ptm<-proc.time()
-    require(snowfall)
-    require(parallel)
+    #require(snowfall)
+    #require(parallel)
     iterations <- floor(TimeAreaObj@iterations)
 
     if(detectCores()>1 & iterations >= detectCores()) {

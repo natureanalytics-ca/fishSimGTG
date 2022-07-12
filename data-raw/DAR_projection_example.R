@@ -1,8 +1,8 @@
 
 
 
-library(fishSimGTG)
-#devtools::load_all()
+#library(fishSimGTG)
+devtools::load_all()
 library(here)
 
 #-----------------------------------------
@@ -24,6 +24,10 @@ LifeHistoryObj@LW_A<-0.046
 LifeHistoryObj@LW_B<-2.85
 LifeHistoryObj@Steep<-0.54
 LifeHistoryObj@recSD<-0 #Run with no rec var'n to see deterministic trends
+LifeHistoryObj@recRho<-0
+LifeHistoryObj@isHermaph<-FALSE
+LifeHistoryObj@R0<-10000
+
 
 HistFisheryObj<-new("Fishery")
 HistFisheryObj@title<-"Test"

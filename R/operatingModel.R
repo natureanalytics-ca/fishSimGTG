@@ -27,7 +27,7 @@
 
 LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1, doPlot = FALSE, wd = NULL, imageName = NULL, dpi = 300){
 
-  if(class(LifeHistoryObj) != "LifeHistory" ||
+  if(!is(LifeHistoryObj, "LifeHistory") ||
      length(LifeHistoryObj@Linf) == 0 ||
      length(LifeHistoryObj@L50) == 0 ||
      length(LifeHistoryObj@L95delta) == 0 ||
@@ -41,7 +41,7 @@ LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1, doPlot = FALS
      LifeHistoryObj@K < 0 ||
      LifeHistoryObj@L50 >= LifeHistoryObj@Linf ||
      isFALSE(LifeHistoryObj@L95delta > 0) ||
-     class(TimeAreaObj) != "TimeArea" ||
+     !is(TimeAreaObj, "TimeArea") ||
      length(TimeAreaObj@gtg) == 0 ||
      stepsPerYear < 1
   ) {
@@ -262,7 +262,7 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
 
   sel<-list()
   if(is.null(lh) ||
-     class(FisheryObj) != "Fishery" ||
+     !is(FisheryObj, "Fishery") ||
      !(FisheryObj@vulType %in%  "logistic") ||
      !(FisheryObj@retType %in%  c("full", "logistic", "slotLimit")) ||
      length(FisheryObj@retMax) == 0 ||
@@ -565,12 +565,12 @@ recDev<-function(LifeHistoryObj, TimeAreaObj, StrategyObj = NULL){
      LifeHistoryObj@recSD < 0 ||
      LifeHistoryObj@recRho < 0 ||
      LifeHistoryObj@recRho > 1 ||
-     isTRUE(TimeAreaObj@historicalYears + ifelse(class(StrategyObj) == "Strategy" && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0) < 1) ||
+     isTRUE(TimeAreaObj@historicalYears + ifelse(is(StrategyObj, "Strategy") && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0) < 1) ||
      TimeAreaObj@iterations < 1
   ) {
     return(NULL)
   } else {
-    years <- 1 + TimeAreaObj@historicalYears + ifelse(class(StrategyObj) == "Strategy"  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)
+    years <- 1 + TimeAreaObj@historicalYears + ifelse(is(StrategyObj, "Strategy")  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)
     iterations <- floor(TimeAreaObj@iterations)
     recSD <- LifeHistoryObj@recSD
     recRho <- LifeHistoryObj@recRho
@@ -610,7 +610,7 @@ bioDev<-function(TimeAreaObj, StochasticObj = NULL){
     return(NULL)
   } else {
 
-    if(class(StochasticObj) == "Stochastic" && length(StochasticObj@historicalBio) > 1 && StochasticObj@historicalBio[2] >= StochasticObj@historicalBio[1]) {
+    if(is(StochasticObj, "Stochastic") && length(StochasticObj@historicalBio) > 1 && StochasticObj@historicalBio[2] >= StochasticObj@historicalBio[1]) {
       Dtmp <- StochasticObj@historicalBio[1:2]
     } else {
       Dtmp <- c(TimeAreaObj@historicalBio, TimeAreaObj@historicalBio)
@@ -641,7 +641,7 @@ cpueDev<-function(TimeAreaObj, StrategyObj){
    ) {
     return(NULL)
   } else {
-    if(class(StrategyObj) == "Strategy" &&
+    if(is(StrategyObj, "Strategy") &&
        length(StrategyObj@projectionParams[['CPUE']]) > 1 &&
        StrategyObj@projectionParams[['CPUE']][1] > 0 &&
        StrategyObj@projectionParams[['CPUE']][2] > 0 &&
@@ -687,7 +687,7 @@ lifehistoryDev<-function(TimeAreaObj, StochasticObj){
     #Linf
     #--------
     Linf<-NULL
-    if(class(StochasticObj) == "Stochastic" &&
+    if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@Linf) > 1 &&
        StochasticObj@Linf[1] > 0 &&
        StochasticObj@Linf[2] > 0 &&
@@ -700,7 +700,7 @@ lifehistoryDev<-function(TimeAreaObj, StochasticObj){
     #K
     #--------
     K<-NULL
-    if(class(StochasticObj) == "Stochastic" &&
+    if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@K) > 1 &&
        StochasticObj@K[1] > 0 &&
        StochasticObj@K[2] > 0 &&
@@ -713,7 +713,7 @@ lifehistoryDev<-function(TimeAreaObj, StochasticObj){
     #L50
     #--------
     L50<-NULL
-    if(class(StochasticObj) == "Stochastic" &&
+    if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@L50) > 1 &&
        StochasticObj@L50[1] > 0 &&
        StochasticObj@L50[2] > 0 &&
@@ -726,7 +726,7 @@ lifehistoryDev<-function(TimeAreaObj, StochasticObj){
     #L95delta
     #--------
     L95delta<-NULL
-    if(class(StochasticObj) == "Stochastic" &&
+    if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@L95delta) > 1 &&
        StochasticObj@L95delta[1] > 0 &&
        StochasticObj@L95delta[2] > 0 &&
@@ -739,7 +739,7 @@ lifehistoryDev<-function(TimeAreaObj, StochasticObj){
     #M
     #--------
     M<-NULL
-    if(class(StochasticObj) == "Stochastic" &&
+    if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@M) > 1 &&
        StochasticObj@M[1] > 0 &&
        StochasticObj@M[2] > 0 &&
@@ -752,7 +752,7 @@ lifehistoryDev<-function(TimeAreaObj, StochasticObj){
     #Steep
     #--------
     Steep<-NULL
-    if(class(StochasticObj) == "Stochastic" &&
+    if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@Steep) > 1 &&
        StochasticObj@Steep[1] >= 0.21 &&
        StochasticObj@Steep[1] < 1 &&
@@ -767,7 +767,7 @@ lifehistoryDev<-function(TimeAreaObj, StochasticObj){
     #recSD
     #--------
     recSD<-NULL
-    if(class(StochasticObj) == "Stochastic" &&
+    if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@recSD) > 1 &&
        StochasticObj@recSD[1] > 0 &&
        StochasticObj@recSD[2] > 0 &&
@@ -781,7 +781,7 @@ lifehistoryDev<-function(TimeAreaObj, StochasticObj){
     #recRho
     #--------
     recRho<-NULL
-    if(class(StochasticObj) == "Stochastic" &&
+    if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@recRho) > 1 &&
        StochasticObj@recRho[1] >= 0 &&
        StochasticObj@recRho[1] <= 1 &&
@@ -796,7 +796,7 @@ lifehistoryDev<-function(TimeAreaObj, StochasticObj){
     #H50
     #--------
     H50<-NULL
-    if(class(StochasticObj) == "Stochastic" &&
+    if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@H50) > 1 &&
        StochasticObj@H50[1] > 0 &&
        StochasticObj@H50[2] > 0 &&
@@ -809,7 +809,7 @@ lifehistoryDev<-function(TimeAreaObj, StochasticObj){
     #H95delta
     #--------
     H95delta<-NULL
-    if(class(StochasticObj) == "Stochastic" &&
+    if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@H95delta) > 1 &&
        StochasticObj@H95delta[1] > 0 &&
        StochasticObj@H95delta[2] > 0 &&
@@ -855,7 +855,7 @@ selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj_list=NULL, Stochasti
     #Historical period vulnerability
     #------------------------------
     historical_vul<-NULL
-    if(class(StochasticObj) == "Stochastic" &&
+    if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@histFisheryVul) > 0 &&
        dim(StochasticObj@histFisheryVul)[1] == 2 &&
        sum(sapply(1:dim(StochasticObj@histFisheryVul)[2], function(x){StochasticObj@histFisheryVul[2,x] >= StochasticObj@histFisheryVul[1,x]})) == dim(StochasticObj@histFisheryVul)[2]
@@ -873,7 +873,7 @@ selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj_list=NULL, Stochasti
     })
     #Check to see if same selectivity elements should be applied to projection period
     if(
-      class(StochasticObj) == "Stochastic" &&
+      is(StochasticObj, "Stochastic") &&
       length(StochasticObj@sameFisheryVul) > 0  &&
       StochasticObj@sameFisheryVul
     ) {
@@ -882,7 +882,7 @@ selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj_list=NULL, Stochasti
       })
     #Otherwise calculate unique projection selectivity elements
     } else {
-      if(class(StochasticObj) == "Stochastic" &&
+      if(is(StochasticObj, "Stochastic") &&
          length(StochasticObj@proFisheryVul_list) > 0
       ) {
         for(i in 1:TimeAreaObj@areas){
@@ -902,7 +902,7 @@ selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj_list=NULL, Stochasti
     #Historical retention
     #----------------------
     histical_retention<-NULL
-    if(class(StochasticObj) == "Stochastic" &&
+    if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@histFisheryRet) > 0 &&
        dim(StochasticObj@histFisheryRet)[1] == 2 &&
        sum(sapply(1:dim(StochasticObj@histFisheryRet)[2], function(x){StochasticObj@histFisheryRet[2,x] >= StochasticObj@histFisheryRet[1,x]})) == dim(StochasticObj@histFisheryRet)[2]
@@ -920,7 +920,7 @@ selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj_list=NULL, Stochasti
     })
     #Check to see if same retention elements should be applied to projection period
     if(
-      class(StochasticObj) == "Stochastic" &&
+      is(StochasticObj, "Stochastic") &&
       length(StochasticObj@sameFisheryRet) > 0 &&
       StochasticObj@sameFisheryRet
     ) {
@@ -929,7 +929,7 @@ selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj_list=NULL, Stochasti
       })
       #Otherwise calculate unique projection retention elements
     } else {
-      if(class(StochasticObj) == "Stochastic" &&
+      if(is(StochasticObj, "Stochastic") &&
          length(StochasticObj@proFisheryRet_list) > 0
       ) {
         for(i in 1:TimeAreaObj@areas){
@@ -949,7 +949,7 @@ selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj_list=NULL, Stochasti
     #Historical Dmort
     #-----------------------
     historical_Dmort<-NULL
-    if(class(StochasticObj) == "Stochastic" &&
+    if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@histFisheryDmort) > 0 &&
        dim(StochasticObj@histFisheryDmort)[1] == 2 &&
        sum(StochasticObj@histFisheryDmort <= 1) == (dim(StochasticObj@histFisheryDmort)[1]*dim(StochasticObj@histFisheryDmort)[2]) &&
@@ -968,7 +968,7 @@ selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj_list=NULL, Stochasti
       NULL
     })
     if(
-      class(StochasticObj) == "Stochastic" &&
+      is(StochasticObj, "Stochastic") &&
       length(StochasticObj@sameFisheryDmort) > 0 &&
       StochasticObj@sameFisheryDmort
     ) {
@@ -977,7 +977,7 @@ selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj_list=NULL, Stochasti
       })
       #Otherwise calculate unique projection retention elements
     } else {
-      if(class(StochasticObj) == "Stochastic" &&
+      if(is(StochasticObj, "Stochastic") &&
          length(StochasticObj@proFisheryDmort_list) > 0
       ) {
         for(i in 1:TimeAreaObj@areas){

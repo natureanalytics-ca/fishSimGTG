@@ -20,7 +20,7 @@ LifeHistoryObj@Linf<-53.2
 LifeHistoryObj@K<-0.225
 LifeHistoryObj@t0<- -1.48
 LifeHistoryObj@L50<-35
-LifeHistoryObj@L95<-35*1.15
+LifeHistoryObj@L95delta<-5.25
 LifeHistoryObj@M<-0.16
 LifeHistoryObj@L_type<-"FL"
 LifeHistoryObj@L_units<-"cm"
@@ -31,6 +31,9 @@ LifeHistoryObj@isHermaph<-TRUE
 LifeHistoryObj@H50<-46.2
 LifeHistoryObj@H95delta<-11.8
 LifeHistoryObj@recSD<-0 #Run with no rec var'n to see deterministic trends
+LifeHistoryObj@recRho<-0
+LifeHistoryObj@R0<-10000
+
 
 #---Populate a TimeArea object
 #---Contains basic inputs about time and space needed to establish simulation bounds
@@ -105,8 +108,8 @@ ProFisheryObj<-new("Fishery")
 ProFisheryObj@title<-"Example"
 ProFisheryObj@vulType<-"logistic"
 ProFisheryObj@vulParams<-c(40.1,0.1) #Approx. knife edge based on input value of 40.1. Must put slightly higher value for second parameter
-ProFisheryObj@retType<-"logistic"
-ProFisheryObj@retParams <- c(35.6, 0.1)
+ProFisheryObj@retType<-"full"
+#ProFisheryObj@retParams <- c(35.6, 0.1)
 ProFisheryObj@retMax <- 1
 ProFisheryObj@Dmort <- 0
 
@@ -124,7 +127,7 @@ ProFisheryObj_list<-list(ProFisheryObj, ProFisheryObj)
 StrategyObj <- new("Strategy")
 StrategyObj@projectionYears <- 50
 StrategyObj@projectionName<-"projectionStrategy"
-StrategyObj@projectionParams<-list(bag = c(2, 2), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(1,2), CPUEtype = "retN")
+StrategyObj@projectionParams<-list(bag = c(-99, -99), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(1,2), CPUEtype = "retN")
 
 
 #----------------
