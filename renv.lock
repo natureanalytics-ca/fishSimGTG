@@ -589,19 +589,6 @@
         "withr"
       ]
     },
-    "ggrepel": {
-      "Package": "ggrepel",
-      "Version": "0.9.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "08ab869f37e6a7741a64ab9069bcb67d",
-      "Requirements": [
-        "Rcpp",
-        "ggplot2",
-        "rlang",
-        "scales"
-      ]
-    },
     "gh": {
       "Package": "gh",
       "Version": "1.3.0",
