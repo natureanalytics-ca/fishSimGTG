@@ -488,7 +488,7 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
       }
       for (j in 1:NROW(Lc)){
 
-        FisheryObj@vulParams<-c(Lc[j], Lc[j]+1)
+        FisheryObj@vulParams<-c(Lc[j], 1)
         sel<-selWrapper(lh, TimeAreaObj, FisheryObj, doPlot = FALSE)
 
         for (i in 1:NROW(F_M)){

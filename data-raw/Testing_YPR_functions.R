@@ -15,7 +15,7 @@ ta<-new("TimeArea")
 ta@gtg<-13
 
 ptm<-proc.time()
-x<-LHwrapper(LifeHistoryObj = lh, TimeAreaObj=ta, stepsPerYear = 12)
+x<-LHwrapper(LifeHistoryObj = lh, TimeAreaObj=ta, stepsPerYear = 12, doPlot = TRUE)
 print("Time in minutes: ")
 print((proc.time()-ptm)/60)
 
@@ -26,9 +26,9 @@ print((proc.time()-ptm)/60)
 FisheryObj<-new("Fishery")
 FisheryObj@title<-"Test"
 FisheryObj@vulType<-"logistic"
-FisheryObj@vulParams<-c(50,75)
+FisheryObj@vulParams<-c(50,15)
 FisheryObj@retType<-"slotLimit"
-FisheryObj@retParams<-c(60,70)
+FisheryObj@retParams<-c(60,10)
 FisheryObj@retMax<-1
 FisheryObj@Dmort<-0.1
 
@@ -46,7 +46,7 @@ FisheryObj@title<-"Test"
 FisheryObj@vulType<-"logistic"
 FisheryObj@vulParams<-c(1,2)
 FisheryObj@retType<-"slotLimit"
-FisheryObj@retParams<-c(66,2000)
+FisheryObj@retParams<-c(66,100)
 FisheryObj@retMax<-1
 FisheryObj@Dmort<-0
 
