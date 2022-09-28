@@ -426,7 +426,6 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
      !is(LifeHistoryObj, "LifeHistory")
   ) {
     return(new("YPRarray",
-               lh = NULL,
                sim=list(stop = TRUE))
     )
   } else {
@@ -458,7 +457,6 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
     lh<-LHwrapper(LifeHistoryObj, TimeAreaObj, stepsPerYear)
     if(is.null(lh)) {
       return(new("YPRarray",
-                 lh = lh,
                  sim=list(stop = TRUE))
       )
     } else {
@@ -523,7 +521,7 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
       Yield_EU<- Yield_EU/max(Yield_EU, na.rm=TRUE)
 
       return(new("YPRarray",
-                 lh = lh,
+                 lhWrap = lh,
                  sim=list(Lc = Lc, F_M = F_M, SPR_EU = SPR_EU, YPR_EU = YPR_EU, Yield_EU=Yield_EU, LcStep = LcStep, F_MStep = F_MStep, stop = stop))
       )
     }

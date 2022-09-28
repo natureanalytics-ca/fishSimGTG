@@ -269,7 +269,7 @@ setClass("Stochastic",
 #'#' @importFrom methods new
 setClass("YPRarray",
   representation(
-    lh = "list",
+    lhWrap = "list",
     sim = "list"
   )
 )
