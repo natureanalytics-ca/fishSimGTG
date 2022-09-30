@@ -260,20 +260,6 @@ StochasticObj@historicalBio = c(0.1, 0.9)
 
 runProjection(LifeHistoryObj = LifeHistoryObj, TimeAreaObj = TimeAreaObj, HistFisheryObj = FisheryObj, StochasticObj=StochasticObj, wd = here("data-test"), fileName = "constantModel", doPlot = TRUE)
 
-#--------------------------------
-#Example using prototype inputs
-#-------------------------------
-
-devtools::load_all()
-library(here)
-
-LifeHistoryObj<- new("LifeHistory")
-FisheryObj<-new("Fishery")
-TimeAreaObj<-new("TimeArea")
-StochasticObj<-new("Stochastic")
-
-runProjection(LifeHistoryObj = LifeHistoryObj, TimeAreaObj = TimeAreaObj, HistFisheryObj = FisheryObj, StochasticObj=StochasticObj, wd = here("data-test"), fileName = "constantModel", doPlot = TRUE)
-
 
 #####################################
 #Projection function testing

@@ -17,7 +17,7 @@ evalMSE<-function(inputObject){
   #------------------
   #Unpack dataObject
   #------------------
-  TimeAreaObj <- StrategyObj <- LifeHistoryObj <- HistFisheryObj <- ProFisheryObj_list <- iterations <- iter <- Ddev <- LHdev <- Sdev <- Cdev <- RdevMatrix <- NULL
+  TimeAreaObj <- StrategyObj <- LifeHistoryObj <- HistFisheryObj <- ProFisheryObj_list <- iterations <- iter <- Ddev <- Edev <- LHdev <- Sdev <- Cdev <- Edev <- RdevMatrix <- NULL
   for(r in 1:NROW(inputObject)) assign(names(inputObject)[r], inputObject[[r]])
 
   controlRuleYear<-c(FALSE, rep(FALSE,(TimeAreaObj@historicalYears)), rep(TRUE, ifelse(is(StrategyObj, "Strategy")  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)))
@@ -208,8 +208,9 @@ evalMSE<-function(inputObject){
                          Ftotal=Ftotal,
                          decisionData=decisionData,
                          decisionAnnual=decisionAnnual,
-                         decisionLocal=decisionLocal,
-                         Cdev=Cdev
+                         decisionLocal=decisionLocal
+                         #Cdev=Cdev,
+                         #Edev=Edev
       ),
       inputObject
       )
@@ -233,8 +234,9 @@ evalMSE<-function(inputObject){
                          Ftotal=Ftotal,
                          decisionData=decisionData,
                          decisionAnnual=decisionAnnual,
-                         decisionLocal=decisionLocal,
-                         Cdev=Cdev
+                         decisionLocal=decisionLocal
+                         #Cdev=Cdev,
+                         #Edev=Edev
                         ),
                     inputObject
       )
@@ -295,8 +297,9 @@ evalMSE<-function(inputObject){
                            Ftotal=Ftotal,
                            decisionData=decisionData,
                            decisionAnnual=decisionAnnual,
-                           decisionLocal=decisionLocal,
-                           Cdev=Cdev
+                           decisionLocal=decisionLocal
+                           #Cdev=Cdev,
+                           #Edev = Edev
         ),
         inputObject
         )
@@ -366,6 +369,12 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
   if(is(StrategyObj, "Strategy") &&
      StrategyObj@projectionName == "projectionStrategy"
   ) Cdev<-cpueDev(TimeAreaObj, StrategyObj)$Cdev
+
+  #Effort implementation error used only in projectionStrategy
+  Edev<-NULL
+  if(is(StrategyObj, "Strategy") &&
+     StrategyObj@projectionName == "projectionStrategy"
+  ) Edev<-effortImpErrorDev(TimeAreaObj, StrategyObj)$Edev
 
   #Life history parmeters
   LHdev<-lifehistoryDev(TimeAreaObj, StochasticObj)
@@ -548,6 +557,15 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
     print("Initial CPUE variation cannot be created. Check inputs.")
   }
 
+  #Edev
+  if(proceedMSE &&
+     is(StrategyObj,"Strategy")  &&
+     StrategyObj@projectionName == "projectionStrategy" &&
+     is.null(Edev)) {
+    proceedMSE<-FALSE
+    print("Effort implementation error cannot be created. Check inputs.")
+  }
+
   #Number of areas not in agreement with dimensions of the move matrix.
   if(proceedMSE && isTRUE(TimeAreaObj@areas != dim(TimeAreaObj@move)[1] | TimeAreaObj@areas != dim(TimeAreaObj@move)[2])) {
     proceedMSE<-FALSE
@@ -593,26 +611,6 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
   #Test whether we can proceed to simulations
   if(
-    #is.null(lh) ||
-    #is.null(selHist) ||
-    #is.null(RdevMatrix) ||
-    #is.null(Ddev) ||
-    #is.null(Cdev) ||
-    #length(TimeAreaObj@iterations) == 0 ||
-    #TimeAreaObj@iterations < 1 ||
-    #isTRUE(!is.null(StrategyObj) &  is.null(selPro)) ||
-    #isTRUE(TimeAreaObj@areas != dim(TimeAreaObj@move)[1] | TimeAreaObj@areas != dim(TimeAreaObj@move)[2]) ||
-    #isTRUE(TimeAreaObj@historicalYears > 0  && isTRUE(TimeAreaObj@areas != dim(TimeAreaObj@historicalEffort)[2] | TimeAreaObj@historicalYears != dim(TimeAreaObj@historicalEffort)[1])) ||
-    #isTRUE(TimeAreaObj@historicalYears + ifelse(class(StrategyObj) == "Strategy"  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0) < 1) ||
-    # isTRUE(class(StrategyObj) == "Strategy" &&
-    #        tryCatch({
-    #          get(StrategyObj@projectionName)
-    #          FALSE
-    #         }, error = function(c) TRUE)
-    #       ) ||
-    #isTRUE(class(StrategyObj) == "Strategy" && length(StrategyObj@projectionYears) == 0) ||
-    #isTRUE(class(StrategyObj) == "Strategy" && length(StrategyObj@projectionYears) > 0 && StrategyObj@projectionYears < 1) ||
-    #isTRUE(class(StrategyObj) == "Strategy" && StrategyObj@projectionName == "projectionStrategy" && length(StrategyObj@projectionParams) != 2)
     isFALSE(proceedMSE)
   ) {
     warning("One or more components contain incomplete or erroneous information. Cannot proceed to simulation.")
@@ -639,6 +637,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                RdevMatrix = RdevMatrix,
                                Ddev = Ddev,
                                Cdev = Cdev,
+                               Edev = Edev,
                                LHdev = LHdev,
                                Sdev = Sdev,
                                LifeHistoryObj = LifeHistoryObj,
@@ -657,6 +656,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                     RdevMatrix=RdevMatrix,
                                     Ddev=Ddev,
                                     Cdev = Cdev,
+                                    Edev = Edev,
                                     LHdev = LHdev,
                                     Sdev = Sdev,
                                     LifeHistoryObj = LifeHistoryObj,

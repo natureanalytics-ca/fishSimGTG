@@ -50,7 +50,7 @@ fixedStrategy<-function(phase, dataObject){
 projectionStrategy<-function(phase, dataObject){
 
   #Unpack dataObject
-  j <- TimeAreaObj <- areas <- StrategyObj <- is <- k <- StochasticObj <- lh <- N <- selHist <- Cdev <- selGroup <- Ftotal <- NULL
+  j <- TimeAreaObj <- areas <- StrategyObj <- is <- k <- StochasticObj <- lh <- N <- selHist <- Cdev <- Edev <- selGroup <- Ftotal <- NULL
   for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
 
   #Book keeping year for items in StrategyObj
@@ -69,7 +69,7 @@ projectionStrategy<-function(phase, dataObject){
       if(bag == -99){
 
         #Apply Flocal
-        Ftmp<-StrategyObj@projectionParams[['effort']][yr,m]*Ftotal[yrHist,k,m]
+        Ftmp<-StrategyObj@projectionParams[['effort']][yr,m]*Ftotal[yrHist,k,m]*Edev[k]
         Flocal<-rbind(Flocal, c(j, k, m, Ftmp))
 
       } else {
@@ -93,7 +93,7 @@ projectionStrategy<-function(phase, dataObject){
           Fmult<-min(nm/lambda, 1.0)
 
           #Apply Flocal
-          Ftmp<-StrategyObj@projectionParams[['effort']][yr,m]*Ftotal[yrHist,k,m]*Fmult
+          Ftmp<-StrategyObj@projectionParams[['effort']][yr,m]*Ftotal[yrHist,k,m]*Fmult*Edev[k]
           Flocal<-rbind(Flocal, c(j, k, m, Ftmp))
 
         }
@@ -117,7 +117,7 @@ projectionStrategy<-function(phase, dataObject){
           Fmult<-min(nm/lambda, 1.0)
 
           #Apply Flocal
-          Ftmp<-StrategyObj@projectionParams[['effort']][yr,m]*Ftotal[yrHist,k,m]*Fmult
+          Ftmp<-StrategyObj@projectionParams[['effort']][yr,m]*Ftotal[yrHist,k,m]*Fmult*Edev[k]
           Flocal<-rbind(Flocal, c(j, k, m, Ftmp))
 
         }

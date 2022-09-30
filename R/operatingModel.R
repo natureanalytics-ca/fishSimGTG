@@ -685,6 +685,40 @@ cpueDev<-function(TimeAreaObj, StrategyObj){
 }
 
 
+#--------------------------------------------------------------------------------------
+#Effort implementation error in projection - special function for projectionStrategy
+#--------------------------------------------------------------------------------------
+
+#Roxygen header
+#'Effort implementation error in projection - special function for projectionStrategy
+#'
+#' @param TimeAreaObj A TimeArea object
+#' @param StrategyObj A Stochastic object
+#' @importFrom methods slot slotNames
+#' @export
+
+effortImpErrorDev<-function(TimeAreaObj, StrategyObj){
+  if(length(TimeAreaObj@iterations) == 0 ||
+     TimeAreaObj@iterations < 1
+  ) {
+    return(NULL)
+  } else {
+    iterations <- floor(TimeAreaObj@iterations)
+    if(is(StrategyObj, "Strategy") &&
+       length(StrategyObj@projectionParams[['effortImpError']]) == 2 &&
+       StrategyObj@projectionParams[['effortImpError']][1] >= 0 &&
+       StrategyObj@projectionParams[['effortImpError']][2] >= 0 &&
+       StrategyObj@projectionParams[['effortImpError']][2] >= StrategyObj@projectionParams[['effortImpError']][1]
+    ) {
+      Edev <- runif(iterations, min = StrategyObj@projectionParams[['effortImpError']][1], max = StrategyObj@projectionParams[['effortImpError']][2])
+      return(list(Edev=Edev))
+    } else {
+      return(list(Edev=runif(iterations, min = 1, max =1)))
+    }
+  }
+}
+
+
 #-----------------------------------------
 #Set of life history params
 #-----------------------------------------

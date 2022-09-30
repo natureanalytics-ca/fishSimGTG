@@ -127,7 +127,8 @@ ProFisheryObj_list<-list(ProFisheryObj, ProFisheryObj)
 StrategyObj <- new("Strategy")
 StrategyObj@projectionYears <- 50
 StrategyObj@projectionName<-"projectionStrategy"
-StrategyObj@projectionParams<-list(bag = c(-99, -99), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(1,2), CPUEtype = "retN")
+StrategyObj@projectionParams<-list(bag = c(-99,-99), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(1,2), CPUEtype = "retN", effortImpError = c(0.7, 1.3))
+
 
 
 #----------------
@@ -146,7 +147,8 @@ runProjection(LifeHistoryObj = LifeHistoryObj,
               wd = here(),
               fileName = "Test1",
               doPlot = TRUE,
-              titleStrategy = "Test1"
+              titleStrategy = "Test1",
+              seed = 10
 )
 
 
