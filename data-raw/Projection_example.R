@@ -4,7 +4,7 @@
 #Example
 #---------------
 devtools::load_all()
-#library(fishSimGTG)
+library(fishSimGTG)
 library(here)
 
 #----------------------------
@@ -43,7 +43,7 @@ TimeAreaObj@title = "Example"
 TimeAreaObj@gtg = 13
 TimeAreaObj@areas = 2
 TimeAreaObj@recArea = c(0.99, 0.01)
-TimeAreaObj@iterations = 3
+TimeAreaObj@iterations = 30
 TimeAreaObj@historicalYears = 10
 TimeAreaObj@historicalBio = 0.5
 TimeAreaObj@historicalBioType = "relB"
@@ -127,7 +127,7 @@ ProFisheryObj_list<-list(ProFisheryObj, ProFisheryObj)
 StrategyObj <- new("Strategy")
 StrategyObj@projectionYears <- 50
 StrategyObj@projectionName<-"projectionStrategy"
-StrategyObj@projectionParams<-list(bag = c(5,5), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(5,8), CPUEtype = "retN", effortImpError = c(1, 1))
+StrategyObj@projectionParams<-list(bag = c(5,5), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(5,8), CPUEtype = "retN", effortImpError = c(0.1, 0.2))
 
 #----------------
 #Run projection
