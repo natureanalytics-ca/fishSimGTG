@@ -32,6 +32,8 @@ LifeHistoryObj@isHermaph<-TRUE
 LifeHistoryObj@H50<-46.2
 LifeHistoryObj@H95delta<-11.8
 LifeHistoryObj@recSD<-0 #Run with no rec var'n to see deterministic trends
+LifeHistoryObj@R0 <- 1000
+LifeHistoryObj@recRho <- 0
 
 #---Populate a TimeArea object
 #---Contains basic inputs about time and space needed to establish simulation bounds
@@ -58,12 +60,12 @@ TimeAreaObj@historicalEffort<-matrix(1:1, nrow = 10, ncol = 2, byrow = FALSE)
 #---Not sure how to set this up? Type ?selWrapper
 HistFisheryObj<-new("Fishery")
 HistFisheryObj@title<-"Example"
-HistFisheryObj@vulType<-"logistic"
-HistFisheryObj@vulParams<-c(30.1,10) #Approx. knife edge based on input value of 40.1. Must put slightly higher value for second parameter
+HistFisheryObj@vulType<-"explog"
+HistFisheryObj@vulParams<-c(0.15,40,0.5) #Approx. knife edge based on input value of 40.1. Must put slightly higher value for second parameter
 HistFisheryObj@retType<-"logistic"
 HistFisheryObj@retParams <- c(30.1,0.1)
 HistFisheryObj@retMax <- 1
-HistFisheryObj@Dmort <- 0.2
+HistFisheryObj@Dmort <- 0
 
 #To simply display to the console
 lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj)
@@ -72,19 +74,19 @@ selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = TRUE)
 
 ProFisheryObj<-new("Fishery")
 ProFisheryObj@title<-"Example"
-ProFisheryObj@vulType<-"logistic"
-ProFisheryObj@vulParams<-c(30.1,10) #Approx. knife edge based on input value of 40.1. Must put slightly higher value for second parameter
+ProFisheryObj@vulType<-"explog"
+ProFisheryObj@vulParams<-c(0.15,40,0.5)
 ProFisheryObj@retType<-"logistic"
 ProFisheryObj@retParams <- c(30.1, 0.1)
 ProFisheryObj@retMax <- 1
-ProFisheryObj@Dmort <- 0.2
+ProFisheryObj@Dmort <- 0
 
 ProFisheryObj2<-new("Fishery")
 ProFisheryObj2@title<-"Example"
-ProFisheryObj2@vulType<-"logistic"
-ProFisheryObj2@vulParams<-c(40.1,0.1) #Approx. knife edge based on input value of 40.1. Must put slightly higher value for second parameter
+ProFisheryObj2@vulType<-"explog"
+ProFisheryObj2@vulParams<-c(0.15,40,0.5)
 ProFisheryObj2@retType<-"logistic"
-ProFisheryObj2@retParams <- c(40.1, 0.1)
+ProFisheryObj2@retParams <- c(30.1, 0.1)
 ProFisheryObj2@retMax <- 1
 ProFisheryObj2@Dmort <- 0
 
@@ -97,15 +99,20 @@ ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj)
 StochasticObj<-new("Stochastic")
 StochasticObj@historicalBio = c(0.3, 0.6)
 
-proFisheryRet_list<-list()
-proFisheryRet_list[[1]]<-matrix(c(30.1,30.1,10,10), nrow=2, byrow=FALSE)
-proFisheryRet_list[[2]]<-matrix(c(40,40,40,40), nrow=2, byrow=FALSE)
-StochasticObj@proFisheryVul_list<-proFisheryRet_list
+proFisheryVul_list<-list()
+proFisheryVul_list[[1]]<-matrix(c(0.1,0.2,35,45,0.4,0.5), nrow=2, byrow=FALSE)
+proFisheryVul_list[[2]]<-matrix(c(0.1,0.2,35,45,0.4,0.5), nrow=2, byrow=FALSE)
+StochasticObj@proFisheryVul_list<-proFisheryVul_list
 
-proFisheryDmort_list<-list()
-proFisheryDmort_list[[1]]<-matrix(c(0.2,0.2), nrow=2, byrow=FALSE)
-proFisheryDmort_list[[2]]<-matrix(c(0.8,0.9), nrow=2, byrow=FALSE)
-StochasticObj@proFisheryDmort_list<-proFisheryDmort_list
+proFisheryRet_list<-list()
+proFisheryRet_list[[1]]<-matrix(c(30.1,30.1,0.1,0.1), nrow=2, byrow=FALSE)
+proFisheryRet_list[[2]]<-matrix(c(30.1,30.1,0.1,0.1), nrow=2, byrow=FALSE)
+StochasticObj@proFisheryRet_list<-proFisheryRet_list
+
+# proFisheryDmort_list<-list()
+# proFisheryDmort_list[[1]]<-matrix(c(0.2,0.2), nrow=2, byrow=FALSE)
+# proFisheryDmort_list[[2]]<-matrix(c(0.8,0.9), nrow=2, byrow=FALSE)
+# StochasticObj@proFisheryDmort_list<-proFisheryDmort_list
 
 
 #------------------------

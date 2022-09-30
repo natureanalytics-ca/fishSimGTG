@@ -416,16 +416,20 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
     }
     if(NROW(selListHist) > 0 & is.null(HistFisheryObj)) print("Uncertainty in historical fishery selectivity cannot be specified without also specifying HistFisheryObj")
   }
+
   #Projection
   if(!is.null(StochasticObj)){
-    #Find LH params that are not null
-    selListPro<-names(Sdev$pro[!unlist(lapply(Sdev$pro, is.null))])
-    if(NROW(selListPro) > 0) {
-      print(paste("Uncertainty in projection fishery selectivity parameters:", selListPro))
-    } else {
-      print(paste("Uncertainty in projection fishery selectivity parameters:", "none"))
+    #Find params that are not null
+
+    for(i in 1:TimeAreaObj@areas){
+      selListPro<-names(Sdev$pro[[i]][!unlist(lapply(Sdev$pro[[i]], is.null))])
+      if(NROW(selListPro) > 0) {
+        print(paste("Area", i, "uncertainty in projection fishery selectivity parameters:", selListPro))
+      } else {
+        print(paste("Area", i, "uncertainty in projection fishery selectivity parameters:", "none"))
+      }
+      if(NROW(selListPro) > 0 & is.null(ProFisheryObj_list)) print("Uncertainty in projection fishery selectivity cannot be specified without also specifying ProFisheryObj")
     }
-    if(NROW(selListPro) > 0 & is.null(ProFisheryObj_list)) print("Uncertainty in projection fishery selectivity cannot be specified without also specifying ProFisheryObj")
   }
 
   #----------------------------------------------
@@ -477,7 +481,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
           selWrapper(lh, TimeAreaObj, FisheryObj = HistFisheryObj_TMP, doPlot = FALSE)
         })
         selPro<-lapply(1:TimeAreaObj@areas, function(x){
-          selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj_TMP[[x]], doPlot = FALSE)
+          selWrapper(lh, TimeAreaObj, FisheryObj = ProFisheryObj_TMP[[x]], doPlot = TRUE)
         })
         if(is.null(lh)) {
           proceedMSE<-FALSE

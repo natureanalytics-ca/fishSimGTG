@@ -194,7 +194,7 @@ LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1, doPlot = FALS
 #'
 #'Total removals is: vul x (Ret + (1 - Ret) x D)
 #'
-#'Selectivity types: "logistic" with params vector c(length at 50% sel, length increment to 95% sel)
+#'Selectivity types: "logistic" with params vector c(length at 50% sel, length increment to 95% sel); "explog" exponential logistic (domed) with vector c(p1, p2, p3)
 #'
 #'Retention types: "full" with no params, assumes Keep = Ret, no discards, no discard mortality; "logistic" with params vector c(length at 50% ret, length increment to 95% ret); "slotLimit" with params vector c(min length, max length) where catches occur betweem min and max
 #'
@@ -234,6 +234,30 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
     }
   }
 
+  #Exponential logistic
+  explogProb<-function(L, param, maxProb){
+    if(
+      length(param) != 3 ||
+      param[1] < 0.02 ||
+      param[1] > 1 ||
+      param[3] < 0.001 ||
+      param[3] > 0.5 ||
+      length(maxProb) == 0 ||
+      maxProb < 0 ||
+      maxProb > 1
+    ) {
+      NULL
+    } else {
+      tryCatch({
+        exp(param[3]*param[1]*(param[2]-L))/(1-param[3]*(1-exp(param[1]*(param[2]-L))))
+      },
+      error = function(c) NULL,
+      warning = function(c) NULL
+      )
+    }
+  }
+
+
   #Full prob
   fullProb<-function(L, maxProb){
     rep(1.0, NROW(L))*maxProb
@@ -263,7 +287,7 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
   sel<-list()
   if(is.null(lh) ||
      !is(FisheryObj, "Fishery") ||
-     !(FisheryObj@vulType %in%  "logistic") ||
+     !(FisheryObj@vulType %in%  c("logistic", "explog")) ||
      !(FisheryObj@retType %in%  c("full", "logistic", "slotLimit")) ||
      length(FisheryObj@retMax) == 0 ||
      FisheryObj@retMax < 0 ||
@@ -277,6 +301,9 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
     #Vulnerability
     if(FisheryObj@vulType == "logistic") {
       sel$vul<-lapply(1:lh$gtg, FUN=function(x) logisticProb(L = lh$L[[x]], param = FisheryObj@vulParams, maxProb = 1.0))
+    }
+    if(FisheryObj@vulType == "explog") {
+      sel$vul<-lapply(1:lh$gtg, FUN=function(x) explogProb(L = lh$L[[x]], param = FisheryObj@vulParams, maxProb = 1.0))
     }
 
     #Retention
