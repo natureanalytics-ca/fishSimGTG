@@ -372,9 +372,9 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
   #Effort implementation error used only in projectionStrategy
   Edev<-NULL
-  # if(is(StrategyObj, "Strategy") &&
-  #    StrategyObj@projectionName == "projectionStrategy"
-  # ) Edev<-effortImpErrorDev(TimeAreaObj, StrategyObj)$Edev
+  if(is(StrategyObj, "Strategy") &&
+     StrategyObj@projectionName == "projectionStrategy"
+  ) Edev<-effortImpErrorDev(TimeAreaObj, StrategyObj)$Edev
 
   #Life history parmeters
   LHdev<-lifehistoryDev(TimeAreaObj, StochasticObj)

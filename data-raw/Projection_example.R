@@ -127,7 +127,7 @@ ProFisheryObj_list<-list(ProFisheryObj, ProFisheryObj)
 StrategyObj <- new("Strategy")
 StrategyObj@projectionYears <- 50
 StrategyObj@projectionName<-"projectionStrategy"
-StrategyObj@projectionParams<-list(bag = c(5,5), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(5,8), CPUEtype = "retN", effortImpError = c(0.1, 0.2))
+StrategyObj@projectionParams<-list(bag = c(-99,-99), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(5,8), CPUEtype = "retN", effortImpError = c(0.1, 0.2))
 
 #----------------
 #Run projection
