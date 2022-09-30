@@ -79,7 +79,9 @@ evalMSE<-function(inputObject){
   #------------------------------
   #Run simulator of k iterations
   #------------------------------
-
+  if(!is.null(hostName) & !is.null(waitName)){
+    waitName$show()
+  }
   #step through iterations k
   for(k in iter[1]:iter[2]){
     #print(k)
@@ -306,6 +308,12 @@ evalMSE<-function(inputObject){
         decisionData<-rbind(decisionData, do.call(get(StrategyObj@projectionName), list(phase=1, dataObject)))
       }
     }
+    if(!is.null(hostName) & !is.null(waitName)){
+      hostName$set(k/floor(TimeAreaObj@iterations)*100)
+    }
+  }
+  if(!is.null(hostName) & !is.null(waitName)){
+    waitName$hide()
   }
 
   #save
@@ -337,16 +345,19 @@ evalMSE<-function(inputObject){
 #' @param doPlot Logical whether to produce diagnostic plots upon completing simulations. Default is FALSE (no plots)
 #' @param customToCluster A character vector containing name or names of custom management strategies to export to the cluster (otherwise parallel processing will fail).
 #' @param titleStrategy A title for management strategy being evaluated.
+#' @param waitName When used within a shiny app, this function can update a host from the waiter package. See example.
+#' @param hostName When used within a shiny app, this function can update a host from the waiter package. See example.
 #' @importFrom grDevices dev.off png rainbow
 #' @importFrom graphics mtext points
 #' @importFrom snowfall sfInit sfLibrary sfLapply sfRemoveAll sfStop sfExport
 #' @importFrom parallel detectCores
 #' @importFrom methods is
+#' @importFrom shinyWidgets updateProgressBar
 #' @export
 
 
 runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryObj_list = NULL, StrategyObj = NULL, StochasticObj = NULL,
-                        wd, fileName, seed = 1, doPlot = FALSE, customToCluster = NULL, titleStrategy = "No name"){
+                        wd, fileName, seed = 1, doPlot = FALSE, customToCluster = NULL, titleStrategy = "No name", waitName=NULL, hostName=NULL){
 
   #-----------------------
   #Build inputObject
@@ -665,7 +676,9 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                     ProFisheryObj_list = ProFisheryObj_list,
                                     StrategyObj = StrategyObj,
                                     StochasticObj = StochasticObj,
-                                    iterations=iterations
+                                    iterations=iterations,
+                                    waitName=waitName,
+                                    hostName=hostName
                                     )
                    )
     }
