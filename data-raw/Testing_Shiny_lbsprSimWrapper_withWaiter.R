@@ -3,7 +3,8 @@ library(shiny)
 library(waiter)
 library(fishSimGTG)
 library(bs4Dash)
-devtools::load_all()
+library(here)
+#devtools::load_all()
 
 ui <- fluidPage(
   br(),

@@ -16,7 +16,9 @@ runProjection(
   seed = 1,
   doPlot = FALSE,
   customToCluster = NULL,
-  titleStrategy = "No name"
+  titleStrategy = "No name",
+  waitName = NULL,
+  hostName = NULL
 )
 }
 \arguments{
@@ -43,6 +45,10 @@ runProjection(
 \item{customToCluster}{A character vector containing name or names of custom management strategies to export to the cluster (otherwise parallel processing will fail).}
 
 \item{titleStrategy}{A title for management strategy being evaluated.}
+
+\item{waitName}{When used within a shiny app, this function can update a host from the waiter package. See example.}
+
+\item{hostName}{When used within a shiny app, this function can update a host from the waiter package. See example.}
 }
 \description{
 Function for running projections or MSE

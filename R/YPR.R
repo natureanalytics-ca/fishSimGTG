@@ -355,6 +355,8 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
 #' @param hostName When used within a shiny app, this function can update a host from the waiter package. See example.
 #' @param gtg The number of growth-type groups. Default is 13.
 #' @param stepsPerYear The number of steps per year. Default is 12.
+#' @param selType When selectivity specified type stated here.
+#' @param selParams Parameters for selectivity function
 #' @importFrom shinyWidgets updateProgressBar
 #' @importFrom methods new
 #' @export
@@ -414,7 +416,7 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
 #' shinyApp(ui, server)}
 
 
-gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL, hostName=NULL, gtg=13, stepsPerYear=12){
+gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL, hostName=NULL, gtg=13, stepsPerYear=12, selType = NULL, selParams = NULL){
 
   #-----------------------------
   #Initial check of conditions
@@ -443,10 +445,18 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
     if(length(LifeHistoryObj@R0) == 0) LifeHistoryObj@R0<-10000
 
     FisheryObj<-new("Fishery")
-    FisheryObj@vulType<-"logistic"
-    FisheryObj@retType<-"full"
     FisheryObj@retMax<-1.0
     FisheryObj@Dmort<-0.0
+
+    if(is.null(selType)){
+      #Full selectivity, retention as per size limit loop
+      FisheryObj@vulType<-"logistic"
+      FisheryObj@vulParams<-c(1, 2)
+    } else {
+      FisheryObj@vulType<-selType
+      FisheryObj@vulParams<-selParams
+    }
+    FisheryObj@retType<-"logistic"
 
     TimeAreaObj<-new("TimeArea")
     TimeAreaObj@gtg<-gtg
@@ -488,7 +498,7 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
       }
       for (j in 1:NROW(Lc)){
 
-        FisheryObj@vulParams<-c(Lc[j], 1)
+        FisheryObj@retParams<-c(Lc[j], 1)
         sel<-selWrapper(lh, TimeAreaObj, FisheryObj, doPlot = FALSE)
 
         for (i in 1:NROW(F_M)){
