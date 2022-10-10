@@ -134,7 +134,7 @@ lbsprSimWrapper<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1, F_MS
     #------------------
 
     Lmax<-(1 - 0.01^(1/MyPars@MK)) * MyPars@Linf
-    Lc<-seq(floor(0.1*Lmax),  floor(Lmax), LcStep)
+    Lc<-seq(floor(0.2*Lmax),  floor(Lmax), LcStep)
     F_M<-round(seq(0, 4, F_MStep), 3)
     SPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
     YPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
@@ -271,7 +271,7 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
     #------------------
 
     Lmax<-(1 - 0.01^(1/MyPars@MK)) * MyPars@Linf
-    Lc<-seq(floor(0.1*Lmax),  floor(Lmax), LcStep)
+    Lc<-seq(floor(0.2*Lmax),  floor(Lmax), LcStep)
     F_M<-round(seq(0, 4, F_MStep), 3)
     SPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
     YPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
@@ -476,7 +476,7 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
       #------------------
 
       Lmax<-(1 - 0.01^(1/(LifeHistoryObj@M/LifeHistoryObj@K))) * LifeHistoryObj@Linf
-      Lc<-seq(floor(0.1*Lmax),  floor(Lmax), LcStep)
+      Lc<-seq(floor(0.2*Lmax),  floor(Lmax), LcStep)
       F_M<-round(seq(0, 4, F_MStep), 3)
       SPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
       YPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))

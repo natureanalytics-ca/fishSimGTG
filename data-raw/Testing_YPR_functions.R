@@ -104,16 +104,16 @@ lines(sim3@sim$F_M, sim3@sim$YPR_EU[,40]/max(sim3@sim$YPR_EU), col="green")
 lines(sim4@sim$F_M, sim4@sim$YPR_EU[,40]/max(sim4@sim$YPR_EU), col="orange")
 
 #Yield
-plot(sim@sim$F_M, sim@sim$Yield_EU[,70], type="l", col="red", main = "0.01")
-lines(sim2@sim$F_M, sim2@sim$Yield_EU[,70], col="blue")
-lines(sim3@sim$F_M, sim3@sim$Yield_EU[,70]/max(sim3@sim$Yield_EU), col="green")
-lines(sim4@sim$F_M, sim4@sim$Yield_EU[,70]/max(sim4@sim$Yield_EU), col="orange")
+plot(sim@sim$F_M, sim@sim$Yield_EU[,40], type="l", col="red", main = "0.01")
+lines(sim2@sim$F_M, sim2@sim$Yield_EU[,40], col="blue")
+lines(sim3@sim$F_M, sim3@sim$Yield_EU[,40]/max(sim3@sim$Yield_EU), col="green")
+lines(sim4@sim$F_M, sim4@sim$Yield_EU[,40]/max(sim4@sim$Yield_EU), col="orange")
 
 #SPR
-plot(sim@sim$F_M, sim@sim$SPR_EU[,50], type="l", col="red", main = "0.01")
-lines(sim2@sim$F_M, sim2@sim$SPR_EU[,50], col="blue")
-lines(sim3@sim$F_M, sim3@sim$SPR_EU[,50], col="green")
-lines(sim4@sim$F_M, sim4@sim$SPR_EU[,50], col="orange")
+plot(sim@sim$F_M, sim@sim$SPR_EU[,40], type="l", col="red", main = "0.01")
+lines(sim2@sim$F_M, sim2@sim$SPR_EU[,40], col="blue")
+lines(sim3@sim$F_M, sim3@sim$SPR_EU[,40], col="green")
+lines(sim4@sim$F_M, sim4@sim$SPR_EU[,40], col="orange")
 
 #------------
 #Lc on x axis
