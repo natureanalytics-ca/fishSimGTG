@@ -687,7 +687,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
     #Ressemble from multiple cores
     #-------------------------------
 
-    if(detectCores()>1 & iterations>=detectCores()) {
+    if(detectCores()>1 & iterations>=detectCores() & is.null(waitName) & is.null(hostName)) {
 
       SB<-mseParallel[[1]]$dynamics$SB
       VB<-mseParallel[[1]]$dynamics$VB
