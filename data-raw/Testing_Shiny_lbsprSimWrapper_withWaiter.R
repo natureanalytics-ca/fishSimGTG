@@ -140,9 +140,9 @@ server <- function(input, output){
                   fileName = "Test1",
                   doPlot = TRUE,
                   titleStrategy = "Test1",
-                  seed = 10,
-                  waitName = waitLoad,
-                  hostName = host
+                  seed = 10
+                  #waitName = waitLoad,
+                  #hostName = host
     )
 
   })

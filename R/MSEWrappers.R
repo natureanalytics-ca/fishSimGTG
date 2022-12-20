@@ -657,7 +657,9 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                ProFisheryObj_list = ProFisheryObj_list,
                                StrategyObj = StrategyObj,
                                StochasticObj = StochasticObj,
-                               iterations=iterations)
+                               iterations=iterations,
+                               waitName=waitName,
+                               hostName=hostName)
       }
       mseParallel<-sfLapply(inputObject, evalMSE)
       sfRemoveAll()
