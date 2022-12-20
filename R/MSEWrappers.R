@@ -633,7 +633,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
     #require(parallel)
     iterations <- floor(TimeAreaObj@iterations)
 
-    if(detectCores()>1 & iterations >= detectCores()) {
+    if(detectCores()>1 & iterations >= detectCores() & is.null(waitName) & is.null(hostName)) {
       print("Running on multiple cores")
       cores<-min(iterations, detectCores())
       sfInit(parallel=T, cpus=cores)

@@ -4,7 +4,7 @@ library(waiter)
 library(fishSimGTG)
 library(bs4Dash)
 library(here)
-#devtools::load_all()
+devtools::load_all()
 
 ui <- fluidPage(
   br(),
@@ -97,7 +97,7 @@ server <- function(input, output){
     TimeAreaObj@gtg = 13
     TimeAreaObj@areas = 2
     TimeAreaObj@recArea = c(0.99, 0.01)
-    TimeAreaObj@iterations = 3
+    TimeAreaObj@iterations = 50
     TimeAreaObj@historicalYears = 10
     TimeAreaObj@historicalBio = 0.5
     TimeAreaObj@historicalBioType = "relB"
