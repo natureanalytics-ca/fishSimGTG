@@ -416,7 +416,7 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
 #' shinyApp(ui, server)}
 
 
-gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL, hostName=NULL, gtg=13, stepsPerYear=12, selType = NULL, selParams = NULL){
+gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL, hostName=NULL, gtg=13, stepsPerYear=1, selType = NULL, selParams = NULL){
 
   #-----------------------------
   #Initial check of conditions
