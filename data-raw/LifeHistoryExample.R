@@ -37,7 +37,7 @@ usethis::use_data(lbsprSimExample, overwrite = TRUE)
 #usethis::use_data(lbsprSimExample, overwrite = TRUE)
 
 #New update
-gtgSimExample<-gtgYPRWrapper(LifeHistoryExample)
+gtgSimExample<-gtgYPRWrapper(LifeHistoryExample, gtg=21)
 usethis::use_data(gtgSimExample, overwrite = TRUE)
 
 
