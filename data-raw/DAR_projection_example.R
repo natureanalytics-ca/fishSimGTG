@@ -1,7 +1,7 @@
 
 
 
-library(fishSimGTG)
+#library(fishSimGTG)
 library(fishSimTools)
 devtools::load_all()
 library(here)
@@ -179,6 +179,16 @@ relSSBseries(wd =  here("data-test", "Kole"),
              dpi = 300)
 
 
+
+relSSBseries(wd =  here("data-test", "Kole"),
+             fileName = list(
+               "Higher_option1"
+             ),
+             facetName = c(as.list(rep("Higher biomass scenario", 1))),
+             chooseArea = 0,
+             percentile = c(0.025, 0.975),
+             doHist = FALSE,
+             dpi = 300)
 
 
 

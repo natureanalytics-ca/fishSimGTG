@@ -32,6 +32,8 @@ gtgYPRWrapper(
 \item{stepsPerYear}{The number of steps per year. Default is 12.}
 
 \item{selType}{When selectivity specified type stated here.}
+
+\item{selParams}{Parameters for selectivity function}
 }
 \description{
 Produces YPR, Yield, and SPR arrays across combinations of F_M and Lc

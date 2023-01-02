@@ -23,9 +23,9 @@ solveD(
 
 \item{F_in}{Equilibrium fishing mortality rate. Used to calculate equilibrium conditions of the stock. Ignored when doFit = TRUE}
 
-\item{D_type}{When doFit = TRUE, specifies type of equilibrium state metric that is specified in D_in (e.g., SSB depletion or SPR). Currently not in use and only SSB depletion is supported}
+\item{D_type}{When doFit = TRUE, specifies type of equilibrium state metric that is specified in D_in (e.g., SSB depletion or SPR).}
 
-\item{D_in}{When doFit = TRUE, specifies value of equilibrium state. Currently this must be SSB depletion (value between 0 and 1)}
+\item{D_in}{When doFit = TRUE, specifies value of equilibrium state. Must be SSB depletion or SPR both with value between 0 and 1}
 
 \item{doPlot}{Equilibrium length composition}
 }

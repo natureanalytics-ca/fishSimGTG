@@ -451,7 +451,7 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
     if(is.null(selType)){
       #Full selectivity, retention as per size limit loop
       FisheryObj@vulType<-"logistic"
-      FisheryObj@vulParams<-c(1, 2)
+      FisheryObj@vulParams<-c(0, 1)
     } else {
       FisheryObj@vulType<-selType
       FisheryObj@vulParams<-selParams

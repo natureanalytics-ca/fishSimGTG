@@ -383,8 +383,8 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
 #' @param sel An object produced by selWrapper
 #' @param doFit Logical. When TRUE, estimates equilibrium fishing mortality based on input D_in. Ignores F_in. Default is FALSE
 #' @param F_in Equilibrium fishing mortality rate. Used to calculate equilibrium conditions of the stock. Ignored when doFit = TRUE
-#' @param D_type When doFit = TRUE, specifies type of equilibrium state metric that is specified in D_in (e.g., SSB depletion or SPR). Currently not in use and only SSB depletion is supported
-#' @param D_in When doFit = TRUE, specifies value of equilibrium state. Currently this must be SSB depletion (value between 0 and 1)
+#' @param D_type When doFit = TRUE, specifies type of equilibrium state metric that is specified in D_in (e.g., SSB depletion or SPR).
+#' @param D_in When doFit = TRUE, specifies value of equilibrium state. Must be SSB depletion or SPR both with value between 0 and 1
 #' @param doPlot Equilibrium length composition
 #' @importFrom methods slot slotNames
 #' @import ggplot2  dplyr
