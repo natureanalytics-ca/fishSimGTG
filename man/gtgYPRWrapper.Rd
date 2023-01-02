@@ -11,7 +11,7 @@ gtgYPRWrapper(
   waitName = NULL,
   hostName = NULL,
   gtg = 13,
-  stepsPerYear = 1,
+  stepsPerYear = 12,
   selType = NULL,
   selParams = NULL
 )
