@@ -211,8 +211,6 @@ evalMSE<-function(inputObject){
                          decisionData=decisionData,
                          decisionAnnual=decisionAnnual,
                          decisionLocal=decisionLocal
-                         #Cdev=Cdev,
-                         #Edev=Edev
       ),
       inputObject
       )
@@ -237,8 +235,6 @@ evalMSE<-function(inputObject){
                          decisionData=decisionData,
                          decisionAnnual=decisionAnnual,
                          decisionLocal=decisionLocal
-                         #Cdev=Cdev,
-                         #Edev=Edev
                         ),
                     inputObject
       )
@@ -300,8 +296,6 @@ evalMSE<-function(inputObject){
                            decisionData=decisionData,
                            decisionAnnual=decisionAnnual,
                            decisionLocal=decisionLocal
-                           #Cdev=Cdev,
-                           #Edev = Edev
         ),
         inputObject
         )

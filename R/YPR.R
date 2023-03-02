@@ -476,7 +476,7 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
       #------------------
 
       Lmax<-(1 - 0.01^(1/(LifeHistoryObj@M/LifeHistoryObj@K))) * LifeHistoryObj@Linf
-      Lc<-seq(floor(0.2*Lmax),  floor(Lmax), LcStep)
+      Lc<-seq(floor(0.3*Lmax),  floor(Lmax), LcStep)
       #F_M<-round(seq(0, 4, F_MStep), 3)
       F_M<-round(seq(0, floor(max(4,3/LifeHistoryObj@M)), F_MStep), 3)
       SPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
