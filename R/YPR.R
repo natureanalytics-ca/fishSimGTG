@@ -359,6 +359,7 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
 #' @param selParams Parameters for selectivity function
 #' @importFrom shinyWidgets updateProgressBar
 #' @importFrom methods new
+#' @importFrom stats quantile
 #' @export
 #' @examples
 #' lh<-new("LifeHistory")
@@ -476,7 +477,11 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
       #------------------
 
       #Lmax<-(1 - 0.01^(1/(LifeHistoryObj@M/LifeHistoryObj@K))) * LifeHistoryObj@Linf
-      Lmax <- max(unlist(lh$L))
+      mt<-matrix(unlist(lh$L), ncol = NROW(lh$L), byrow = FALSE)
+      Lhigh_likely <-sapply(1:NROW(mt), function(x){
+        quantile(mt[x,], probs = 0.75)
+      })
+      Lmax <- max(Lhigh_likely)
       Lmin <- LifeHistoryObj@L50/2
       #Lc<-seq(floor(0.3*Lmax),  floor(Lmax), LcStep)
       Lc<-seq(floor(Lmin),  floor(Lmax), LcStep)
