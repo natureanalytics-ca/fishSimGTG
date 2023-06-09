@@ -194,7 +194,7 @@ LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1, doPlot = FALS
 #'
 #'Total removals is: vul x (Ret + (1 - Ret) x D)
 #'
-#'Selectivity types: "logistic" with params vector c(length at 50% sel, length increment to 95% sel); "explog" exponential logistic (domed) with vector c(p1, p2, p3)
+#'Selectivity types: "logistic" with params vector c(length at 50% sel, length increment to 95% sel); "explog" exponential logistic (domed) with vector c(p1, p2, p3); "gillnetMasterNormal" master curve for mesh sel with vector(R0 relative peak L/m, var, mesh (in cm)); "gillnetMasterLognormal" master curve for mesh sel with vector (R0 relative peak L/m, var, mesh (in cm))
 #'
 #'Retention types: "full" with no params, assumes Keep = Ret, no discards, no discard mortality; "logistic" with params vector c(length at 50% ret, length increment to 95% ret); "slotLimit" with params vector c(min length, max length) where catches occur betweem min and max
 #'
@@ -257,6 +257,66 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
     }
   }
 
+  #Gillnet master normal
+  gillnetNormalProb<-function(L, param){
+    if(
+      length(param) != 3 ||
+      param[1] < 0 ||
+      param[2] < 0 ||
+      param[3] < 0
+    ) {
+      NULL
+    } else {
+      tryCatch({
+        R<-L/param[3]
+        exp(-(R - param[1])^2/(2*param[2]))
+      },
+      error = function(c) NULL,
+      warning = function(c) NULL
+      )
+    }
+  }
+
+  #Gillnet master lognormal
+  gillnetLogProb<-function(L, param){
+    if(
+      length(param) != 3 ||
+      param[1] < 0 ||
+      param[2] < 0 ||
+      param[3] < 0
+    ) {
+      NULL
+    } else {
+      tryCatch({
+        R<-L/param[3]
+        exp(-(log(R) - log(param[1]))^2/(2*param[2]))
+      },
+      error = function(c) NULL,
+      warning = function(c) NULL
+      )
+    }
+  }
+
+  #Gillnet master skewed normal
+  gillnetLogProb<-function(L, param){
+    if(
+      length(param) != 3 ||
+      param[1] < 0 ||
+      param[2] < 0 ||
+      param[3] < 0
+    ) {
+      NULL
+    } else {
+      tryCatch({
+        R<-L/param[3]
+        exp(-(log(R) - log(param[1]))^2/(2*param[2]))
+      },
+      error = function(c) NULL,
+      warning = function(c) NULL
+      )
+    }
+  }
+
 
   #Full prob
   fullProb<-function(L, maxProb){
@@ -287,7 +347,7 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
   sel<-list()
   if(is.null(lh) ||
      !is(FisheryObj, "Fishery") ||
-     !(FisheryObj@vulType %in%  c("logistic", "explog")) ||
+     !(FisheryObj@vulType %in%  c("logistic", "explog", "gillnetMasterNormal", "gillnetMasterLognormal")) ||
      !(FisheryObj@retType %in%  c("full", "logistic", "slotLimit")) ||
      length(FisheryObj@retMax) == 0 ||
      FisheryObj@retMax < 0 ||
@@ -305,6 +365,13 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
     if(FisheryObj@vulType == "explog") {
       sel$vul<-lapply(1:lh$gtg, FUN=function(x) explogProb(L = lh$L[[x]], param = FisheryObj@vulParams, maxProb = 1.0))
     }
+    if(FisheryObj@vulType == "gillnetMasterNormal") {
+      sel$vul<-lapply(1:lh$gtg, FUN=function(x) gillnetNormalProb(L = lh$L[[x]], param = FisheryObj@vulParams))
+    }
+    if(FisheryObj@vulType == "gillnetMasterLognormal") {
+      sel$vul<-lapply(1:lh$gtg, FUN=function(x) gillnetLogProb(L = lh$L[[x]], param = FisheryObj@vulParams))
+    }
+
 
     #Retention
     if(FisheryObj@retType == "logistic") {

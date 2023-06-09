@@ -60,12 +60,12 @@ TimeAreaObj@historicalEffort<-matrix(1:1, nrow = 10, ncol = 2, byrow = FALSE)
 #---Not sure how to set this up? Type ?selWrapper
 HistFisheryObj<-new("Fishery")
 HistFisheryObj@title<-"Example"
-HistFisheryObj@vulType<-"explog"
-HistFisheryObj@vulParams<-c(0.15,40,0.5) #Approx. knife edge based on input value of 40.1. Must put slightly higher value for second parameter
+HistFisheryObj@vulType<-"gillnetMasterNormal"
+HistFisheryObj@vulParams<-c(4.19,0.71,5.08)
 HistFisheryObj@retType<-"logistic"
-HistFisheryObj@retParams <- c(30.1,0.1)
+HistFisheryObj@retParams <- c(25,0.1)
 HistFisheryObj@retMax <- 1
-HistFisheryObj@Dmort <- 0
+HistFisheryObj@Dmort <- 0.2
 
 #To simply display to the console
 lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj)
