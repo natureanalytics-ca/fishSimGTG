@@ -417,7 +417,7 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
 #' shinyApp(ui, server)}
 
 
-gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL, hostName=NULL, gtg=13, stepsPerYear=12, selType = NULL, selParams = NULL){
+gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL, hostName=NULL, gtg=13, stepsPerYear=12, selType = NULL, selParams = NULL, inchStep = NULL){
 
   #-----------------------------
   #Initial check of conditions
@@ -477,14 +477,23 @@ gtgYPRWrapper<-function(LifeHistoryObj, LcStep = 1, F_MStep = 0.2, waitName=NULL
       #------------------
 
       #Lmax<-(1 - 0.01^(1/(LifeHistoryObj@M/LifeHistoryObj@K))) * LifeHistoryObj@Linf
+      #Lc<-seq(floor(0.3*Lmax),  floor(Lmax), LcStep)
+
+
       mt<-matrix(unlist(lh$L), ncol = NROW(lh$L), byrow = FALSE)
       Lhigh_likely <-sapply(1:NROW(mt), function(x){
         quantile(mt[x,], probs = 0.75)
       })
       Lmax <- max(Lhigh_likely)
       Lmin <- LifeHistoryObj@L50/2
-      #Lc<-seq(floor(0.3*Lmax),  floor(Lmax), LcStep)
+
       Lc<-seq(floor(Lmin),  floor(Lmax), LcStep)
+
+      if(!is.null(inchStep)){
+        LcInch<-seq(round(floor(Lmin) / 2.54,0),  round(floor(Lmax) / 2.54, 0), inchStep) * 2.54
+        Lc<-sort(unique(c(Lc,LcInch)))
+      }
+
       #F_M<-round(seq(0, 4, F_MStep), 3)
       F_M<-round(seq(0, floor(max(4,3/LifeHistoryObj@M)), F_MStep), 3)
       SPR_EU<-matrix(nrow=NROW(F_M), ncol=NROW(Lc))
