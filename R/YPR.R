@@ -357,6 +357,7 @@ lbsprSimWrapperAbsel<-function(LifeHistoryObj, binWidth=1, binMin=0, LcStep = 1,
 #' @param stepsPerYear The number of steps per year. Default is 12.
 #' @param selType When selectivity specified type stated here.
 #' @param selParams Parameters for selectivity function
+#' @param inchStep Optional parameter adding Lc corresponding to inch-based increments
 #' @importFrom shinyWidgets updateProgressBar
 #' @importFrom methods new
 #' @importFrom stats quantile

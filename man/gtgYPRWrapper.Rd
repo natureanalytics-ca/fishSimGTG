@@ -13,7 +13,8 @@ gtgYPRWrapper(
   gtg = 13,
   stepsPerYear = 12,
   selType = NULL,
-  selParams = NULL
+  selParams = NULL,
+  inchStep = NULL
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ gtgYPRWrapper(
 \item{selType}{When selectivity specified type stated here.}
 
 \item{selParams}{Parameters for selectivity function}
+
+\item{inchStep}{Optional parameter adding Lc corresponding to inch-based increments}
 }
 \description{
 Produces YPR, Yield, and SPR arrays across combinations of F_M and Lc
