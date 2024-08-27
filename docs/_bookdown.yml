@@ -1,0 +1,15 @@
+delete_merged_file: true
+language:
+  ui:
+    chapter_name: ""
+split_bib: false
+rmd_files: [
+  "index.Rmd",
+  "01-intro.Rmd",
+  "02-OM.Rmd",
+  "03-MPs.Rmd",
+  "04-Running_the_closed_loop.Rmd",
+  "05-Simulation_results.Rmd",
+  "06-Example.Rmd",
+  "07-references.Rmd"
+]
