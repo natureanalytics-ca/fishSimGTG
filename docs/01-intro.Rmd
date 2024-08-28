@@ -1,9 +1,5 @@
----
-output:
-  html_document: default
-  pdf_document: default
----
-# How to Populate the Operating Model (OM) {#OM-pop}
+
+# How to Populate the Operating Model (OM) {#om-pop}
 
 The OM is comprised of six S4 objects:
 

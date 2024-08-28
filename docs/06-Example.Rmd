@@ -1,15 +1,11 @@
----
-output:
-  html_document: default
-  pdf_document: default
----
+
 # Examples
 
 ## Honeycomb grouper example
 
 This example illustrates a model with four areas and a suite of management options, including size limits, effort reductions (such as seasonal closures or time-day closures), and rotational spatial closures. All simulations are conducted under the assumption that fishing effort is reallocated from closed areas to open areas, rather than being removed from the fishery.
 
-See Section \@ref(OM-pop) for details on how to populate the Operating Model.
+See Section \@ref(om-pop) for details on how to populate the Operating Model.
 
 ### Populationg the life history
 

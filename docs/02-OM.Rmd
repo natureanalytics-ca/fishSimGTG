@@ -1,4 +1,5 @@
-# Mathematical description of the Operating model (OM) {#OM}
+
+# Mathematical description of the Operating model (OM) {#om}
 
 &nbsp;&nbsp;&nbsp;&nbsp;An operating model is a mathematical representation of the biology of a fish stock and the fishery that operates on the fish stock. The operating model should also include a sub-model that reflects how the management regulations are implemented and are adhered to in practice [@punt_management_2016].
 
