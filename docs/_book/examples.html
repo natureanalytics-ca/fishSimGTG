@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>7 Examples | Examples</title>
+  <meta name="description" content="This document includes the description of FishSimGTG" />
+  <meta name="generator" content="bookdown 0.40 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="7 Examples | Examples" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="This document includes the description of FishSimGTG" />
+  <meta name="github-repo" content="rstudio/bookdown-demo" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="7 Examples | Examples" />
+  
+  <meta name="twitter:description" content="This document includes the description of FishSimGTG" />
+  
+
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="exploring-the-simulation-outputs.html"/>
+<link rel="next" href="references.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">This document includes the description of FishSimGTG</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> What is FishSimGTG?</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#installation-and-required-packages"><i class="fa fa-check"></i><b>1.1</b> Installation and required packages</a></li>
+<li class="chapter" data-level="1.2" data-path="index.html"><a href="index.html#how-to-use-fishsimgtg"><i class="fa fa-check"></i><b>1.2</b> How to use FishSimGTG?</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="om-pop.html"><a href="om-pop.html"><i class="fa fa-check"></i><b>2</b> How to Populate the Operating Model (OM)</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="om-pop.html"><a href="om-pop.html#life-history-object"><i class="fa fa-check"></i><b>2.1</b> Life history object</a></li>
+<li class="chapter" data-level="2.2" data-path="om-pop.html"><a href="om-pop.html#fishery-object"><i class="fa fa-check"></i><b>2.2</b> Fishery object</a>
+<ul>
+<li class="chapter" data-level="2.2.1" data-path="om-pop.html"><a href="om-pop.html#selectivity-or-vulnerability"><i class="fa fa-check"></i><b>2.2.1</b> Selectivity or vulnerability</a></li>
+<li class="chapter" data-level="2.2.2" data-path="om-pop.html"><a href="om-pop.html#retention"><i class="fa fa-check"></i><b>2.2.2</b> Retention</a></li>
+<li class="chapter" data-level="2.2.3" data-path="om-pop.html"><a href="om-pop.html#discard-mortality-rate"><i class="fa fa-check"></i><b>2.2.3</b> Discard mortality rate</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="om-pop.html"><a href="om-pop.html#time-area-object"><i class="fa fa-check"></i><b>2.3</b> Time area object</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="om-pop.html"><a href="om-pop.html#lh-sel"><i class="fa fa-check"></i><b>2.3.1</b> Exploring the Parameterization of the Operating Model So Far</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="om-pop.html"><a href="om-pop.html#stochastic-object"><i class="fa fa-check"></i><b>2.4</b> Stochastic object</a>
+<ul>
+<li class="chapter" data-level="2.4.1" data-path="om-pop.html"><a href="om-pop.html#adding-stochasticity-to-the-lifehistoryobj-object"><i class="fa fa-check"></i><b>2.4.1</b> Adding stochasticity to the <code>LifeHistoryObj</code> object</a></li>
+<li class="chapter" data-level="2.4.2" data-path="om-pop.html"><a href="om-pop.html#adding-stochasticity-to-the-histfisheryobj-object"><i class="fa fa-check"></i><b>2.4.2</b> Adding stochasticity to the <code>HistFisheryObj</code> object</a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="om-pop.html"><a href="om-pop.html#fishery-projections"><i class="fa fa-check"></i><b>2.5</b> Fishery projections</a>
+<ul>
+<li class="chapter" data-level="2.5.1" data-path="om-pop.html"><a href="om-pop.html#adding-stochasticity-to-the-fishery-projections"><i class="fa fa-check"></i><b>2.5.1</b> Adding stochasticity to the fishery projections</a></li>
+</ul></li>
+<li class="chapter" data-level="2.6" data-path="om-pop.html"><a href="om-pop.html#the-management-strategy"><i class="fa fa-check"></i><b>2.6</b> The management strategy</a></li>
+<li class="chapter" data-level="2.7" data-path="om-pop.html"><a href="om-pop.html#running-the-projection-and-management-strategy-simulation"><i class="fa fa-check"></i><b>2.7</b> Running the projection and management strategy simulation</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="om.html"><a href="om.html"><i class="fa fa-check"></i><b>3</b> Mathematical description of the Operating model (OM)</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="om.html"><a href="om.html#population-dynamics"><i class="fa fa-check"></i><b>3.1</b> Population dynamics</a></li>
+<li class="chapter" data-level="3.2" data-path="om.html"><a href="om.html#life-history"><i class="fa fa-check"></i><b>3.2</b> Life history</a></li>
+<li class="chapter" data-level="3.3" data-path="om.html"><a href="om.html#initial-conditions"><i class="fa fa-check"></i><b>3.3</b> Initial conditions</a></li>
+<li class="chapter" data-level="3.4" data-path="om.html"><a href="om.html#fishery-dynamics"><i class="fa fa-check"></i><b>3.4</b> Fishery dynamics</a></li>
+<li class="chapter" data-level="3.5" data-path="om.html"><a href="om.html#observation-and-monitoring"><i class="fa fa-check"></i><b>3.5</b> Observation and monitoring</a></li>
+<li class="chapter" data-level="3.6" data-path="om.html"><a href="om.html#growth-type-group"><i class="fa fa-check"></i><b>3.6</b> Growth-type group</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="customized-management-procedures-mps.html"><a href="customized-management-procedures-mps.html"><i class="fa fa-check"></i><b>4</b> Customized Management Procedures (MPs)</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="customized-management-procedures-mps.html"><a href="customized-management-procedures-mps.html#mp-1"><i class="fa fa-check"></i><b>4.1</b> MP 1</a></li>
+<li class="chapter" data-level="4.2" data-path="customized-management-procedures-mps.html"><a href="customized-management-procedures-mps.html#mp-2"><i class="fa fa-check"></i><b>4.2</b> MP 2</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="the-closed-loop-simulation.html"><a href="the-closed-loop-simulation.html"><i class="fa fa-check"></i><b>5</b> The Closed Loop Simulation</a></li>
+<li class="chapter" data-level="6" data-path="exploring-the-simulation-outputs.html"><a href="exploring-the-simulation-outputs.html"><i class="fa fa-check"></i><b>6</b> Exploring the Simulation Outputs</a></li>
+<li class="chapter" data-level="7" data-path="examples.html"><a href="examples.html"><i class="fa fa-check"></i><b>7</b> Examples</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="examples.html"><a href="examples.html#honeycomb-grouper-example"><i class="fa fa-check"></i><b>7.1</b> Honeycomb grouper example</a>
+<ul>
+<li class="chapter" data-level="7.1.1" data-path="examples.html"><a href="examples.html#populationg-the-life-history"><i class="fa fa-check"></i><b>7.1.1</b> Populationg the life history</a></li>
+<li class="chapter" data-level="7.1.2" data-path="examples.html"><a href="examples.html#populating-the-fishery-history"><i class="fa fa-check"></i><b>7.1.2</b> Populating the fishery history</a></li>
+<li class="chapter" data-level="7.1.3" data-path="examples.html"><a href="examples.html#populating-the-time-and-area-parameters"><i class="fa fa-check"></i><b>7.1.3</b> Populating the time and area parameters</a></li>
+<li class="chapter" data-level="7.1.4" data-path="examples.html"><a href="examples.html#exploring-the-paramaterization-of-the-om-so-far"><i class="fa fa-check"></i><b>7.1.4</b> Exploring the paramaterization of the OM so far</a></li>
+<li class="chapter" data-level="7.1.5" data-path="examples.html"><a href="examples.html#including-stochasticity"><i class="fa fa-check"></i><b>7.1.5</b> Including stochasticity</a></li>
+<li class="chapter" data-level="7.1.6" data-path="examples.html"><a href="examples.html#fishery-projections-1"><i class="fa fa-check"></i><b>7.1.6</b> Fishery projections</a></li>
+<li class="chapter" data-level="7.1.7" data-path="examples.html"><a href="examples.html#the-management-strategy-1"><i class="fa fa-check"></i><b>7.1.7</b> The management strategy</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Examples</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="examples" class="section level1 hasAnchor" number="7">
+<h1><span class="header-section-number">7</span> Examples<a href="examples.html#examples" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div id="honeycomb-grouper-example" class="section level2 hasAnchor" number="7.1">
+<h2><span class="header-section-number">7.1</span> Honeycomb grouper example<a href="examples.html#honeycomb-grouper-example" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>This example illustrates a model with four areas and a suite of management options, including size limits, effort reductions (such as seasonal closures or time-day closures), and rotational spatial closures. All simulations are conducted under the assumption that fishing effort is reallocated from closed areas to open areas, rather than being removed from the fishery.</p>
+<p>See Section <a href="om-pop.html#om-pop">2</a> for details on how to populate the Operating Model.</p>
+<div id="populationg-the-life-history" class="section level3 hasAnchor" number="7.1.1">
+<h3><span class="header-section-number">7.1.1</span> Populationg the life history<a href="examples.html#populationg-the-life-history" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="examples.html#cb39-1" tabindex="-1"></a>LifeHistoryObj <span class="ot">&lt;-</span> <span class="fu">new</span>(<span class="st">&quot;LifeHistory&quot;</span>)</span>
+<span id="cb39-2"><a href="examples.html#cb39-2" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>title<span class="ot">&lt;-</span><span class="st">&quot;Honeycomb grouper&quot;</span></span>
+<span id="cb39-3"><a href="examples.html#cb39-3" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>speciesName<span class="ot">&lt;-</span><span class="st">&quot;EpinephelusMerra&quot;</span></span>
+<span id="cb39-4"><a href="examples.html#cb39-4" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>shortDescription<span class="ot">&lt;-</span><span class="st">&quot;example multiple areas&quot;</span></span>
+<span id="cb39-5"><a href="examples.html#cb39-5" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>Linf<span class="ot">&lt;-</span><span class="fl">24.4</span></span>
+<span id="cb39-6"><a href="examples.html#cb39-6" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>K<span class="ot">&lt;-</span><span class="fl">0.2</span></span>
+<span id="cb39-7"><a href="examples.html#cb39-7" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>t0<span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb39-8"><a href="examples.html#cb39-8" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>L50<span class="ot">&lt;-</span><span class="fl">14.1</span></span>
+<span id="cb39-9"><a href="examples.html#cb39-9" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>L95delta<span class="ot">&lt;-</span><span class="fl">2.1</span></span>
+<span id="cb39-10"><a href="examples.html#cb39-10" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>M<span class="ot">&lt;-</span><span class="fl">0.29</span></span>
+<span id="cb39-11"><a href="examples.html#cb39-11" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>L_type<span class="ot">&lt;-</span><span class="st">&quot;FL&quot;</span></span>
+<span id="cb39-12"><a href="examples.html#cb39-12" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>L_units<span class="ot">&lt;-</span><span class="st">&quot;cm&quot;</span></span>
+<span id="cb39-13"><a href="examples.html#cb39-13" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>LW_A<span class="ot">&lt;-</span><span class="fl">0.016</span></span>
+<span id="cb39-14"><a href="examples.html#cb39-14" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>LW_B<span class="ot">&lt;-</span><span class="fl">2.966</span></span>
+<span id="cb39-15"><a href="examples.html#cb39-15" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>Walpha_units<span class="ot">&lt;-</span><span class="st">&quot;g&quot;</span></span>
+<span id="cb39-16"><a href="examples.html#cb39-16" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>Steep<span class="ot">&lt;-</span><span class="fl">0.69</span></span>
+<span id="cb39-17"><a href="examples.html#cb39-17" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>recSD<span class="ot">&lt;-</span><span class="fl">0.6</span></span>
+<span id="cb39-18"><a href="examples.html#cb39-18" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>recRho<span class="ot">&lt;-</span><span class="dv">0</span></span>
+<span id="cb39-19"><a href="examples.html#cb39-19" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>isHermaph<span class="ot">&lt;-</span><span class="cn">FALSE</span></span>
+<span id="cb39-20"><a href="examples.html#cb39-20" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>R0<span class="ot">&lt;-</span><span class="dv">10000</span></span></code></pre></div>
+</div>
+<div id="populating-the-fishery-history" class="section level3 hasAnchor" number="7.1.2">
+<h3><span class="header-section-number">7.1.2</span> Populating the fishery history<a href="examples.html#populating-the-fishery-history" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="examples.html#cb40-1" tabindex="-1"></a>HistFisheryObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;Fishery&quot;</span>)</span>
+<span id="cb40-2"><a href="examples.html#cb40-2" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>title<span class="ot">&lt;-</span><span class="st">&quot;Test&quot;</span></span>
+<span id="cb40-3"><a href="examples.html#cb40-3" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>vulType<span class="ot">&lt;-</span><span class="st">&quot;logistic&quot;</span></span>
+<span id="cb40-4"><a href="examples.html#cb40-4" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>vulParams<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="dv">19</span>, <span class="fl">0.9</span>)</span>
+<span id="cb40-5"><a href="examples.html#cb40-5" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>retType<span class="ot">&lt;-</span><span class="st">&quot;full&quot;</span></span>
+<span id="cb40-6"><a href="examples.html#cb40-6" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>retMax <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb40-7"><a href="examples.html#cb40-7" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>Dmort <span class="ot">&lt;-</span> <span class="dv">0</span></span></code></pre></div>
+</div>
+<div id="populating-the-time-and-area-parameters" class="section level3 hasAnchor" number="7.1.3">
+<h3><span class="header-section-number">7.1.3</span> Populating the time and area parameters<a href="examples.html#populating-the-time-and-area-parameters" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="examples.html#cb41-1" tabindex="-1"></a><span class="co"># I want to run the low movement scenario</span></span>
+<span id="cb41-2"><a href="examples.html#cb41-2" tabindex="-1"></a>TimeAreaObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;TimeArea&quot;</span>)</span>
+<span id="cb41-3"><a href="examples.html#cb41-3" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>title <span class="ot">=</span> <span class="st">&quot;Test&quot;</span></span>
+<span id="cb41-4"><a href="examples.html#cb41-4" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>gtg <span class="ot">=</span> <span class="dv">13</span></span>
+<span id="cb41-5"><a href="examples.html#cb41-5" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>areas <span class="ot">=</span> <span class="dv">4</span></span>
+<span id="cb41-6"><a href="examples.html#cb41-6" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>recArea <span class="ot">=</span> <span class="fu">c</span>(<span class="fl">0.067</span>, <span class="fl">0.067</span>,<span class="fl">0.067</span>,<span class="fl">0.8</span>)<span class="co">#rec pars excel?</span></span>
+<span id="cb41-7"><a href="examples.html#cb41-7" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>iterations <span class="ot">=</span> <span class="dv">100</span></span>
+<span id="cb41-8"><a href="examples.html#cb41-8" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>historicalYears <span class="ot">=</span> <span class="dv">50</span></span>
+<span id="cb41-9"><a href="examples.html#cb41-9" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>historicalBio <span class="ot">=</span> <span class="fl">0.5</span></span>
+<span id="cb41-10"><a href="examples.html#cb41-10" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>historicalBioType <span class="ot">=</span> <span class="st">&quot;relB&quot;</span></span>
+<span id="cb41-11"><a href="examples.html#cb41-11" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>move <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(</span>
+<span id="cb41-12"><a href="examples.html#cb41-12" tabindex="-1"></a>  <span class="fl">0.9</span>, <span class="fl">0.05</span>, <span class="fl">0.05</span>, <span class="dv">0</span>,</span>
+<span id="cb41-13"><a href="examples.html#cb41-13" tabindex="-1"></a>  <span class="fl">0.05</span>, <span class="fl">0.9</span>, <span class="fl">0.05</span>, <span class="dv">0</span>,</span>
+<span id="cb41-14"><a href="examples.html#cb41-14" tabindex="-1"></a>  <span class="fl">0.05</span>, <span class="fl">0.05</span>, <span class="fl">0.9</span>, <span class="dv">0</span>,</span>
+<span id="cb41-15"><a href="examples.html#cb41-15" tabindex="-1"></a>  <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>), <span class="at">nrow=</span><span class="dv">4</span>, <span class="at">ncol=</span><span class="dv">4</span>, <span class="at">byrow=</span><span class="cn">TRUE</span>) <span class="co">#move pars excel?</span></span>
+<span id="cb41-16"><a href="examples.html#cb41-16" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>historicalEffort<span class="ot">&lt;-</span><span class="fu">matrix</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">1</span>, <span class="at">nrow =</span> <span class="dv">50</span>, <span class="at">ncol =</span> <span class="dv">4</span>, <span class="at">byrow =</span> <span class="cn">FALSE</span>) <span class="co">#excel time-area base - hist effort row 1 &gt; effort pars row 1?</span></span></code></pre></div>
+</div>
+<div id="exploring-the-paramaterization-of-the-om-so-far" class="section level3 hasAnchor" number="7.1.4">
+<h3><span class="header-section-number">7.1.4</span> Exploring the paramaterization of the OM so far<a href="examples.html#exploring-the-paramaterization-of-the-om-so-far" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="examples.html#cb42-1" tabindex="-1"></a><span class="co">#To simply display to the console</span></span>
+<span id="cb42-2"><a href="examples.html#cb42-2" tabindex="-1"></a>lhOut<span class="ot">&lt;-</span><span class="fu">LHwrapper</span>(LifeHistoryObj, TimeAreaObj, <span class="at">doPlot =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="figure"><span style="display:block;" id="fig:lhgrouper"></span>
+<img src="_main_files/figure-html/lhgrouper-1.png" alt="Life history schedules of honeycomb grouper." width="672" />
+<p class="caption">
+Figure 7.1: Life history schedules of honeycomb grouper.
+</p>
+</div>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="examples.html#cb43-1" tabindex="-1"></a><span class="co">#To return life history details</span></span>
+<span id="cb43-2"><a href="examples.html#cb43-2" tabindex="-1"></a>lhOut</span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="examples.html#cb44-1" tabindex="-1"></a>selOut<span class="ot">&lt;-</span><span class="fu">selWrapper</span>(<span class="at">lh =</span> lhOut, TimeAreaObj, <span class="at">FisheryObj =</span> HistFisheryObj, <span class="at">doPlot =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="figure"><span style="display:block;" id="fig:selgrouper"></span>
+<img src="_main_files/figure-html/selgrouper-1.png" alt="Logistic selectivity function." width="672" />
+<p class="caption">
+Figure 7.2: Logistic selectivity function.
+</p>
+</div>
+</div>
+<div id="including-stochasticity" class="section level3 hasAnchor" number="7.1.5">
+<h3><span class="header-section-number">7.1.5</span> Including stochasticity<a href="examples.html#including-stochasticity" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="examples.html#cb45-1" tabindex="-1"></a>StochasticObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;Stochastic&quot;</span>)</span>
+<span id="cb45-2"><a href="examples.html#cb45-2" tabindex="-1"></a>StochasticObj<span class="sc">@</span>historicalBio <span class="ot">=</span> <span class="fu">c</span>(<span class="fl">0.2</span>, <span class="fl">0.6</span>)</span>
+<span id="cb45-3"><a href="examples.html#cb45-3" tabindex="-1"></a>StochasticObj<span class="sc">@</span>Linf<span class="ot">=</span><span class="fu">c</span>(<span class="fl">24.4</span>, <span class="fl">29.8</span>)</span>
+<span id="cb45-4"><a href="examples.html#cb45-4" tabindex="-1"></a>StochasticObj<span class="sc">@</span>K<span class="ot">=</span><span class="fu">c</span>(<span class="fl">0.2</span>, <span class="fl">0.97</span>)</span>
+<span id="cb45-5"><a href="examples.html#cb45-5" tabindex="-1"></a>StochasticObj<span class="sc">@</span>L50<span class="ot">=</span><span class="fu">c</span>(<span class="fl">14.1</span>, <span class="fl">16.8</span>)</span>
+<span id="cb45-6"><a href="examples.html#cb45-6" tabindex="-1"></a>StochasticObj<span class="sc">@</span>L95delta<span class="ot">=</span><span class="fu">c</span>(<span class="fl">2.1</span>, <span class="fl">2.5</span>)</span>
+<span id="cb45-7"><a href="examples.html#cb45-7" tabindex="-1"></a>StochasticObj<span class="sc">@</span>M<span class="ot">=</span><span class="fu">c</span>(<span class="fl">0.29</span>, <span class="fl">0.43</span>)</span>
+<span id="cb45-8"><a href="examples.html#cb45-8" tabindex="-1"></a>StochasticObj<span class="sc">@</span>Steep<span class="ot">=</span><span class="fu">c</span>(<span class="fl">0.69</span>, <span class="fl">0.84</span>)</span>
+<span id="cb45-9"><a href="examples.html#cb45-9" tabindex="-1"></a>StochasticObj<span class="sc">@</span>histFisheryVul<span class="ot">=</span><span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">18.05</span>,<span class="fl">19.95</span>,<span class="fl">0.86</span>,<span class="fl">0.95</span>), <span class="at">nrow=</span><span class="dv">2</span>, <span class="at">ncol=</span><span class="dv">2</span>,<span class="at">byrow=</span><span class="cn">FALSE</span>)  <span class="co">#ask bill - stochastic base excel says 1- I took sel_uncert (excel) pars</span></span>
+<span id="cb45-10"><a href="examples.html#cb45-10" tabindex="-1"></a>StochasticObj<span class="sc">@</span>sameFisheryVul<span class="ot">=</span><span class="cn">TRUE</span></span></code></pre></div>
+</div>
+<div id="fishery-projections-1" class="section level3 hasAnchor" number="7.1.6">
+<h3><span class="header-section-number">7.1.6</span> Fishery projections<a href="examples.html#fishery-projections-1" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="examples.html#cb46-1" tabindex="-1"></a>ProFisheryObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;Fishery&quot;</span>)</span>
+<span id="cb46-2"><a href="examples.html#cb46-2" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>title<span class="ot">&lt;-</span><span class="st">&quot;Test&quot;</span></span>
+<span id="cb46-3"><a href="examples.html#cb46-3" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>vulType<span class="ot">&lt;-</span><span class="st">&quot;logistic&quot;</span></span>
+<span id="cb46-4"><a href="examples.html#cb46-4" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>vulParams<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="dv">19</span>, <span class="fl">0.9</span>) <span class="co"># excel fishery-base row3 (is proj?)</span></span>
+<span id="cb46-5"><a href="examples.html#cb46-5" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>retType<span class="ot">&lt;-</span><span class="st">&quot;logistic&quot;</span></span>
+<span id="cb46-6"><a href="examples.html#cb46-6" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>retParams <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">22</span>, <span class="fl">0.1</span>)<span class="co">#excel fishery-base row3 (is proj?)</span></span>
+<span id="cb46-7"><a href="examples.html#cb46-7" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>retMax <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb46-8"><a href="examples.html#cb46-8" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>Dmort <span class="ot">&lt;-</span> <span class="dv">0</span></span></code></pre></div>
+</div>
+<div id="the-management-strategy-1" class="section level3 hasAnchor" number="7.1.7">
+<h3><span class="header-section-number">7.1.7</span> The management strategy<a href="examples.html#the-management-strategy-1" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Trying to figure out how to implement the 25% effort reduction?</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="examples.html#cb47-1" tabindex="-1"></a>StrategyObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;Strategy&quot;</span>)</span>
+<span id="cb47-2"><a href="examples.html#cb47-2" tabindex="-1"></a>StrategyObj<span class="sc">@</span>projectionYears <span class="ot">&lt;-</span> <span class="dv">50</span></span>
+<span id="cb47-3"><a href="examples.html#cb47-3" tabindex="-1"></a>StrategyObj<span class="sc">@</span>projectionName<span class="ot">&lt;-</span><span class="st">&quot;projectionStrategy&quot;</span></span>
+<span id="cb47-4"><a href="examples.html#cb47-4" tabindex="-1"></a><span class="co"># I took effort from row 3 corresponding to strategy 25% red</span></span>
+<span id="cb47-5"><a href="examples.html#cb47-5" tabindex="-1"></a>eff_vector<span class="ot">=</span><span class="fu">scan</span>(<span class="at">text=</span>(<span class="st">&quot;0    0   0   0   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1&quot;</span>))</span>
+<span id="cb47-6"><a href="examples.html#cb47-6" tabindex="-1"></a></span>
+<span id="cb47-7"><a href="examples.html#cb47-7" tabindex="-1"></a><span class="co"># StrategyObj@projectionParams&lt;-list(bag = c(-99    -99 -99 -99</span></span>
+<span id="cb47-8"><a href="examples.html#cb47-8" tabindex="-1"></a><span class="co"># ), effort = matrix(eff_vector, nrow=50, ncol=4, byrow = FALSE), CPUE = c(1,2), CPUEtype = &#39;retN&#39;) # CPUE is strategy excel proj_CPUE?</span></span></code></pre></div>
+
+</div>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="exploring-the-simulation-outputs.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="references.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/USERNAME/REPO/edit/BRANCH/06-Example.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["_main.pdf", "_main.epub"],
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
