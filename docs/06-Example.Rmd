@@ -124,7 +124,7 @@ ProFisheryObj@Dmort <- 0
 
 ### The management strategy
 
-Trying to figure out how to implement the 25% effort reduction?
+Implementing a 25% effort reduction
 
 ```{r, eval=TRUE, echo=TRUE}
 StrategyObj<-new("Strategy")

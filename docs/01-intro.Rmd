@@ -7,7 +7,6 @@ The OM is comprised of six S4 objects:
 - Fishery object (`HistFisheryObj`)
 - Time-area object (`TimeAreaObj`)
 - Stochastic object (`StochasticObj`)
-Separate section
 - Projection object (`ProFisheryObj`)
 - Strategy object (`StrategyObj`)
 
@@ -78,13 +77,13 @@ Maturity parameters are represented by the `L50` and `L95delta` parameters, assu
 
 `L_type` represents the method of measuring length. e.g. `"TL"` for total length or `"FL"` for fork length. Must be consistent for all length parameters (e.g., `Linf`, `L50`, `L95delta`). `L_units`, are the units of measure (`"cm"` is expected). `L_units` must be consistent for all length parameters (e.g., `Linf`, `L50`, `L95delta`).
 
-`LW_A` and `LW_B` are the parameters of the allometric length-weight relationship. `Walpha_units` (**ask bill/ in help says W_units**)represents the measurement units of weight and must be consistent with the `LW_A` and `LW_B` parameters.
+`LW_A` and `LW_B` are the parameters of the allometric length-weight relationship. `Walpha_units` (**help file-W_units**)represents the measurement units of weight and must be consistent with the `LW_A` and `LW_B` parameters.
 
 Recruitment is modeled using a Beverton-Holt stock-recruitment relationship, parameterized in terms of steepness (`Steep`). Values for `Steep` range between 0.2 to 1. `R0` represents the initial number of unfished recruits (positive number). Recruitment process error is generated from a normal distribution with mean zero and standard deviation represented by `recSD`. Autocorrelation in recruitment deviations in log space are defined by `recRho`, producing 1-year lagged correlation. `recSD` and `recRho`, are non-negative real numbers.
 
 The **FishSimGTG** package allows for modeling the population dynamics of gonochoristic and protogynous hermaphrodite species. The user will set `isHermaph` to `TRUE` when the species is a protogynous hermaphrodite and to `FALSE` when it is a gonochoristic species. If the species is a protogynous hermaphrodite, the user will need to define two additional parameters: `H50` and `H95delta`. `H50` represents the length at which 50% of the population are male, and `H95delta` represents the length increment between `H50` and length at which 95% of the population are male. `H95delta` must be a value larger than 0. 
 
-`MK` and `Tmax` are not esscencial input parameters. `MK` represents the M/K ratio (natural mortality divided by von Bertalanffy K coefficient) and `Tmax` the maximum observed age. (**ask bill**). `Tmax` must be equal to or greater than 2. When `Tmax` is not specified, the age to which 1% the population survives in an unfished system is used to calculate `Tmax`.
+`MK` and `Tmax` are not essential input parameters (**?**). `MK` represents the M/K ratio (natural mortality divided by von Bertalanffy K coefficient) and `Tmax` the maximum observed age. `Tmax` must be equal to or greater than 2. When `Tmax` is not specified, the age to which 1% the population survives in an unfished system is used to calculate `Tmax`.
 
 ## Fishery object
 
@@ -147,14 +146,14 @@ p3 is the descending rate, which must be within the range of 0.001 to 0.5. A val
 When length vector/p3 equals p1, the selectivity function reaches its peak. For example, if p1 equals 2.5, the peak of selectivity will occur at the length when length/p3 equals 2.5.
 
 
-(**ask Bill whether he agrees with this explanation**)
+(**?**)
 
 - "**gillnetMasterLognormal**" is a master curve for mesh selectivity with a vector of three parameter (`vulParams`), represented as `c(p1, p2, and p3)`. These parameters are the same as those used in the "**gillnetMasterNormal**" selectivity function.
 The difference between "**gillnetMasterNormal**" and "**gillnetMasterLognormal**" lies in the logarithmic transformation applied in the "**gillnetMasterLognormal**" function, where length/p3 and p1 are log transformed.
 
 The logarithmic transformation spreads out the curve, making it wider and less steep. This transformation smooths the effect of differences between length/p3 and p1, leading to a more gradual decrease in selectivity. Without using the logarithmic function, the selectivity curve becomes narrower and steeper, responding more sensitively to deviations from the peak.
 
-(**ask Bill whether he agrees with this explanation**)
+(**?**)
 
 ### Retention
 
@@ -219,7 +218,7 @@ TimeAreaObj@move <- matrix(c(1,0, 0,1), nrow=2, ncol=2, byrow=FALSE)
 TimeAreaObj@historicalEffort<-matrix(1:1, nrow = 10, ncol = 2, byrow = FALSE)
 ```
 
-The **FishSimGTG** package allows for accounting for individual variation in growth trajectories by dividing the population into growth-type groups (GTGs), so each age class is divided into a collection of smaller cohorts or GTGs. The `gtg` slot in `TimeAreaObj` represents the number of growth-type groups, with a default value of 13.(**ask Bill**)
+The **FishSimGTG** package allows for accounting for individual variation in growth trajectories by dividing the population into growth-type groups (GTGs), so each age class is divided into a collection of smaller cohorts or GTGs. The `gtg` slot in `TimeAreaObj` represents the number of growth-type groups, with a default value of 13.
 
 `areas` represents the number of areas in the model, and it must be greater than 1.
 
