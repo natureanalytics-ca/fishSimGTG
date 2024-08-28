@@ -15,7 +15,7 @@ fig:selgrouper
 what-is-fishsimgtg
 installation-and-required-packages
 how-to-use-fishsimgtg
-OM-pop
+om-pop
 life-history-object
 fishery-object
 selectivity-or-vulnerability
@@ -30,7 +30,7 @@ fishery-projections
 adding-stochasticity-to-the-fishery-projections
 the-management-strategy
 running-the-projection-and-management-strategy-simulation
-OM
+om
 population-dynamics
 life-history
 initial-conditions
