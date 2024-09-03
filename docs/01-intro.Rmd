@@ -1,0 +1,526 @@
+
+# How to Populate the Operating Model (OM) {#om-pop}
+
+The OM is comprised of six S4 objects:
+
+- Life history object (`LifeHistoryObj`)
+- Fishery object (`HistFisheryObj`)
+- Time-area object (`TimeAreaObj`)
+- Stochastic object (`StochasticObj`)
+- Projection object (`ProFisheryObj`)
+- Strategy object (`StrategyObj`)
+
+Each of these S4 objects contains a specific number of slots, which can be accessed using the `slotNames()` function. These slots are populated within R. The first step, before populating the slots of each object, is to create a new object using the `new()` function.
+
+## Life history object
+
+The `LifeHistoryObj` is an S4 object of the class `LifeHistory` that holds the description of a life history.
+To create a new object of class `LifeHistory`, use the `new()` function, as follows:
+
+```{r setup, include=FALSE}
+# Load necessary package
+library(devtools)
+library(fishSimGTG)
+library(fishSimTools)
+library(here)
+```
+
+```{r, eval=TRUE, echo=TRUE}
+LifeHistoryObj <- new("LifeHistory")
+```
+
+The user can see the elements or slots of the `LifeHistoryObject` using the  `slotNames()` function.
+
+```{r, eval=TRUE, echo=TRUE}
+slotNames(LifeHistoryObj)
+```
+
+The user can access the help file for classes by using `?` symbol
+
+```{r, eval=FALSE, echo=TRUE}
+?`LifeHistory-class`  
+```
+
+In the help file, the user will find a description of the `LifeHistoryObject` and the elements or slots it contains. To populate the rest of the slots of the `LifeHistoryObject`, the user should start by defining a useful title (`title`), followed by the scientific name of the species (`speciesName`). If desired, the user can add a short description (`shortDescription`) of the object.
+
+```{r, eval=TRUE, echo=TRUE}
+LifeHistoryObj@title<-"Kole"
+LifeHistoryObj@speciesName<-"Ctenochaetus strigosus"
+LifeHistoryObj@shortDescription<-"stock name/location"
+```
+
+Then, the user can proceed to populate the rest of the slots as follows:
+
+```{r, eval=TRUE, echo=TRUE}
+LifeHistoryObj@Linf<-17.7
+LifeHistoryObj@K<-0.423
+LifeHistoryObj@t0<- -0.51
+LifeHistoryObj@L50<-8.4
+LifeHistoryObj@L95delta<-1.26
+LifeHistoryObj@M<-0.08
+LifeHistoryObj@L_type<-"FL"
+LifeHistoryObj@L_units<-"cm"
+LifeHistoryObj@LW_A<-0.046
+LifeHistoryObj@LW_B<-2.85
+LifeHistoryObj@Steep<-0.54
+LifeHistoryObj@recSD<-0
+LifeHistoryObj@recRho<-0
+LifeHistoryObj@isHermaph<-FALSE
+LifeHistoryObj@R0<-10000
+```
+
+Growth is modeled in the **FishSimGTG** package using a von Bertalanffy growth curve, where `Linf` represents the asymptotic average length, `K` the Brody growth rate coefficient (with units in yr\(^{-1}\)), and `t0` represents the time or age when the average length was zero.
+
+Maturity parameters are represented by the `L50` and `L95delta` parameters, assuming that maturity is size-dependent and follows a logistic model. The `L50` is the length at 50% maturity, and the `L95delta` is the length increment between L50 and the length at 95% maturity. `L95delta` must be a value larger than 0.
+
+`M`, represent the natural mortality rate per year. 
+
+`L_type` represents the method of measuring length. e.g. `"TL"` for total length or `"FL"` for fork length. Must be consistent for all length parameters (e.g., `Linf`, `L50`, `L95delta`). `L_units`, are the units of measure (`"cm"` is expected). `L_units` must be consistent for all length parameters (e.g., `Linf`, `L50`, `L95delta`).
+
+`LW_A` and `LW_B` are the parameters of the allometric length-weight relationship. `Walpha_units` (**help file-W_units**)represents the measurement units of weight and must be consistent with the `LW_A` and `LW_B` parameters.
+
+Recruitment is modeled using a Beverton-Holt stock-recruitment relationship, parameterized in terms of steepness (`Steep`). Values for `Steep` range between 0.2 to 1. `R0` represents the initial number of unfished recruits (positive number). Recruitment process error is generated from a normal distribution with mean zero and standard deviation represented by `recSD`. Autocorrelation in recruitment deviations in log space are defined by `recRho`, producing 1-year lagged correlation. `recSD` and `recRho`, are non-negative real numbers.
+
+The **FishSimGTG** package allows for modeling the population dynamics of gonochoristic and protogynous hermaphrodite species. The user will set `isHermaph` to `TRUE` when the species is a protogynous hermaphrodite and to `FALSE` when it is a gonochoristic species. If the species is a protogynous hermaphrodite, the user will need to define two additional parameters: `H50` and `H95delta`. `H50` represents the length at which 50% of the population are male, and `H95delta` represents the length increment between `H50` and length at which 95% of the population are male. `H95delta` must be a value larger than 0. 
+
+`MK` and `Tmax` are not essential input parameters (**?**). `MK` represents the M/K ratio (natural mortality divided by von Bertalanffy K coefficient) and `Tmax` the maximum observed age. `Tmax` must be equal to or greater than 2. When `Tmax` is not specified, the age to which 1% the population survives in an unfished system is used to calculate `Tmax`.
+
+## Fishery object
+
+The `HistFisheryObj` is an S4 object of the class `Fishery` that holds the historical description of a fish stock, including vulnerability, retention, and discard information.
+To create a new object of class `Fishery`, use the `new()` function, as follows:
+
+```{r, eval=TRUE, echo=TRUE}
+HistFisheryObj<-new("Fishery")
+```
+
+The slot names of the `HistFisheryObj` can be seen using the `slotNames()` function.
+
+```{r, eval=TRUE, echo=TRUE}
+slotNames(HistFisheryObj)
+```
+
+The user can access the help file using `?` symbol
+
+```{r, eval=FALSE, echo=TRUE}
+?`Fishery-class`  
+```
+
+In the help file, the user will find a description of the `HistFisheryObj` and the elements or slots it contains. To populate the slots, the user should start by defining a meaningful title (`title`), followed by specifying the selectivity/vulnerability, retention, and discard information.
+
+
+```{r, eval=TRUE, echo=TRUE}
+HistFisheryObj@title<-"Test"
+HistFisheryObj@vulType<-"logistic"
+HistFisheryObj@vulParams<-c(10.2,0.1) #Approx. knife edge
+HistFisheryObj@retType<-"full"
+HistFisheryObj@retMax <- 1
+HistFisheryObj@Dmort <- 0
+```
+
+### Selectivity or vulnerability
+
+Selectivity or vulnerability is the probability of being selected or becoming vulnerable to the fishing gear. It can be defined as selectivity-at-age or selectivity-at-length. In the **FishSimGTG package**, selectivity is defined with respect to length, with a maximum value of 1 enforced.
+`vulType` describes the type of selectivity/vulnerability function for the historical time period. The **FishSimGTG** package offers four options to model the selectivity shape: "**logistic**", "**explog**", "**gillnetMasterNormal**", and "**gillnetMasterLognormal**". The user can see a detailed description of the different selectivity functions by exploring the `?selWrapper` function.
+
+Vulnerability types: 
+
+- "**logistic**" selectivity with two parameters (`vulParams`) represented by the length at 50% of selectivity and the length increment between the length at 50% of selectivity and the length at 95% selectivity.
+
+- "**explog**" is an exponential logistic selectivity (dome-shaped) function, defined by three parameters (`vulParams`), represented as `c(p1, peak, and p3)`. To use the "**explog**" function, the user must first provide the ascending rate (p1), which should be within the range of 0.02 to 1. Next, the user needs to define the peak of the vulnerability function, which corresponds to the location of the peak of the dome-shaped selectivity curve or the length at which selectivity is highest. This peak is expressed as a fraction (p2), determining its position relative to the range of lengths. For example, if the length range is between 1 and 20 cm, and p2 is set to 0.5, the peak will be at 10 cm.
+
+The peak can be calculated using the following equation:
+
+\[
+\text{peak} = \text{min}(\text{Length}) + p_2 \times (\text{max}(\text{Length}) - \text{min}(\text{Length}))
+\]
+
+p2 must be within the range of 0.01 to 0.9, with a reasonable starting value of 0.5. By adjusting p2, the user can shift the peak along the length range, from the minimum length to the maximum length.
+
+p3 is the descending rate, which must be within the range of 0.001 to 0.5. A value of 0.001 provides a nearly asymptotic curve, while values above 0.2 produce a strongly dome-shaped function, where the p3 and p1 parameters interact strongly.
+
+**Note: I suggest changing p2 by peak in the help file (i.e., c(p1, peak, p3) because what the user provides is the peak not p2 see Testing_selectivity.R)** 
+
+- "**gillnetMasterNormal**" is a master curve for mesh selectivity with a vector of three parameter (`vulParams`), represented as `c(p1, p2, and p3)`. `p1` determines the peak or central point of the dome-shaped selectivity curve. It is referred to as the location parameter because it "locates" where the maximum selectivity occurs along the length vector. `p2` is the variance parameter that controls the spread or width of the selectivity curve. It is related to how quickly selectivity decreases from the peak. A smaller value of p2 results in a narrower peak, meaning selectivity drops off more sharply as you move away from the central point (p1), making the curve steeper. `p3` represents the mesh size and scales the length vector. By dividing the length by p3, the selectivity curve can be adjusted to reflect different mesh sizes used in the fishery.
+
+When length vector/p3 equals p1, the selectivity function reaches its peak. For example, if p1 equals 2.5, the peak of selectivity will occur at the length when length/p3 equals 2.5.
+
+
+(**?**)
+
+- "**gillnetMasterLognormal**" is a master curve for mesh selectivity with a vector of three parameter (`vulParams`), represented as `c(p1, p2, and p3)`. These parameters are the same as those used in the "**gillnetMasterNormal**" selectivity function.
+The difference between "**gillnetMasterNormal**" and "**gillnetMasterLognormal**" lies in the logarithmic transformation applied in the "**gillnetMasterLognormal**" function, where length/p3 and p1 are log transformed.
+
+The logarithmic transformation spreads out the curve, making it wider and less steep. This transformation smooths the effect of differences between length/p3 and p1, leading to a more gradual decrease in selectivity. Without using the logarithmic function, the selectivity curve becomes narrower and steeper, responding more sensitively to deviations from the peak.
+
+(**?**)
+
+### Retention
+
+Retention is the probability of being retained (kept by the fleet) and not discarded. It describes both the shape with respect to length and the maximum value, which can be less than 1. Fish that are selected by the fishing gear but not retained are discarded (discard mortality rate). The probability of being landed (**keep**), is calculated as Vulnerability × Retention. The user can see a detailed description of the different retention types by exploring the `?selWrapper` function.
+
+There are three retention types (`retType`):
+
+- "**full**" retention assumes that keep is equal to retention and that there is no discard mortality. There are no parameters (`retParams`) for "full" retention.
+
+- "**logistic**" retention has two parameters (`retParams`): the length at 50% retention and the length increment to 95% retention.
+
+- "**slotLimit**" retention includes two parameters (`retParams`): minimum length and maximum length, where catches occur between the minimum and maximum values.
+
+`retMax` is a numeric value between 0 and 1 that defines the peak of the historical retention curve.
+
+### Discard mortality rate
+
+Discard mortality rate represents the fish that are selected but not retained, and are therefore subject to the discard mortality rate (`Dmort`). `Dmort` is the fraction of discards that are killed (e.g., 0.25 means 25% are killed). This value must be between 0 and 1.
+
+<!-- **Dead discards** are the deaths resulting from vulnerable abundance that is not retained, defined as: -->
+
+<!-- \[ \text{Dead discards} = \text{Vul} \times (1 - \text{Ret}) \times \text{Dmort} \] -->
+
+<!-- where `Dmort` is the discard mortality rate. -->
+
+<!-- **Total dead** is the probability of removal from the population via landing or discard, calculated as: -->
+
+<!-- \[ \text{Total dead} = \text{Vul} \times (\text{Ret} + (1 - \text{Ret}) \times \text{Dmort}) \] -->
+
+in Section \@ref(lh-sel), the user can explore various life history plots and different shapes of vulnerability, retention, keep, discard, and removal curves.
+
+## Time area object
+
+The **FishSimGTG** package allows the user to model migration between multiple areas. The `TimeAreaObj` object holds descriptions of time steps, growth-type groups (GTGs), and area parameters.
+
+To create a new object of class `TimeArea`, use the `new()` function as follows:
+
+```{r, eval=TRUE, echo=TRUE}
+TimeAreaObj<-new("TimeArea")
+```
+
+To populate the slots of the `TimeAreaObj` object, the user should start by defining a meaningful title (`title`). Similar to the other S4 objects, the slot names of the `TimeAreaObj` can be viewed using the `slotNames()` function, and the user can access the help file using the `?` symbol.
+
+```{r, eval=TRUE, echo=TRUE}
+slotNames(TimeAreaObj)
+```
+```{r, eval=FALSE, echo=TRUE}
+#getting help
+?`TimeArea-class`  
+```
+
+```{r, eval=TRUE, echo=TRUE}
+TimeAreaObj@title = "Test"
+TimeAreaObj@gtg = 13
+TimeAreaObj@areas = 2
+TimeAreaObj@recArea = c(0.99, 0.01)
+TimeAreaObj@iterations = 100
+TimeAreaObj@historicalYears = 10
+TimeAreaObj@historicalBio = 0.5
+TimeAreaObj@historicalBioType = "relB"
+TimeAreaObj@move <- matrix(c(1,0, 0,1), nrow=2, ncol=2, byrow=FALSE)
+TimeAreaObj@historicalEffort<-matrix(1:1, nrow = 10, ncol = 2, byrow = FALSE)
+```
+
+The **FishSimGTG** package allows for accounting for individual variation in growth trajectories by dividing the population into growth-type groups (GTGs), so each age class is divided into a collection of smaller cohorts or GTGs. The `gtg` slot in `TimeAreaObj` represents the number of growth-type groups, with a default value of 13.
+
+`areas` represents the number of areas in the model, and it must be greater than 1.
+
+`recArea` is a vector of length `areas`. Each element of the vector represents the fraction of recruitment to each area, with the values summing to 1. In this example, 0.99 of the recruitment is assigned to area 1, and 0.01 to area 2, implying that the model is treated similarly to a single-area model.
+
+`iterations` is the number of iterations to run.
+
+`historicalYears` are the number of years to simulate historical dynamics.
+
+`historicalBio` is a value grater than 0 and less than 1. The model assumes the population does not start in unfished conditions.
+
+`historicalBioType`is a string, that represents the type of historical biomass state. The options are: "relB" (relative biomass) or "SPR" (Spawning Potential Ratio).
+
+`move` is a matrix of migration rates of dimensions `areas` x `areas`.
+
+`historicalEffort` is a matrix of nrows = `historicalYears` and ncols = `areas` that contains value multipiers of initial equilibrium fishing effort. (**ask bill**).
+
+### Exploring the Parameterization of the Operating Model So Far {#lh-sel}
+
+The **FishSimGTG** package includes several plotting functions that allow users to explore the simulated life history and the configuration of the fishery object.
+
+- The life history schedules can be plotted using the `LHwrapper()` function. This function displays the plot in the console and also returns all the details of the life history. The user can access the help file for the `LHwrapper()` function by using the `?` symbol (`?LHwrapper`).
+
+```{r lifehist, eval=TRUE, echo=TRUE, fig.cap= "Life history schedules."}
+#To simply display to the console
+lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj, doPlot = TRUE)
+```
+
+The upper panels represent the von Bertalanffy growth curve (left) and the maturity ogive (right). The bottom panels represent the weight-at-age relationship and the allometric length-weight relationship.
+
+`lhOut` returns all the details of the life history.
+
+```{r, eval=FALSE, echo=TRUE}
+#To return life history details
+lhOut
+```
+
+```{r, eval=TRUE, echo=FALSE}
+#To simply display to the console
+lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj, doPlot = FALSE)
+```
+
+- Vulnerability, retention, keep, dead discards, and removals at length can be plotted using the `selWrapper()` function.
+
+```{r sel, eval=TRUE, echo=TRUE, fig.cap= "Logistic selectivity function."}
+selOut<-selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = TRUE)
+```
+
+`selOut` returns all the details of the fishery selectivity.
+
+```{r, eval=FALSE, echo=TRUE}
+#To return sel details
+selOut
+```
+
+If the user modifies the vulnerability, retention, and discard parameters in the `HistFisheryObj`, other selectivity/vulnerability and retention shapes can be explored. For example:
+
+-- Assuming a vulnerability type `vulType` of "explog", with parameters p1, peak, and p3.
+
+```{r sel2, eval=TRUE, echo=TRUE, fig.cap= "Exponential logistic selectivity (dome-shaped)."}
+HistFisheryObj@vulType<-"explog"
+HistFisheryObj@vulParams<-c(0.9,10,0.15) #dome-shaped
+HistFisheryObj@retType<-"full"
+HistFisheryObj@retMax <- 1
+HistFisheryObj@Dmort <- 0
+selOut<-selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = TRUE)
+```
+
+-- Assuming a vulnerability type `vulType` of "logistic", with changes in the retention type (`retType`) and retention parameters (`retParams`).
+
+```{r sel3, eval=TRUE, echo=TRUE, fig.cap= "Logistic selectivity function with different retention parameters."}
+HistFisheryObj@vulType<-"logistic"
+HistFisheryObj@vulParams<-c(10.2,0.1) #Approx. knife edge
+HistFisheryObj@retType<-"logistic"
+HistFisheryObj@retParams<-c(11,0.8)
+HistFisheryObj@retMax <- 1
+HistFisheryObj@Dmort <- 0
+selOut<-selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = TRUE)
+```
+
+-- Assuming a vulnerability type `vulType` of "gillnetMasterNormal" with parameters (`vulParams`), represented as `c(p1, p2, and p3)` and changes in the retention type (`retType`) and retention parameters (`retParams`). 
+
+```{r sel4, eval=TRUE, echo=TRUE, fig.cap= "Gillnet master normal selectivity function with different retention parameters."}
+HistFisheryObj@vulType<-"gillnetMasterNormal"
+HistFisheryObj@vulParams<-c(2.5,0.1,4)
+HistFisheryObj@retType<-"logistic"
+HistFisheryObj@retParams<-c(9,0.5)
+HistFisheryObj@retMax <- 1
+HistFisheryObj@Dmort <- 0
+selOut<-selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = TRUE)
+```
+
+
+-- Assuming a vulnerability type `vulType` of "gillnetMasterLognormal" with parameters (`vulParams`), represented as `c(p1, p2, and p3)` and changes in the retention type (`retType`) and retention parameters (`retParams`). 
+
+```{r sel5, eval=TRUE, echo=TRUE, fig.cap= "Gillnet master log normal selectivity function with different retention parameters."}
+HistFisheryObj@vulType<-"gillnetMasterLognormal"
+HistFisheryObj@vulParams<-c(2.5,0.1,4)
+HistFisheryObj@retType<-"logistic"
+HistFisheryObj@retParams<-c(9,0.5)
+HistFisheryObj@retMax <- 1
+HistFisheryObj@Dmort <- 0
+selOut<-selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = TRUE)
+```
+
+
+```{r, eval=TRUE, echo=FALSE}
+#just to continue with the original configuration of sel and retention
+HistFisheryObj@vulType<-"logistic"
+HistFisheryObj@vulParams<-c(10.2,0.1) #Approx. knife edge
+HistFisheryObj@retType<-"full"
+HistFisheryObj@retMax <- 1
+HistFisheryObj@Dmort <- 0
+```
+
+## Stochastic object
+
+The `StochasticObj` holds the parameters for stochastic components of the population and fishery dynamics.
+To create a new object of class `Stochastic`, use the `new()` function.
+
+```{r, eval=TRUE, echo=TRUE}
+StochasticObj<-new("Stochastic")
+```
+
+Similar to other S4 objects, the slot names of `StochasticObj` can be viewed using the `slotNames()` function, and the help file can be accessed using the `?` symbol. 
+
+```{r, eval=TRUE, echo=TRUE}
+slotNames(StochasticObj)
+```
+
+```{r, eval=FALSE, echo=TRUE}
+#getting help
+?`Stochastic-class`  
+```
+
+To populate the slots of `StochasticObj`, the user should begin by defining a meaningful title (`title`) and specifying the parameters in which they want to include stochasticity.
+
+The slots defined in the `StochasticObj` object create additional inputs and override parameters specified elsewhere (e.g., `LifeHistoryObj`, `HistFisheryObj`, or `TimeAreaObj`), allowing the corresponding model components to become stochastic. The exception is recruitment variation (`recSD`), which is entered in the `LifeHistoryObj` object.
+
+In the following example, we add uncertainty to `historicalBio` by replacing the parameter defined in the `TimeAreaObj` object (`TimeArea@historicalBio`) with a vector of length 2 that contains the lower and upper bounds of a uniform distribution for the historical equilibrium biomass `historicalBio`. During each iteration, one value is drawn from the uniform distribution.
+
+```{r, eval=TRUE, echo=TRUE}
+StochasticObj@title<-"adding unceratinty"
+StochasticObj@historicalBio = c(0.3, 0.6)
+```
+
+### Adding stochasticity to the `LifeHistoryObj` object
+
+All scalar parameters in the `LifeHistoryObj` object that hold a single value, such as `Linf`, `K`, `L50`, `L95delta`, `M`, `Steep`, `recSD`, `recRho`, `H50`, and `H95delta`, can be redefined in the `StochasticObj` object. When redefined, they are replaced by a vector of length 2 containing the minimum and maximum values. If provided, these values override those in the `LifeHistoryObj`, and a unique value for each iteration is generated by sampling from the uniform distribution.
+
+```{r, eval=FALSE, echo=TRUE}
+StochasticObj@Steep = c(0.5, 0.6) #e.g., adding stochasticity to Steepness
+```
+
+### Adding stochasticity to the `HistFisheryObj` object
+
+A matrix with \(n\) columns and 2 rows is used to define the range of uncertainty for the vulnerability (`vulParams`) and retention (`retParams`) parameters from the `HistFisheryObj` in the `StochasticObj` object. Row 1 contains the minimum values, and row 2 contains the maximum values for each parameter, corresponding to the respective column \(n\).
+
+When this matrix is provided in the `StochasticObj` object, it replaces the `vulParams` and `retParams` slots previously defined in the `HistFisheryObj`. This ensures that the columns of the matrix align with the required inputs for `vulType` and `retType` in the `HistFisheryObj` object.
+
+The same logic applies to redefining the `Dmort` parameter, but in this case, the matrix contains only 1 column and 2 rows (min and max), as the `Dmort` parameter is a scalar. When this matrix is provided, it replaces the `Dmort` slot in the `HistFisheryObj`.
+
+```{r, eval=FALSE, echo=TRUE}
+StochasticObj@histFisheryVul=matrix(c(9,11,0.07,0.13), nrow=2, ncol=2,byrow=FALSE)  #e.g., adding stochasticity to histFisheryVul
+```
+
+There are additional slots in the `StochasticObj` object that modify fishery projections (`ProFisheryObj`), which will be described in detail in a separate section. 
+
+## Fishery projections
+
+The user has the option to modify the `HistFisheryObj` object when performing fishery projections. These modifications are stored in `ProFisheryObj`. The slots of `ProFisheryObj` can either be set to the same values as those in `HistFisheryObj` or adjusted to modify vulnerability, retention, and discard scenarios during the projection phase.
+
+`ProFisheryObj` can be populated as follows:
+
+```{r, eval=TRUE, echo=TRUE}
+ProFisheryObj<-new("Fishery")
+ProFisheryObj@title<-"Test"
+ProFisheryObj@vulType<-"logistic"
+ProFisheryObj@vulParams<-c(10.2,0.1)
+ProFisheryObj@retType<-"logistic"
+ProFisheryObj@retParams <- c(10.2, 0.1)
+ProFisheryObj@retMax <- 1
+ProFisheryObj@Dmort <- 0
+```
+
+In this example, during the projections, we maintain the same vulnerability type and parameters as in the `HistFisheryObj` object but modify retention to follow a logistic function, using the same parameters as vulnerability.
+
+
+### Adding stochasticity to the fishery projections
+
+Additional slots in the `StochasticObj` object allow for modifications to the fishery projections (`ProFisheryObj`). These additional slots, `proFisheryVul_list`, `proFisheryRet_list`, and `proFisheryDmort_list`, are lists where the number of objects corresponds to the number of areas (`TimeAreaObj@areas`) defined in the model. Each object in the list is a matrix with \(n\) columns and 2 rows, where the rows represent the minimum and maximum values for the parameters associated with each column \(n\).
+
+When provided, these lists replace the `vulParams`, `retParams`, and `Dmort` slots in the fishery projections (`ProFisheryObj`). For `proFisheryVul_list` and `proFisheryRet_list`, the columns of the matrix align with the required inputs for `ProFisheryObj@vulType` and `ProFisheryObj@retType`.
+
+During each iteration, the model samples values from a uniform distribution within the specified range (i.e., between the min and max values in each row), allowing for stochastic variation in the parameters across different areas.
+
+The final slots in the `StochasticObj` object are `sameFisheryVul`, `sameFisheryRet`, and `sameFisheryDmort`. These slots determine whether the historical and projection parameter values for vulnerability, retention, and discards remain identical. Each slot contains a logical variable ("TRUE" or "FALSE") that specifies whether the values defined in the `HistFisheryObj` for `vulParams`, `retParams`, and `Dmort` should also be applied to the fishery projections (`ProFisheryObj`) for `vulType`, `retType`, and `Dmort`. If set to `TRUE`, this will override any input provided in `ProFisheryObj` for these slots.
+
+## The management strategy
+
+The management strategy (`StrategyObj`) holds descriptions of projections to be made, including a harvest strategy. One of the most distinctive features of **FishSimGTG** is that it allows the user to customize the desired management procedures.
+
+To create a new object of class `StrategyObj`, use the `new()` function.
+
+```{r, eval=TRUE, echo=TRUE}
+StrategyObj<-new("Strategy")
+```
+
+To populate the `StrategyObj`, the user should start by specifying the number of forward projection years to simulate (`projectionYears`), the `projectionName`, which defines the name of the strategy, and `projectionParams`, a list structure that follows the specifications of the projection function defined in `projectionName`.
+
+In this example, `projectionParams` is a list with four items. The first item is a vector of length `areas` containing bag limits (`bag`). To indicate no bag limit, use `-99`. The bag limit should be considered as the take per unit time (e.g., per day) and basically acts like a CPUE threshold.
+   
+The second item is a matrix with `nrows = projectionYears` and `ncols = areas` that contains value multipliers of the initial equilibrium fishing effort (`effort`). This allows for the projection of effort reductions and the establishment of marine reserves by setting effort to `0`.
+
+The two final items are a vector of length `areas` containing CPUE (`CPUE`), along with a `CPUEtype`, which is defined as a character string (e.g., `retN` for retention in numbers).
+
+```{r, eval=TRUE, echo=TRUE}
+StrategyObj@projectionYears <- 50
+StrategyObj@projectionName<-"projectionStrategy"
+StrategyObj@projectionParams<-list(bag = c(5, 5), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(7,11), CPUEtype = 'retN')
+```
+
+## Running the projection and management strategy simulation
+
+This section provides an example for the user on how to run projections using three management strategies that combine minimum size and bag limits.
+
+```{r, eval=TRUE, echo=TRUE}
+#Batch processing - 3 management strategies
+stateLmin<-c(10.2, 12.7,  12.7)
+stateBag<-c(20, -99, 20)
+fileLabel<-c("Higher_option1", "Higher_option2", "Higher_option3")
+projectionLabel<-c("Bag 20", "Min size 5 inch", "Bag 20 & min size 5 inch")
+```
+
+In this example, `stateLmin` is a vector containing three minimum sizes, and `stateBag` is a vector that contains three bag limits. To indicate no bag limit, use `-99`. `fileLabel` is a label for the file name, and `projectionLabel` defines the name for the strategy that will be evaluated.
+
+To run the projection under the three different management strategies (i.e., "Bag 20", "Min size 5 inch", and "Bag 20 & Min size 5 inch"), we will use the `runProjection()`. 
+
+In this example, we modify the retention parameters of the logistic function previously defined in `ProFisheryObj@retParams`. These parameters are now redefined as `ProFisheryObj@retParams <- c(stateLmin[sc], 0.1)`, using the pre-specified size limits (`stateLmin`).
+
+Additionally, in the list structure of the `StrategyObj@projectionParams`, the elements of the `bag` vector are replaced by the specified bag limits (`stateBag`).
+
+```{r, eval=FALSE, echo=TRUE}
+for(sc in 1:NROW(stateLmin)){
+
+  #Size limit - changes retention, not selectivity
+  ProFisheryObj@retParams<-c(stateLmin[sc],0.1)
+
+  #Bag limit
+StrategyObj@projectionParams<-list(bag = c(stateBag[sc], stateBag[sc]), effort = matrix(1:1, nrow=50, ncol=2, byrow = FALSE), CPUE = c(7,11), CPUEtype = 'retN')
+
+  runProjection(LifeHistoryObj = LifeHistoryObj,
+                TimeAreaObj = TimeAreaObj,
+                HistFisheryObj = HistFisheryObj,
+                ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj),
+                StrategyObj = StrategyObj,
+                StochasticObj = StochasticObj,
+                wd = here("data-test", "Kole"),
+                fileName = fileLabel[sc],
+                doPlot = TRUE,
+                titleStrategy = projectionLabel[sc]
+  )
+}
+```
+
+The `runProjection()` function contains several arguments. The objects `LifeHistoryObj`, `TimeAreaObj`, `HistFisheryObj`, `ProFisheryObj_list`, and `StrategyObj` were defined above. Among these, `LifeHistoryObj`, `TimeAreaObj`, and `HistFisheryObj` are required. The objects `StochasticObj`, `ProFisheryObj_list`, and `StrategyObj` are optional; however, `ProFisheryObj_list` should be used when `StrategyObj` is specified.
+
+The function requires `ProFisheryObj` to be entered as a list, allowing the user to modify vulnerability, retention, and discard scenarios during the projection phase across different areas.
+
+The `wd` argument is required and sets the working directory where the outputs of the projection will be saved. In this example, "Kole" is a subfolder of "data-test," so all plots will be stored in "Kole."
+
+The `fileName` argument specifies the output file name and can be set to the `fileLabel` defined above. This argument is always required.
+
+The `doPlot` argument is a logical value indicating whether to produce diagnostic plots upon completing simulations. The default is `FALSE` (no plots).
+
+The `titleStrategy` argument describes the title for the management strategy being evaluated and can be set to the `projectionLabel`.
+
+To explore all the arguments of this function, the user can use `?ProFisheryObj`.
+
+Next, we present some of the plots produced by `runProjection()`.
+
+```{r fig-SB-H-opt1, fig.cap="Spawning biomass by area- Higher_option1 ", echo=FALSE, out.width="100%"}
+knitr::include_graphics("data-test/Kole/Higher_option1_SB_Area.png")
+```
+
+```{r fig-SB-H-opt2, fig.cap="Spawning biomass by area- Higher_option2 ", echo=FALSE, out.width="100%"}
+knitr::include_graphics("data-test/Kole/Higher_option2_SB_Area.png")
+```
+
+```{r fig-SB-H-opt3, fig.cap="Spawning biomass by area- Higher_option3 ", echo=FALSE, out.width="100%"}
+knitr::include_graphics("data-test/Kole/Higher_option3_SB_Area.png")
+```
+
+```{r fig-catch-H-opt1, fig.cap="Catch biomass by area- Higher_option1 ", echo=FALSE, out.width="100%"}
+knitr::include_graphics("data-test/Kole/Higher_option1_catchB_Area.png")
+```
+
+```{r fig-catch-H-opt2, fig.cap="Catch biomass by area- Higher_option2 ", echo=FALSE, out.width="100%"}
+knitr::include_graphics("data-test/Kole/Higher_option2_catchB_Area.png")
+```
+
+
+```{r fig-catch-H-opt3, fig.cap="Catch biomass by area- Higher_option3 ", echo=FALSE, out.width="100%"}
+knitr::include_graphics("data-test/Kole/Higher_option3_catchB_Area.png")
+```
