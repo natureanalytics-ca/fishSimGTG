@@ -242,7 +242,7 @@ The **FishSimGTG** package includes several plotting functions that allow users 
 
 - The life history schedules can be plotted using the `LHwrapper()` function. This function displays the plot in the console and also returns all the details of the life history. The user can access the help file for the `LHwrapper()` function by using the `?` symbol (`?LHwrapper`).
 
-```{r lifehist, eval=TRUE, echo=TRUE, fig.cap= "Life history schedules."}
+```{r lifehist, eval=TRUE, echo=TRUE, fig.cap= "Life history schedules.", fig.show="hold", out.width="100%"}
 #To simply display to the console
 lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj, doPlot = TRUE)
 ```
@@ -263,7 +263,7 @@ lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj, doPlot = FALSE)
 
 - Vulnerability, retention, keep, dead discards, and removals at length can be plotted using the `selWrapper()` function.
 
-```{r sel, eval=TRUE, echo=TRUE, fig.cap= "Logistic selectivity function."}
+```{r sel, eval=TRUE, echo=TRUE, fig.cap= "Logistic selectivity function.", fig.show="hold", out.width="100%"}
 selOut<-selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = TRUE)
 ```
 
@@ -278,7 +278,7 @@ If the user modifies the vulnerability, retention, and discard parameters in the
 
 -- Assuming a vulnerability type `vulType` of "explog", with parameters p1, peak, and p3.
 
-```{r sel2, eval=TRUE, echo=TRUE, fig.cap= "Exponential logistic selectivity (dome-shaped)."}
+```{r sel2, eval=TRUE, echo=TRUE, fig.cap= "Exponential logistic selectivity (dome-shaped).", fig.show="hold", out.width="100%"}
 HistFisheryObj@vulType<-"explog"
 HistFisheryObj@vulParams<-c(0.9,10,0.15) #dome-shaped
 HistFisheryObj@retType<-"full"
@@ -289,7 +289,7 @@ selOut<-selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot 
 
 -- Assuming a vulnerability type `vulType` of "logistic", with changes in the retention type (`retType`) and retention parameters (`retParams`).
 
-```{r sel3, eval=TRUE, echo=TRUE, fig.cap= "Logistic selectivity function with different retention parameters."}
+```{r sel3, eval=TRUE, echo=TRUE, fig.cap= "Logistic selectivity function with different retention parameters.", fig.show="hold", out.width="100%"}
 HistFisheryObj@vulType<-"logistic"
 HistFisheryObj@vulParams<-c(10.2,0.1) #Approx. knife edge
 HistFisheryObj@retType<-"logistic"
@@ -301,7 +301,7 @@ selOut<-selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot 
 
 -- Assuming a vulnerability type `vulType` of "gillnetMasterNormal" with parameters (`vulParams`), represented as `c(p1, p2, and p3)` and changes in the retention type (`retType`) and retention parameters (`retParams`). 
 
-```{r sel4, eval=TRUE, echo=TRUE, fig.cap= "Gillnet master normal selectivity function with different retention parameters."}
+```{r sel4, eval=TRUE, echo=TRUE, fig.cap= "Gillnet master normal selectivity function with different retention parameters.", fig.show="hold", out.width="100%"}
 HistFisheryObj@vulType<-"gillnetMasterNormal"
 HistFisheryObj@vulParams<-c(2.5,0.1,4)
 HistFisheryObj@retType<-"logistic"
@@ -314,7 +314,7 @@ selOut<-selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot 
 
 -- Assuming a vulnerability type `vulType` of "gillnetMasterLognormal" with parameters (`vulParams`), represented as `c(p1, p2, and p3)` and changes in the retention type (`retType`) and retention parameters (`retParams`). 
 
-```{r sel5, eval=TRUE, echo=TRUE, fig.cap= "Gillnet master log normal selectivity function with different retention parameters."}
+```{r sel5, eval=TRUE, echo=TRUE, fig.cap= "Gillnet master log normal selectivity function with different retention parameters.", fig.show="hold", out.width="100%"}
 HistFisheryObj@vulType<-"gillnetMasterLognormal"
 HistFisheryObj@vulParams<-c(2.5,0.1,4)
 HistFisheryObj@retType<-"logistic"
