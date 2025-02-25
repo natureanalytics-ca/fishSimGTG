@@ -260,12 +260,14 @@ To create a new object of class <code>LifeHistory</code>, use the <code>new()</c
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="om-pop.html#cb3-1" tabindex="-1"></a>LifeHistoryObj <span class="ot">&lt;-</span> <span class="fu">new</span>(<span class="st">&quot;LifeHistory&quot;</span>)</span></code></pre></div>
 <p>The user can see the elements or slots of the <code>LifeHistoryObject</code> using the <code>slotNames()</code> function.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="om-pop.html#cb4-1" tabindex="-1"></a><span class="fu">slotNames</span>(LifeHistoryObj)</span></code></pre></div>
-<pre><code>##  [1] &quot;title&quot;            &quot;speciesName&quot;      &quot;shortDescription&quot; &quot;L_type&quot;          
-##  [5] &quot;L_units&quot;          &quot;Walpha_units&quot;     &quot;Linf&quot;             &quot;K&quot;               
-##  [9] &quot;t0&quot;               &quot;L50&quot;              &quot;L95delta&quot;         &quot;M&quot;               
-## [13] &quot;MK&quot;               &quot;LW_A&quot;             &quot;LW_B&quot;             &quot;Tmax&quot;            
-## [17] &quot;Steep&quot;            &quot;R0&quot;               &quot;recSD&quot;            &quot;recRho&quot;          
-## [21] &quot;isHermaph&quot;        &quot;H50&quot;              &quot;H95delta&quot;</code></pre>
+<pre><code>##  [1] &quot;title&quot;            &quot;speciesName&quot;      &quot;shortDescription&quot;
+##  [4] &quot;L_type&quot;           &quot;L_units&quot;          &quot;Walpha_units&quot;    
+##  [7] &quot;Linf&quot;             &quot;K&quot;                &quot;t0&quot;              
+## [10] &quot;L50&quot;              &quot;L95delta&quot;         &quot;M&quot;               
+## [13] &quot;MK&quot;               &quot;LW_A&quot;             &quot;LW_B&quot;            
+## [16] &quot;Tmax&quot;             &quot;Steep&quot;            &quot;R0&quot;              
+## [19] &quot;recSD&quot;            &quot;recRho&quot;           &quot;isHermaph&quot;       
+## [22] &quot;H50&quot;              &quot;H95delta&quot;</code></pre>
 <p>The user can access the help file for classes by using <code>?</code> symbol</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="om-pop.html#cb6-1" tabindex="-1"></a>?<span class="st">`</span><span class="at">LifeHistory-class</span><span class="st">`</span>  </span></code></pre></div>
 <p>In the help file, the user will find a description of the <code>LifeHistoryObject</code> and the elements or slots it contains. To populate the rest of the slots of the <code>LifeHistoryObject</code>, the user should start by defining a useful title (<code>title</code>), followed by the scientific name of the species (<code>speciesName</code>). If desired, the user can add a short description (<code>shortDescription</code>) of the object.</p>
@@ -304,8 +306,8 @@ To create a new object of class <code>Fishery</code>, use the <code>new()</code>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="om-pop.html#cb9-1" tabindex="-1"></a>HistFisheryObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;Fishery&quot;</span>)</span></code></pre></div>
 <p>The slot names of the <code>HistFisheryObj</code> can be seen using the <code>slotNames()</code> function.</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="om-pop.html#cb10-1" tabindex="-1"></a><span class="fu">slotNames</span>(HistFisheryObj)</span></code></pre></div>
-<pre><code>## [1] &quot;title&quot;     &quot;vulType&quot;   &quot;vulParams&quot; &quot;retType&quot;   &quot;retParams&quot; &quot;retMax&quot;   
-## [7] &quot;Dmort&quot;</code></pre>
+<pre><code>## [1] &quot;title&quot;     &quot;vulType&quot;   &quot;vulParams&quot; &quot;retType&quot;   &quot;retParams&quot;
+## [6] &quot;retMax&quot;    &quot;Dmort&quot;</code></pre>
 <p>The user can access the help file using <code>?</code> symbol</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="om-pop.html#cb12-1" tabindex="-1"></a>?<span class="st">`</span><span class="at">Fishery-class</span><span class="st">`</span>  </span></code></pre></div>
 <p>In the help file, the user will find a description of the <code>HistFisheryObj</code> and the elements or slots it contains. To populate the slots, the user should start by defining a meaningful title (<code>title</code>), followed by specifying the selectivity/vulnerability, retention, and discard information.</p>
@@ -493,13 +495,17 @@ To create a new object of class <code>Stochastic</code>, use the <code>new()</co
 <div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="om-pop.html#cb27-1" tabindex="-1"></a>StochasticObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;Stochastic&quot;</span>)</span></code></pre></div>
 <p>Similar to other S4 objects, the slot names of <code>StochasticObj</code> can be viewed using the <code>slotNames()</code> function, and the help file can be accessed using the <code>?</code> symbol.</p>
 <div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="om-pop.html#cb28-1" tabindex="-1"></a><span class="fu">slotNames</span>(StochasticObj)</span></code></pre></div>
-<pre><code>##  [1] &quot;title&quot;                &quot;historicalBio&quot;        &quot;Linf&quot;                
-##  [4] &quot;K&quot;                    &quot;L50&quot;                  &quot;L95delta&quot;            
-##  [7] &quot;M&quot;                    &quot;Steep&quot;                &quot;recSD&quot;               
-## [10] &quot;recRho&quot;               &quot;H50&quot;                  &quot;H95delta&quot;            
-## [13] &quot;histFisheryVul&quot;       &quot;proFisheryVul_list&quot;   &quot;sameFisheryVul&quot;      
-## [16] &quot;histFisheryRet&quot;       &quot;proFisheryRet_list&quot;   &quot;sameFisheryRet&quot;      
-## [19] &quot;histFisheryDmort&quot;     &quot;proFisheryDmort_list&quot; &quot;sameFisheryDmort&quot;</code></pre>
+<pre><code>##  [1] &quot;title&quot;                &quot;historicalBio&quot;       
+##  [3] &quot;Linf&quot;                 &quot;K&quot;                   
+##  [5] &quot;L50&quot;                  &quot;L95delta&quot;            
+##  [7] &quot;M&quot;                    &quot;Steep&quot;               
+##  [9] &quot;recSD&quot;                &quot;recRho&quot;              
+## [11] &quot;H50&quot;                  &quot;H95delta&quot;            
+## [13] &quot;histFisheryVul&quot;       &quot;proFisheryVul_list&quot;  
+## [15] &quot;sameFisheryVul&quot;       &quot;histFisheryRet&quot;      
+## [17] &quot;proFisheryRet_list&quot;   &quot;sameFisheryRet&quot;      
+## [19] &quot;histFisheryDmort&quot;     &quot;proFisheryDmort_list&quot;
+## [21] &quot;sameFisheryDmort&quot;</code></pre>
 <div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="om-pop.html#cb30-1" tabindex="-1"></a><span class="co">#getting help</span></span>
 <span id="cb30-2"><a href="om-pop.html#cb30-2" tabindex="-1"></a>?<span class="st">`</span><span class="at">Stochastic-class</span><span class="st">`</span>  </span></code></pre></div>
 <p>To populate the slots of <code>StochasticObj</code>, the user should begin by defining a meaningful title (<code>title</code>) and specifying the parameters in which they want to include stochasticity.</p>
