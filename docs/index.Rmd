@@ -18,7 +18,7 @@ link-citations: yes
 github-repo: rstudio/bookdown-demo
 ---
 ```{r setup_fig, include=FALSE}
-knitr::opts_chunk$set(dpi = 300, dev = "png")
+knitr::opts_chunk$set(fig.path = "docs/figures/", dpi = 300, dev = "png")
 ```
 
 # What is FishSimGTG?
