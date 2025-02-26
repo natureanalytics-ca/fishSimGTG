@@ -17,6 +17,7 @@ description: |
 link-citations: yes
 github-repo: rstudio/bookdown-demo
 ---
+
 # What is FishSimGTG?
 
 **FishSimGTG** is an R package that conducts numerical modeling of fish populations, including management strategy evaluation (MSE) and is an age-structured model that represents multiple concurrent cohorts using the growth-type-group methodology [@walters_fisheries_2004]. This framework is typically used to quantify trade-offs among competing management strategies or management options in terms of expected achievement of fishery management objectives. These trade-offs emerge from modeling results that are obtained from analysis methods like management strategy evaluation (MSE) or population dynamics projection. Calculation of trade-offs can play a meaningful role in supporting the development fishery management plans and fishery rule making. Simulations are implemented in the R statistical computing environment [@r_core_team_r_2022]. This framework is not a ‘black box’ software, and thus, it is intended to be customized to address specific questions related to fishery management. This summary describes the base configuration of the population dynamics equations used in the simulation framework. Please be aware that this configuration can be tailored to specific applications.
