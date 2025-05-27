@@ -651,7 +651,7 @@ recruit<-function(LifeHistoryObj, B0=0, stock=0, forceR=FALSE, Rforced=0){
 #' @importFrom stats rnorm
 #' @export
 
-recDev<-function(LifeHistoryObj, TimeAreaObj, StrategyObj = NULL){
+recDev<-function(LifeHistoryObj, TimeAreaObj, StochasticObj, StrategyObj = NULL){
   if(length(LifeHistoryObj@recSD) == 0 ||
      length(LifeHistoryObj@recRho) == 0 ||
      length(TimeAreaObj@historicalYears) == 0 ||
@@ -664,17 +664,47 @@ recDev<-function(LifeHistoryObj, TimeAreaObj, StrategyObj = NULL){
   ) {
     return(NULL)
   } else {
+
+
+    #--------
+    #recSD
+    #--------
+    recSD <- rep(LifeHistoryObj@recSD, iterations)
+    if(is(StochasticObj, "Stochastic") &&
+       length(StochasticObj@recSD) > 1 &&
+       StochasticObj@recSD[1] > 0 &&
+       StochasticObj@recSD[2] > 0 &&
+       StochasticObj@recSD[2] >= StochasticObj@recSD[1]
+    ) {
+      recSD<-runif(iterations, min = StochasticObj@recSD[1], max = StochasticObj@recSD[2])
+    }
+
+
+    #--------
+    #recRho
+    #--------
+    recRho <- rep(LifeHistoryObj@recRho, iterations)
+    if(is(StochasticObj, "Stochastic") &&
+       length(StochasticObj@recRho) > 1 &&
+       StochasticObj@recRho[1] >= 0 &&
+       StochasticObj@recRho[1] <= 1 &&
+       StochasticObj@recRho[2] >= 0 &&
+       StochasticObj@recRho[2] <= 1 &&
+       StochasticObj@recRho[2] >= StochasticObj@recRho[1]
+    ) {
+      recRho<-runif(iterations, min = StochasticObj@recRho[1], max = StochasticObj@recRho[2])
+    }
+
+
     years <- 1 + TimeAreaObj@historicalYears + ifelse(is(StrategyObj, "Strategy")  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)
     iterations <- floor(TimeAreaObj@iterations)
-    recSD <- LifeHistoryObj@recSD
-    recRho <- LifeHistoryObj@recRho
     Rmult<-array(1:1, dim=c(years, iterations))
     for (k in 1:iterations){
-      eps<-w<-rnorm(years,0,recSD)
+      eps<-w<-rnorm(years,0,recSD[k])
       for (i in 2:NROW(eps)){
-        eps[i]<-recRho*eps[i-1]+w[i]*sqrt(1-recRho*recRho)
+        eps[i]<-recRho[k]*eps[i-1]+w[i]*sqrt(1-recRho[k]*recRho[k])
       }
-      Rmult[,k]<-exp(eps-recSD*recSD/2)
+      Rmult[,k]<-exp(eps-recSD[k]*recSD[k]/2)
     }
     return(list(Rmult=Rmult))
   }
@@ -883,41 +913,12 @@ lifehistoryDev<-function(TimeAreaObj, StochasticObj){
     if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@Steep) > 1 &&
        StochasticObj@Steep[1] >= 0.21 &&
-       StochasticObj@Steep[1] < 1 &&
+       StochasticObj@Steep[1] <= 1 &&
        StochasticObj@Steep[2] >= 0.21 &&
-       StochasticObj@Steep[2] < 1 &&
+       StochasticObj@Steep[2] <= 1 &&
        StochasticObj@Steep[2] >= StochasticObj@Steep[1]
     ) {
       Steep<-runif(iterations, min = StochasticObj@Steep[1], max = StochasticObj@Steep[2])
-    }
-
-    #--------
-    #recSD
-    #--------
-    recSD<-NULL
-    if(is(StochasticObj, "Stochastic") &&
-       length(StochasticObj@recSD) > 1 &&
-       StochasticObj@recSD[1] > 0 &&
-       StochasticObj@recSD[2] > 0 &&
-       StochasticObj@recSD[2] >= StochasticObj@recSD[1]
-    ) {
-      recSD<-runif(iterations, min = StochasticObj@recSD[1], max = StochasticObj@recSD[2])
-    }
-
-
-    #--------
-    #recRho
-    #--------
-    recRho<-NULL
-    if(is(StochasticObj, "Stochastic") &&
-       length(StochasticObj@recRho) > 1 &&
-       StochasticObj@recRho[1] >= 0 &&
-       StochasticObj@recRho[1] <= 1 &&
-       StochasticObj@recRho[2] >= 0 &&
-       StochasticObj@recRho[2] <= 1 &&
-       StochasticObj@recRho[2] >= StochasticObj@recRho[1]
-    ) {
-      recRho<-runif(iterations, min = StochasticObj@recRho[1], max = StochasticObj@recRho[2])
     }
 
     #--------
@@ -946,7 +947,7 @@ lifehistoryDev<-function(TimeAreaObj, StochasticObj){
       H95delta<-runif(iterations, min = StochasticObj@H95delta[1], max = StochasticObj@H95delta[2])
     }
 
-    return(list(Linf=Linf, K=K, L50=L50, L95delta=L95delta, M=M, Steep=Steep, recSD=recSD, recRho=recRho, H50=H50, H95delta=H95delta))
+    return(list(Linf=Linf, K=K, L50=L50, L95delta=L95delta, M=M, Steep=Steep, H50=H50, H95delta=H95delta))
   }
 }
 

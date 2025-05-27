@@ -3,8 +3,8 @@
 #---------------
 #Example
 #---------------
-#devtools::load_all()
-library(fishSimGTG)
+devtools::load_all()
+#library(fishSimGTG)
 library(here)
 
 #----------------------------
@@ -95,7 +95,7 @@ selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = TRUE, 
 #-----------------------------
 StochasticObj<-new("Stochastic")
 StochasticObj@historicalBio = c(0.3, 0.6)
-
+StochasticObj@Linf <- c(40,70)
 
 #-------------------------------------------------------
 #Setup fishery characteristics for the projection period
@@ -139,8 +139,8 @@ StrategyObj@projectionParams<-list(bag = c(-99,-99), effort = matrix(1:1, nrow=5
 runProjection(LifeHistoryObj = LifeHistoryObj,
               TimeAreaObj = TimeAreaObj,
               HistFisheryObj = HistFisheryObj,
-              ProFisheryObj_list = ProFisheryObj_list,
-              StrategyObj = StrategyObj,
+              #ProFisheryObj_list = ProFisheryObj_list,
+              #StrategyObj = StrategyObj,
               StochasticObj = StochasticObj,
               wd = here(),
               fileName = "Test1",

@@ -238,7 +238,7 @@ evalMSE<-function(inputObject){
                         ),
                     inputObject
       )
-      if(controlRuleYear[j]) { decisionLocal<-rbind(decisionLocal, do.call(get(StrategyObj@projectionName), list(phase=3, dataObject)))
+      if(controlRuleYear[j]) {  l<-rbind(decisionLocal, do.call(get(StrategyObj@projectionName), list(phase=3, dataObject)))
       } else { decisionLocal<-rbind(decisionLocal, do.call(fixedStrategy, list(phase=3, dataObject)))}
 
       #SB and recruits
@@ -627,9 +627,9 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
     #require(parallel)
     iterations <- floor(TimeAreaObj@iterations)
 
-    if(detectCores()>1 & iterations >= detectCores() & is.null(waitName) & is.null(hostName)) {
+    if(detectCores() > 3 && iterations >= (detectCores() - 2) && is.null(waitName) && is.null(hostName)) {
       print("Running on multiple cores")
-      cores<-min(iterations, detectCores())
+      cores<-min(iterations, (detectCores()-2))
       sfInit(parallel=T, cpus=cores)
       sfLibrary(fishSimGTG)
       if(!is.null(customToCluster)) sfExport(list = returnValue(customToCluster))
@@ -637,7 +637,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       inputObject<-list()
       size<-floor(iterations/cores)
       for (i in 1:cores){
-        input[[i]]<-c(size*(i-1)+1, ifelse(i==cores, iterations,size*i))
+        input[[i]]<-c(size*(i-1)+1, ifelse(i==cores, iterations, size*i))
         inputObject[[i]]<-list(iter=c(size*(i-1)+1, ifelse(i==cores, iterations, size*i)),
                                RdevMatrix = RdevMatrix,
                                Ddev = Ddev,
