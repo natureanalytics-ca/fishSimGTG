@@ -1,9 +1,5 @@
 
-# The Closed Loop Simulation
+# Management strategy evalution (MSE)
 
-This chapter explains.....
-
-
-
-
+Coming soon.....
 

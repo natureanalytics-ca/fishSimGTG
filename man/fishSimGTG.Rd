@@ -2,8 +2,8 @@
 % Please edit documentation in R/fishSimGTG.R
 \docType{package}
 \name{fishSimGTG}
-\alias{fishSimGTG}
 \alias{fishSimGTG-package}
+\alias{fishSimGTG}
 \title{Numerical simulations of fish population dynamics}
 \description{
 Conducts projections, MSE, and equilibrium conditions for a specified fish life history.

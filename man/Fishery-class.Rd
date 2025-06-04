@@ -7,15 +7,15 @@
 \arguments{
 \item{title}{A title for the object, useful for displaying the contents of the object}
 
-\item{vulType}{String. Vulnerability function for historical time period, see selWrapper for options}
+\item{vulType}{String. Vulnerability function, see selWrapper for options}
 
-\item{vulParams}{Numeric value or vector for vulnerability params for historical time period. See selWrapper for options}
+\item{vulParams}{Numeric value or vector for vulnerability params. See selWrapper for options}
 
-\item{retType}{String. Retention function for historical time period. See selWrapper for options}
+\item{retType}{String. Retention function. See selWrapper for options}
 
-\item{retParams}{Numeric value or vector for retention params for historical time period. See selWrapper for options}
+\item{retParams}{Numeric value or vector for retention params. See selWrapper for options}
 
-\item{retMax}{Numeric value that defines the peak of the historical retention curve. A value between 0 and 1.}
+\item{retMax}{Numeric value that defines the peak of the retention curve. A value between 0 and 1.}
 
 \item{Dmort}{Discard mortality rate (not instantaneous rate, rather it is the fraction of discards killed e.g. 0.25 is 25\% killed). A value between 0 and 1.}
 }
@@ -23,5 +23,5 @@
 An S4 object that holds a description of a fish stock, including selectivity and discard information.
 }
 \details{
-Options for vulnerability and retention retention functions along with guidance on parameter specification is found in Sel documentation
+Options for vulnerability and retention retention functions along with guidance on parameter specification is found in \code{selWrapper()} documentation
 }

@@ -4,7 +4,7 @@
 \alias{recDev}
 \title{Recuitment deviations}
 \usage{
-recDev(LifeHistoryObj, TimeAreaObj, StrategyObj = NULL)
+recDev(LifeHistoryObj, TimeAreaObj, StochasticObj, StrategyObj = NULL)
 }
 \arguments{
 \item{LifeHistoryObj}{A life history object.}

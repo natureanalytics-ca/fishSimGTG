@@ -87,7 +87,7 @@ setClass("LifeHistory",
 
 
 #----------------------
-#Stock object
+#Fishery object
 #----------------------
 
 #Roxygen header
@@ -95,13 +95,13 @@ setClass("LifeHistory",
 #'
 #'An S4 object that holds a description of a fish stock, including selectivity and discard information.
 #'
-#'Options for vulnerability and retention retention functions along with guidance on parameter specification is found in Sel documentation
+#'Options for vulnerability and retention retention functions along with guidance on parameter specification is found in `selWrapper()` documentation
 #' @param title A title for the object, useful for displaying the contents of the object
-#' @param vulType String. Vulnerability function for historical time period, see selWrapper for options
-#' @param vulParams Numeric value or vector for vulnerability params for historical time period. See selWrapper for options
-#' @param retType String. Retention function for historical time period. See selWrapper for options
-#' @param retParams Numeric value or vector for retention params for historical time period. See selWrapper for options
-#' @param retMax Numeric value that defines the peak of the historical retention curve. A value between 0 and 1.
+#' @param vulType String. Vulnerability function, see selWrapper for options
+#' @param vulParams Numeric value or vector for vulnerability params. See selWrapper for options
+#' @param retType String. Retention function. See selWrapper for options
+#' @param retParams Numeric value or vector for retention params. See selWrapper for options
+#' @param retMax Numeric value that defines the peak of the retention curve. A value between 0 and 1.
 #' @param Dmort Discard mortality rate (not instantaneous rate, rather it is the fraction of discards killed e.g. 0.25 is 25% killed). A value between 0 and 1.
 #' @importFrom methods new
 #'
@@ -220,13 +220,13 @@ setClass("Strategy",
 #' @param H95delta A vector of length 2 that contains a min and a max. If entered, values replaces value in life history object. Create unique value for each iteration by sampling from uniform distribution.
 #' @param histFisheryVul A matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces HistFisheryObj@vulParams. Columns correspond to needed inputs of HistFisheryObj@vulType. Range sampled at each iteration using a uniform distribution.
 #' @param proFisheryVul_list A list containing number of objects equal to areas. Each object is a matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@vulParams. Columns correspond to needed inputs of ProFisheryObj@vulType. Range sampled at each iteration using a uniform distribution.
-#' @param sameFisheryVul Logical. Indicates whether values generated for histFisheryVul should be applied to proFisheryVul so that historical and projection parameter values are identical. TRUE overrides any input in proFisheryVul
+#' @param sameFisheryVul Logical. Indicates whether values generated for histFisheryVul should be applied so that historical and projection parameter values are identical. TRUE also overrides any input in proFisheryVul_list
 #' @param histFisheryRet A matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces HistFisheryObj@retParams. Columns correspond to needed inputs of HistFisheryObj@retType. Range sampled at each iteration using a uniform distribution.
 #' @param proFisheryRet_list  A list containing number of objects equal to areas. Each object is a matrix n cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@retParams. Columns correspond to needed inputs of ProFisheryObj@retType. Range sampled at each iteration using a uniform distribution.
-#' @param sameFisheryRet Logical. Indicates whether values generated for histFisheryRet should be applied to proFisheryRet so that historical and projection parameter values are identical. TRUE overrides any input in proFisheryRet
+#' @param sameFisheryRet Logical. Indicates whether values generated for histFisheryRet should be applied so that historical and projection parameter values are identical. TRUE also overrides any input in proFisheryRet_list
 #' @param histFisheryDmort A matrix 1 cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces HistFisheryObj@Dmort. Range sampled at each iteration using a uniform distribution.
 #' @param proFisheryDmort_list A list containing number of objects equal to areas. Each object is a matrix 1 cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@Dmort. Range sampled at each iteration using a uniform distribution.
-#' @param sameFisheryDmort Logical. Indicates whether values generated for histFisheryDmort should be applied to proFisheryDmort so that historical and projection parameter values are identical. TRUE overrides any input in proFisheryDmort
+#' @param sameFisheryDmort Logical. Indicates whether values generated for histFisheryDmort should be applied so that historical and projection parameter values are identical. TRUE also overrides any input in proFisheryDmort_list
 #' @importFrom methods new
 
 setClass("Stochastic",

@@ -72,6 +72,20 @@ lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj)
 selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = TRUE)
 
 
+HistFisheryObj<-new("Fishery")
+HistFisheryObj@title<-"Example"
+HistFisheryObj@vulType<-"logistic"
+HistFisheryObj@vulParams<-c(20,1)
+HistFisheryObj@retType<-"full"
+#HistFisheryObj@retParams <- c(25,0.1)
+HistFisheryObj@retMax <- 0.8
+HistFisheryObj@Dmort <- 0
+
+#To simply display to the console
+lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj)
+selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = TRUE)
+
+
 ProFisheryObj<-new("Fishery")
 ProFisheryObj@title<-"Example"
 ProFisheryObj@vulType<-"explog"

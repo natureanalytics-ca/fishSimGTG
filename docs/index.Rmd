@@ -1,10 +1,10 @@
 --- 
-title: "FishSimGTG: Population dynamics simulation framework"
+title: "FishSimGTG: Population dynamics simulation"
 author: |
   `r if (knitr::is_html_output()) '<div style="text-align: center;">' else '\\begin{center}'`
-  William J Harford  
+  Nature Analytics  
   `r if (knitr::is_html_output()) '<br>' else '\\newline'`
-  Version 1.0.4
+  Version 1.0.7
   `r if (knitr::is_html_output()) '<br>' else '\\newline'`
   `r Sys.Date()`
   `r if (knitr::is_html_output()) '</div>' else '\\end{center}'`
@@ -15,7 +15,7 @@ bibliography: zotero_references.bib/FishSimGTG_ref.bib
 description: |
   This document includes the description of FishSimGTG
 link-citations: yes
-github-repo: rstudio/bookdown-demo
+github-repo: natureanalytics-ca/fishSimGTG
 ---
 ```{r setup_fig, include=FALSE}
 knitr::opts_chunk$set(fig.path = "docs/figures/", dpi = 300, dev = "png")
@@ -23,7 +23,7 @@ knitr::opts_chunk$set(fig.path = "docs/figures/", dpi = 300, dev = "png")
 
 # What is FishSimGTG?
 
-**FishSimGTG** is an R package that conducts numerical modeling of fish populations, including management strategy evaluation (MSE) and is an age-structured model that represents multiple concurrent cohorts using the growth-type-group methodology [@walters_fisheries_2004]. This framework is typically used to quantify trade-offs among competing management strategies or management options in terms of expected achievement of fishery management objectives. These trade-offs emerge from modeling results that are obtained from analysis methods like management strategy evaluation (MSE) or population dynamics projection. Calculation of trade-offs can play a meaningful role in supporting the development fishery management plans and fishery rule making. Simulations are implemented in the R statistical computing environment [@r_core_team_r_2022]. This framework is not a ‘black box’ software, and thus, it is intended to be customized to address specific questions related to fishery management. This summary describes the base configuration of the population dynamics equations used in the simulation framework. Please be aware that this configuration can be tailored to specific applications.
+**FishSimGTG** is an R package that conducts numerical modeling of fish populations, including management strategy evaluation (MSE) and is an age-structured model that represents multiple concurrent cohorts using the growth-type-group methodology [@walters_fisheries_2004]. This framework is typically used to quantify trade-offs among competing management strategies or management options in terms of expected achievement of fishery management objectives. These trade-offs emerge from modeling results that are obtained from analysis methods like management strategy evaluation (MSE) or population dynamics projection. Calculation of trade-offs can play a meaningful role in supporting the development fishery management plans and fishery rule making. Simulations are implemented in the R statistical computing environment [@r_core_team_r_2022]. This framework is not a ‘black box’ software, and thus, it is intended to be customized to address specific questions related to fishery management.
 
 ## Installation and required packages
 
@@ -45,28 +45,27 @@ The user can install the necessary packages to run the simulation and visualize 
 
 ```{r, eval=FALSE}
 install.packages("devtools")
-devtools::install_github("natureanalytics-ca/fishSimGTG@v1.0.6")
-devtools::install_github("natureanalytics-ca/fishSimTools@v0.0.0.9")
-install.packages("here")
+library(devtools)
+
+devtools::install_github("natureanalytics-ca/fishSimGTG")
+devtools::install_github("natureanalytics-ca/fishSimTools")
 ```
 
 4. **Load the Required Packages**:
 
 ```{r,eval=FALSE}
-library(devtools)
 library(fishSimGTG)
 library(fishSimTools)
-library(here)
 ```
 
-The core packages required to run the simulation are `fishSimGTG` and `fishSimTools`. The `devtools` package is necessary because it allows us to install these core packages directly from GitHub, ensuring we have the latest versions and updates. The `here` package is essential for simplifying file referencing in project-oriented workflows, making it easier to manage and navigate project files consistently.
+The core packages required to run the simulation are `fishSimGTG` and `fishSimTools`. The `devtools` package is necessary because it allows us to install these core packages directly from GitHub, ensuring we have the latest versions and updates.
 
 
 ## How to use FishSimGTG?
 
 The **FishSimGTG** package can be used to construct an operating model (OM) that simulates population and fishery dynamics, including data collection and the application of user-customized management procedures. The OM consists of several S4-type objects, such as the `LifeHistory` object, `Fishery` object, and `TimeArea` object, etc. These objects store parameters and information in slots, which users can access using the `@` symbol.
 
-The simplest way to start building the OM is to create a new object using the R function `new()` and populate it with the required input information and parameters. The next chapter provides a full description of the S4 object components and instructions on how to populate each object to create the OM.
+This user guide provides a full description of the S4 object components and instructions on how to populate each object to create the OM.
 
 ```{r include=FALSE}
 # automatically create a bib database for R packages
