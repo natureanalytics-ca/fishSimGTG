@@ -669,6 +669,7 @@ recDev<-function(LifeHistoryObj, TimeAreaObj, StochasticObj, StrategyObj = NULL)
     #--------
     #recSD
     #--------
+    iterations <- floor(TimeAreaObj@iterations)
     recSD <- rep(LifeHistoryObj@recSD, iterations)
     if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@recSD) > 1 &&
@@ -697,7 +698,6 @@ recDev<-function(LifeHistoryObj, TimeAreaObj, StochasticObj, StrategyObj = NULL)
 
 
     years <- 1 + TimeAreaObj@historicalYears + ifelse(is(StrategyObj, "Strategy")  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)
-    iterations <- floor(TimeAreaObj@iterations)
     Rmult<-array(1:1, dim=c(years, iterations))
     for (k in 1:iterations){
       eps<-w<-rnorm(years,0,recSD[k])
