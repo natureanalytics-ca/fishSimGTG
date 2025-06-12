@@ -1,6 +1,6 @@
 Package: fishSimGTG
 Title: Numerical simulations of fish population dynamics
-Version: 1.0.7
+Version: 1.0.9
 Authors@R: 
     person(given = "William",
            family = "Harford",

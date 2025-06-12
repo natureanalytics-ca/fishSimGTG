@@ -238,7 +238,7 @@ evalMSE<-function(inputObject){
                         ),
                     inputObject
       )
-      if(controlRuleYear[j]) {  l<-rbind(decisionLocal, do.call(get(StrategyObj@projectionName), list(phase=3, dataObject)))
+      if(controlRuleYear[j]) { decisionLocal<-rbind(decisionLocal, do.call(get(StrategyObj@projectionName), list(phase=3, dataObject)))
       } else { decisionLocal<-rbind(decisionLocal, do.call(fixedStrategy, list(phase=3, dataObject)))}
 
       #SB and recruits
@@ -365,7 +365,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
   set.seed(seed = seed)
 
   #Rec devs
-  RdevMatrix<-recDev(LifeHistoryObj, TimeAreaObj, StrategyObj)$Rmult
+  RdevMatrix<-recDev(LifeHistoryObj, TimeAreaObj, StochasticObj, StrategyObj)$Rmult
 
   #Initial depletion (SSB rel)
   Ddev<-bioDev(TimeAreaObj, StochasticObj)$Ddev
@@ -659,33 +659,10 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       mseParallel<-sfLapply(inputObject, evalMSE)
       sfRemoveAll()
       sfStop()
-    } else {
-      mse<-evalMSE(inputObject=list(iter=c(1, iterations),
-                                    RdevMatrix=RdevMatrix,
-                                    Ddev=Ddev,
-                                    Cdev = Cdev,
-                                    Edev = Edev,
-                                    LHdev = LHdev,
-                                    Sdev = Sdev,
-                                    LifeHistoryObj = LifeHistoryObj,
-                                    TimeAreaObj = TimeAreaObj,
-                                    HistFisheryObj = HistFisheryObj,
-                                    ProFisheryObj_list = ProFisheryObj_list,
-                                    StrategyObj = StrategyObj,
-                                    StochasticObj = StochasticObj,
-                                    iterations=iterations,
-                                    waitName=waitName,
-                                    hostName=hostName
-                                    )
-                   )
-    }
 
-    #-------------------------------
-    #Ressemble from multiple cores
-    #-------------------------------
-
-    if(detectCores()>1 & iterations>=detectCores() & is.null(waitName) & is.null(hostName)) {
-
+      #-------------------------------
+      #Ressemble from multiple cores
+      #-------------------------------
       SB<-mseParallel[[1]]$dynamics$SB
       VB<-mseParallel[[1]]$dynamics$VB
       RB<-mseParallel[[1]]$dynamics$RB
@@ -721,7 +698,27 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
         decisionLocal<-rbind(decisionLocal, mseParallel[[i]]$HCR$decisionLocal)
         decisionData<-rbind(decisionData, mseParallel[[i]]$HCR$decisionData)
       }
+
     } else {
+      mse<-evalMSE(inputObject=list(iter=c(1, iterations),
+                                    RdevMatrix=RdevMatrix,
+                                    Ddev=Ddev,
+                                    Cdev = Cdev,
+                                    Edev = Edev,
+                                    LHdev = LHdev,
+                                    Sdev = Sdev,
+                                    LifeHistoryObj = LifeHistoryObj,
+                                    TimeAreaObj = TimeAreaObj,
+                                    HistFisheryObj = HistFisheryObj,
+                                    ProFisheryObj_list = ProFisheryObj_list,
+                                    StrategyObj = StrategyObj,
+                                    StochasticObj = StochasticObj,
+                                    iterations=iterations,
+                                    waitName=waitName,
+                                    hostName=hostName
+                                    )
+                   )
+
       SB<-mse$dynamics$SB
       VB<-mse$dynamics$VB
       RB<-mse$dynamics$RB
