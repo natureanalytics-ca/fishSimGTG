@@ -17,7 +17,7 @@ evalMSE<-function(inputObject){
   #------------------
   #Unpack dataObject
   #------------------
-  TimeAreaObj <- StrategyObj <- LifeHistoryObj <- HistFisheryObj <- ProFisheryObj_list <- iterations <- iter <- Ddev <- Edev <- LHdev <- Sdev <- Cdev <- Edev <- RdevMatrix <- NULL
+  TimeAreaObj <- StrategyObj <- LifeHistoryObj <- HistFisheryObj <- ProFisheryObj_list <- iterations <- iter <- Ddev <- Edev <- LHdev <- Sdev <- Cdev <- Edev <- RdevMatrix <- doDiagnostic <- NULL
   for(r in 1:NROW(inputObject)) assign(names(inputObject)[r], inputObject[[r]])
 
   controlRuleYear<-c(FALSE, rep(FALSE,(TimeAreaObj@historicalYears)), rep(TRUE, ifelse(is(StrategyObj, "Strategy")  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)))
@@ -38,6 +38,7 @@ evalMSE<-function(inputObject){
   SPR<-array(dim=c(years, iterations))
   relSB<-array(dim=c(years, iterations))
   recN<-array(dim=c(years, iterations))
+  Nexport<-NULL
 
   #-----------------------------------------------
   #Setup recording of management strategy details
@@ -208,8 +209,8 @@ evalMSE<-function(inputObject){
                          catchN=catchN,
                          catchB=catchB,
                          Ftotal=Ftotal,
-                         decisionData=decisionData,
-                         decisionAnnual=decisionAnnual,
+                         decisionData=decisionData,  # array containing obs data for the entire perod
+                         decisionAnnual=decisionAnnual, #history of decision
                          decisionLocal=decisionLocal
       ),
       inputObject
@@ -302,6 +303,9 @@ evalMSE<-function(inputObject){
         decisionData<-rbind(decisionData, do.call(get(StrategyObj@projectionName), list(phase=1, dataObject)))
       }
     }
+    if(doDiagnostic & k==1) Nexport = N
+
+
     if(!is.null(hostName) & !is.null(waitName)){
       hostName$set(k/floor(TimeAreaObj@iterations)*100)
     }
@@ -313,7 +317,7 @@ evalMSE<-function(inputObject){
   #save
   dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref = ref)
   HCR<-list(decisionLocal=decisionLocal, decisionAnnual=decisionAnnual, decisionData=decisionData)
-  return(list(dynamics=dynamics, HCR=HCR, iter=iter))
+  return(list(dynamics=dynamics, HCR=HCR, iter=iter, N=Nexport))
 }
 
 
@@ -352,7 +356,7 @@ evalMSE<-function(inputObject){
 
 
 runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryObj_list = NULL, StrategyObj = NULL, StochasticObj = NULL,
-                        wd, fileName, seed = 1, doPlot = FALSE, customToCluster = NULL, titleStrategy = "No name", waitName=NULL, hostName=NULL){
+                        wd, fileName, seed = 1, doPlot = FALSE, doDiagnostic=F, customToCluster = NULL, titleStrategy = "No name", waitName=NULL, hostName=NULL){
 
   #-----------------------
   #Build inputObject
@@ -654,7 +658,8 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                StochasticObj = StochasticObj,
                                iterations=iterations,
                                waitName=waitName,
-                               hostName=hostName)
+                               hostName=hostName,
+                               doDiagnostic=doDiagnostic)
       }
       mseParallel<-sfLapply(inputObject, evalMSE)
       sfRemoveAll()
@@ -678,11 +683,13 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       decisionAnnual<-mseParallel[[1]]$HCR$decisionAnnual
       decisionLocal<-mseParallel[[1]]$HCR$decisionLocal
       decisionData<-mseParallel[[1]]$HCR$decisionData
+      N<-mseParallel[[1]]$N
 
       for (i in 2:cores){
         for(m in 1:TimeAreaObj@areas){
           SB[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$SB[,input[[i]][1]:input[[i]][2],m]
           VB[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$VB[,input[[i]][1]:input[[i]][2],m]
+          TB[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$TB[,input[[i]][1]:input[[i]][2],m]
           RB[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$RB[,input[[i]][1]:input[[i]][2],m]
           catchB[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$catchB[,input[[i]][1]:input[[i]][2],m]
           catchN[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$catchN[,input[[i]][1]:input[[i]][2],m]
@@ -715,7 +722,8 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                     StochasticObj = StochasticObj,
                                     iterations=iterations,
                                     waitName=waitName,
-                                    hostName=hostName
+                                    hostName=hostName,
+                                    doDiagnostic=doDiagnostic
                                     )
                    )
 
@@ -734,13 +742,15 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       decisionAnnual<-mse$HCR$decisionAnnual
       decisionLocal<-mse$HCR$decisionLocal
       decisionData<-mse$HCR$decisionData
+      N<-mse$N
+
     }
 
     #---------------
     #Save results
     #---------------
 
-    dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref = ref)
+    dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref = ref, N=N)
     HCR<-list(decisionLocal=decisionLocal, decisionAnnual=decisionAnnual, decisionData=decisionData)
     dt<-list(titleStrategy = titleStrategy, dynamics=dynamics, HCR=HCR, iterations=iterations, LifeHistoryObj=LifeHistoryObj, LHdev=LHdev, Sdev = Sdev, Ddev=Ddev, TimeAreaObj=TimeAreaObj, HistFisheryObj=HistFisheryObj, ProFisheryObj_list=ProFisheryObj_list,  StrategyObj= StrategyObj, StochasticObj=StochasticObj)
     saveRDS(dt, file=paste(wd, "/", fileName, ".rds", sep=""))
