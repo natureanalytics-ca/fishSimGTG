@@ -39,6 +39,8 @@ evalMSE<-function(inputObject){
   relSB<-array(dim=c(years, iterations))
   recN<-array(dim=c(years, iterations))
   Nexport<-NULL
+  catchNageExport<-NULL
+  catchBageExport<-NULL
 
   #-----------------------------------------------
   #Setup recording of management strategy details
@@ -169,6 +171,17 @@ evalMSE<-function(inputObject){
       }
     }
 
+    # VH: add this section to report whn diagnostic is TRUE only for iter 1 catch at age in numbers and biomass
+    if(doDiagnostic & k==1) {
+      # Initialize catch-at-age arrays for diagnostic
+      catchNage<-list()
+      catchBage<-list()
+      for(l in 1:lh$gtg){
+        catchNage[[l]]<-array(dim=c(ageClasses, years, areas))
+        catchBage[[l]]<-array(dim=c(ageClasses, years, areas))
+      }
+    }
+
     #Arrays
     for(m in 1:areas) SB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum((N[[x]][,1,m]*lh$mat[[x]]*lh$W[[x]])[2:ageClasses])))
     SPR[1,k]<-(sum(SB[1,k,])/is$Req)/(is$B0/lh$LifeHistory@R0)
@@ -178,6 +191,19 @@ evalMSE<-function(inputObject){
       VB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist[[m]]$vul[[x]]*lh$W[[x]])))
       RB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist[[m]]$keep[[x]]*lh$W[[x]])))
       Ftotal[1,k,m] <- is$Feq
+
+    #VH: calculate the ctach at age in numbers and biomass (matrices)
+      # Calculate catch matrices by gtg and age
+      if(doDiagnostic & k==1) {
+      for(l in 1:lh$gtg){
+        catchNage_tmp <- Ftotal[1,k,m]*selHist[[m]]$keep[[l]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[l]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[l]]-lh$LifeHistory@M))*N[[l]][,1,m]
+        catchBage_tmp <- lh$W[[l]]*catchNage_tmp
+        catchNage[[l]][,1,m] <- catchNage_tmp
+        catchBage[[l]][,1,m] <- catchBage_tmp
+        }
+      }
+
+
       catchN[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[1,k,m]*selHist[[m]]$keep[[x]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
       catchB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[1,k,m]*selHist[[m]]$keep[[x]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
       discN[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[1,k,m]*selHist[[m]]$discard[[x]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
@@ -256,6 +282,18 @@ evalMSE<-function(inputObject){
         RB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,j,m]*selGroup[[m]]$keep[[x]]*lh$W[[x]])))
         xRow<-which(decisionLocal$year==j & decisionLocal$iteration==k & decisionLocal$area==m)
         Ftotal[j,k,m] <- decisionLocal$Flocal[xRow]
+
+      #VH: calculate catch matrices by gtg and age
+        for(l in 1:lh$gtg){
+          catchNage_tmp <- Ftotal[j,k,m]*selGroup[[m]]$keep[[l]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[l]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[l]]-lh$LifeHistory@M))*N[[l]][,j,m]
+          catchBage_tmp <- lh$W[[l]]*catchNage_tmp
+
+          if(doDiagnostic & k==1) {
+            catchNage[[l]][,j,m] <- catchNage_tmp
+            catchBage[[l]][,j,m] <- catchBage_tmp
+          }
+        }
+
         catchN[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[j,k,m]*selGroup[[m]]$keep[[x]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
         catchB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[j,k,m]*selGroup[[m]]$keep[[x]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
         discN[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[j,k,m]*selGroup[[m]]$discard[[x]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
@@ -303,7 +341,11 @@ evalMSE<-function(inputObject){
         decisionData<-rbind(decisionData, do.call(get(StrategyObj@projectionName), list(phase=1, dataObject)))
       }
     }
-    if(doDiagnostic & k==1) Nexport = N
+    # VH: modify this section to export too catchNage and catchBage
+    if(doDiagnostic & k==1) {
+    Nexport = N
+    catchNageExport = catchNage
+    catchBageExport = catchBage}
 
 
     if(!is.null(hostName) & !is.null(waitName)){
@@ -317,7 +359,8 @@ evalMSE<-function(inputObject){
   #save
   dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref = ref)
   HCR<-list(decisionLocal=decisionLocal, decisionAnnual=decisionAnnual, decisionData=decisionData)
-  return(list(dynamics=dynamics, HCR=HCR, iter=iter, N=Nexport))
+  #VH: modified to report catch matrices
+  return(list(dynamics=dynamics, HCR=HCR, iter=iter, N=Nexport,catchNage=catchNageExport, catchBage=catchBageExport))
 }
 
 
@@ -683,13 +726,18 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       decisionAnnual<-mseParallel[[1]]$HCR$decisionAnnual
       decisionLocal<-mseParallel[[1]]$HCR$decisionLocal
       decisionData<-mseParallel[[1]]$HCR$decisionData
+
+      #VH: same here, modif
       N<-mseParallel[[1]]$N
+      catchNage<-mseParallel[[1]]$catchNage
+      catchBage<-mseParallel[[1]]$catchBage
+
+
 
       for (i in 2:cores){
         for(m in 1:TimeAreaObj@areas){
           SB[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$SB[,input[[i]][1]:input[[i]][2],m]
           VB[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$VB[,input[[i]][1]:input[[i]][2],m]
-          TB[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$TB[,input[[i]][1]:input[[i]][2],m]
           RB[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$RB[,input[[i]][1]:input[[i]][2],m]
           catchB[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$catchB[,input[[i]][1]:input[[i]][2],m]
           catchN[,input[[i]][1]:input[[i]][2],m]<-mseParallel[[i]]$dynamics$catchN[,input[[i]][1]:input[[i]][2],m]
@@ -742,15 +790,18 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       decisionAnnual<-mse$HCR$decisionAnnual
       decisionLocal<-mse$HCR$decisionLocal
       decisionData<-mse$HCR$decisionData
-      N<-mse$N
 
+      #VH: modif.
+      N<-mse$N
+      catchNage<-mse$catchNage
+      catchBage<-mse$catchBage
     }
 
     #---------------
     #Save results
     #---------------
-
-    dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref = ref, N=N)
+    #VH:modif to report catch matrices
+    dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref = ref, N=N,, catchNage=catchNage, catchBage=catchBage)
     HCR<-list(decisionLocal=decisionLocal, decisionAnnual=decisionAnnual, decisionData=decisionData)
     dt<-list(titleStrategy = titleStrategy, dynamics=dynamics, HCR=HCR, iterations=iterations, LifeHistoryObj=LifeHistoryObj, LHdev=LHdev, Sdev = Sdev, Ddev=Ddev, TimeAreaObj=TimeAreaObj, HistFisheryObj=HistFisheryObj, ProFisheryObj_list=ProFisheryObj_list,  StrategyObj= StrategyObj, StochasticObj=StochasticObj)
     saveRDS(dt, file=paste(wd, "/", fileName, ".rds", sep=""))
