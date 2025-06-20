@@ -42,6 +42,9 @@ evalMSE<-function(inputObject){
   catchNageExport<-NULL
   catchBageExport<-NULL
 
+  catchNage<-NULL
+  catchBage<-NULL
+
   #-----------------------------------------------
   #Setup recording of management strategy details
   #-----------------------------------------------
@@ -172,7 +175,7 @@ evalMSE<-function(inputObject){
     }
 
     # VH: add this section to report whn diagnostic is TRUE only for iter 1 catch at age in numbers and biomass
-    if(doDiagnostic & k==1) {
+    if(doDiagnostic & k==iter[1]) {
       # Initialize catch-at-age arrays for diagnostic
       catchNage<-list()
       catchBage<-list()
@@ -194,7 +197,7 @@ evalMSE<-function(inputObject){
 
     #VH: calculate the ctach at age in numbers and biomass (matrices)
       # Calculate catch matrices by gtg and age
-      if(doDiagnostic & k==1) {
+      if(doDiagnostic & k==iter[1]) {
       for(l in 1:lh$gtg){
         catchNage_tmp <- Ftotal[1,k,m]*selHist[[m]]$keep[[l]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[l]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[l]]-lh$LifeHistory@M))*N[[l]][,1,m]
         catchBage_tmp <- lh$W[[l]]*catchNage_tmp
@@ -288,7 +291,7 @@ evalMSE<-function(inputObject){
           catchNage_tmp <- Ftotal[j,k,m]*selGroup[[m]]$keep[[l]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[l]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[l]]-lh$LifeHistory@M))*N[[l]][,j,m]
           catchBage_tmp <- lh$W[[l]]*catchNage_tmp
 
-          if(doDiagnostic & k==1) {
+          if(doDiagnostic & k==iter[1]) {
             catchNage[[l]][,j,m] <- catchNage_tmp
             catchBage[[l]][,j,m] <- catchBage_tmp
           }
@@ -342,10 +345,11 @@ evalMSE<-function(inputObject){
       }
     }
     # VH: modify this section to export too catchNage and catchBage
-    if(doDiagnostic & k==1) {
+    if(doDiagnostic & k==iter[1]) {
     Nexport = N
     catchNageExport = catchNage
-    catchBageExport = catchBage}
+    catchBageExport = catchBage
+    }
 
 
     if(!is.null(hostName) & !is.null(waitName)){
@@ -801,7 +805,8 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
     #Save results
     #---------------
     #VH:modif to report catch matrices
-    dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref = ref, N=N, catchNage=catchNage, catchBage=catchBage)
+    dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref=ref, N=N, catchNage=catchNage, catchBage=catchBage)
+
     HCR<-list(decisionLocal=decisionLocal, decisionAnnual=decisionAnnual, decisionData=decisionData)
     dt<-list(titleStrategy = titleStrategy, dynamics=dynamics, HCR=HCR, iterations=iterations, LifeHistoryObj=LifeHistoryObj, LHdev=LHdev, Sdev = Sdev, Ddev=Ddev, TimeAreaObj=TimeAreaObj, HistFisheryObj=HistFisheryObj, ProFisheryObj_list=ProFisheryObj_list,  StrategyObj= StrategyObj, StochasticObj=StochasticObj)
     saveRDS(dt, file=paste(wd, "/", fileName, ".rds", sep=""))
