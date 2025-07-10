@@ -1,5 +1,5 @@
 
-# Parameters of the Operating Model (OM) {#om-pop}
+# Operating Model (OM) {#om-pop}
 
 The OM is comprised of three required objects in S4 format:
 
@@ -12,6 +12,12 @@ Optional:
 - Stochastic object (`StochasticObj`)
 
 Each of these S4 objects contains a specific number of slots, which can be accessed using the `slotNames()` function. These slots are populated within R. The simplest way to start building the OM is to create a new object using the R function `new()` and populate it with the required input information and parameters. The first step, before populating the slots of each object, is to create a new object using the `new()` function.
+
+```{r setup, include=FALSE}
+# Load necessary package
+library(fishSimGTG)
+library(fishSimTools)
+```
 
 ## Time area object
 
@@ -28,9 +34,10 @@ To populate the slots of the `TimeAreaObj` object, the user should start by defi
 ```{r, eval=TRUE, echo=TRUE}
 slotNames(TimeAreaObj)
 ```
+
 ```{r, eval=FALSE, echo=TRUE}
 #getting help
-?`TimeArea-class`  
+?`TimeArea-class` 
 ```
 
 ```{r, eval=TRUE, echo=TRUE}
@@ -42,8 +49,8 @@ TimeAreaObj@iterations = 100
 TimeAreaObj@historicalYears = 10
 TimeAreaObj@historicalBio = 0.5
 TimeAreaObj@historicalBioType = "relB"
-TimeAreaObj@move <- matrix(c(1,0, 0,1), nrow=2, ncol=2, byrow=FALSE)
-TimeAreaObj@historicalEffort<-matrix(1:1, nrow = 10, ncol = 2, byrow = FALSE)
+TimeAreaObj@move = matrix(c(1,0, 0,1), nrow=2, ncol=2, byrow=FALSE)
+TimeAreaObj@historicalEffort = matrix(1:1, nrow = 10, ncol = 2, byrow = FALSE)
 ```
 
 The **FishSimGTG** package allows for accounting for individual variation in growth trajectories by dividing the population into growth-type groups (GTGs), so each age class is divided into a collection of smaller cohorts or GTGs. The `gtg` slot in `TimeAreaObj` represents the number of growth-type groups, with a default value of 13.
@@ -68,14 +75,6 @@ The **FishSimGTG** package allows for accounting for individual variation in gro
 
 The `LifeHistoryObj` is an S4 object of the class `LifeHistory` that holds the description of a life history.
 To create a new object of class `LifeHistory`, use the `new()` function, as follows:
-
-```{r setup, include=FALSE}
-# Load necessary package
-library(devtools)
-library(fishSimGTG)
-library(fishSimTools)
-library(here)
-```
 
 ```{r, eval=TRUE, echo=TRUE}
 LifeHistoryObj <- new("LifeHistory")
@@ -161,7 +160,7 @@ lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj, doPlot = FALSE)
 
 ## Historical fishery object
 
-The `HistFisheryObj` is an S4 object of the class `Fishery` that holds fishery characteristics, including vulnerability, retention, and discard information. In its current form, **FishSimGTG** is specified such that the characteristics defined in the `HistFisheryObj` apply to all areas. Doing so enables rapid calculation of initial stable age distribution within each area. This structure should be interpreted as the state of the resource prior to any spatial management, or alternatively, as homogeneous fishery characteristics across all areas.
+The `HistFisheryObj` is an S4 object of the class `Fishery` that holds fishery characteristics, including vulnerability, retention, and discard information. In its current configuration, the characteristics defined in the `HistFisheryObj` apply to all areas. Doing so enables rapid calculation of initial stable age distribution within each area. This structure should be interpreted as the state of the resource prior to any spatial management, or alternatively, as homogeneous fishery characteristics across all areas.
 
 
 To create a new object of class `Fishery`, use the `new()` function, as follows:
@@ -307,9 +306,9 @@ slotNames(StochasticObj)
 
 To populate the slots of `StochasticObj`, the user should begin by defining a meaningful title (`title`) and specifying the parameters in which they want to include variation.
 
-The slots defined in the `StochasticObj` object create additional inputs and override parameters specified elsewhere (e.g., `LifeHistoryObj`, `HistFisheryObj`, or `TimeAreaObj`), allowing the corresponding model components to become random processes. Values for these components are generated ahead of simulation and retained to ensure reproducibility of results. See documentation of `runProjection()` for details.
+The slots defined in the `StochasticObj` object create additional inputs and override parameters specified elsewhere (e.g., `LifeHistoryObj`, `HistFisheryObj`, or `TimeAreaObj`), allowing the corresponding model components to become random processes. Values for these components are generated ahead of simulation and retained to ensure reproducibility of results.
 
-In the following example, we add uncertainty to `historicalBio`. As state of depletion can be uncertain, initial depletion can be implemented as a range of plausible values, producing slightly different values for each iteration. This is achieved by assignubg a vector of length 2 that contains the lower and upper bounds of a uniform distribution to the slot `StochasticObj@historicalBio`. Doing so will override (replace) the quantity defined in the `TimeAreaObj` object (`TimeArea@historicalBio`). For each iteration, one value is drawn from a uniform distribution. Importantly, `TimeArea@historicalBioType` continues to determine the type of historical biomass state (e.g., 'relB' or 'SPR').
+In the following example, we add uncertainty to `historicalBio`. As state of depletion can be uncertain, initial depletion can be implemented as a range of plausible values, producing slightly different values for each iteration. This is achieved by assigning a vector of length 2 that contains the lower and upper bounds of a uniform distribution to the slot `StochasticObj@historicalBio`. Doing so will override (replace) the quantity defined in the `TimeAreaObj` object (`TimeArea@historicalBio`). For each iteration, one value is drawn from a uniform distribution. Importantly, `TimeArea@historicalBioType` continues to determine the type of historical biomass state (e.g., 'relB' or 'SPR').
 
 ```{r, eval=TRUE, echo=TRUE}
 StochasticObj@title<-"adding unceratinty"
@@ -344,7 +343,3 @@ StochasticObj@histFisheryVul=matrix(c(9,11,0.07,0.13), nrow=2, ncol=2,byrow=FALS
 ```
 
 There are additional slots in the `StochasticObj` object that modify fishery projections (`ProFisheryObj`), which will be described in detail in a separate section.
-
-## Simulating historical dynamics {#lh-sel}
-
-Coming soon...

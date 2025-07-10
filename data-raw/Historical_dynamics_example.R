@@ -3,8 +3,9 @@
 #---------------
 #Example
 #---------------
-library(fishSimGTG)
-library(here)
+devtools::load_all()
+#library(fishSimGTG)
+#library(here)
 
 #----------------------------
 #Create a LifeHistory object
@@ -12,6 +13,7 @@ library(here)
 
 #---Populate LifeHistory object
 #---Contains the life history parameters
+# Populate the life history object
 LifeHistoryObj <- new("LifeHistory")
 LifeHistoryObj@title<-"Hawaiian Uhu - Parrotfish"
 LifeHistoryObj@speciesName<-"Chlorurus perspicillatus"
@@ -19,7 +21,7 @@ LifeHistoryObj@Linf<-53.2
 LifeHistoryObj@K<-0.225
 LifeHistoryObj@t0<- -1.48
 LifeHistoryObj@L50<-35
-LifeHistoryObj@L95<-35*1.15
+LifeHistoryObj@L95delta<-5
 LifeHistoryObj@M<-0.16
 LifeHistoryObj@L_type<-"FL"
 LifeHistoryObj@L_units<-"cm"
@@ -28,8 +30,10 @@ LifeHistoryObj@LW_B<-3.109
 LifeHistoryObj@Steep<-0.6
 LifeHistoryObj@isHermaph<-TRUE
 LifeHistoryObj@H50<-46.2
-LifeHistoryObj@H95<-58
-LifeHistoryObj@recSD<-0 #Run with no rec var'n to see deterministic trends
+LifeHistoryObj@H95delta<-11.8
+LifeHistoryObj@recSD<-0.6
+LifeHistoryObj@recRho<-0
+LifeHistoryObj@R0<-10000
 
 #---Populate a TimeArea object
 #---Contains basic inputs about time and space needed to establish simulation bounds
@@ -46,6 +50,14 @@ TimeAreaObj@historicalBioType = "relB"
 TimeAreaObj@move <- matrix(c(1,0, 0,1), nrow=2, ncol=2, byrow=FALSE)
 TimeAreaObj@historicalEffort<-matrix(1:1, nrow = 50, ncol = 2, byrow = FALSE)
 
+# populate the historical fishery object
+HistFisheryObj<-new("Fishery")
+HistFisheryObj@title<-"Test"
+HistFisheryObj@vulType<-"logistic"
+HistFisheryObj@vulParams<-c(40, 1)
+HistFisheryObj@retType<-"full"
+HistFisheryObj@retMax <- 1
+HistFisheryObj@Dmort <- 0
 
 #---Visualize life history. Does everything make sense?
 #---Optional, create a plot of life history that is useful for reports.
@@ -59,22 +71,6 @@ lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj, wd = here(), imageName = "LifeHist
 #Note that LHwrapper returns all the details of the life history
 lhOut
 
-
-#-----------------------------
-#Setup fishery characteristics
-#-----------------------------
-
-#---Pupulate a Fishery object
-#---Contains selectivity, retention and discard characteristics
-#---Not sure how to set this up? Type ?selWrapper
-HistFisheryObj<-new("Fishery")
-HistFisheryObj@title<-"Example"
-HistFisheryObj@vulType<-"logistic"
-HistFisheryObj@vulParams<-c(40,48) #Approx. knife edge based on input value of 40.1. Must put slightly higher value for second parameter
-HistFisheryObj@retType<-"logistic"
-HistFisheryObj@retParams<-c(45, 45.1)
-HistFisheryObj@retMax <- 1
-HistFisheryObj@Dmort <- 1
 
 #---Visualize fishery vulnerability. Does everything make sense?
 #---Optional, create a plot of life history that is useful for reports.
@@ -99,9 +95,9 @@ runProjection(LifeHistoryObj = LifeHistoryObj,
               TimeAreaObj = TimeAreaObj,
               HistFisheryObj = HistFisheryObj,
               wd = here(),
-              fileName = "Test1",
+              fileName = "HistoricalDy",
               doPlot = TRUE,
-              titleStrategy = "Test1"
+              titleStrategy = "HistoricalDy"
 )
 
 #---What if we change the historical effort trend?

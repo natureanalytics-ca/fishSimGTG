@@ -1,5 +1,5 @@
 
-# Description of the Operating Model (OM) {#om}
+# Technical description {#om}
 
 &nbsp;&nbsp;&nbsp;&nbsp;This section describes the base configuration of the population dynamics equations used in the simulation framework. Please be aware that this configuration can be tailored to specific applications. An operating model is a mathematical representation of the biology of a fish stock, the fishery that operates on the fish stock, and ways in which the data is collected. The operating model should also include a sub-model that reflects how the management regulations are implemented and are adhered to in practice [@punt_management_2016].
 
