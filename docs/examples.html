@@ -243,74 +243,76 @@ div.csl-indent {
 <span id="cb46-2"><a href="examples.html#cb46-2" tabindex="-1"></a><span class="fu">library</span>(fishSimGTG)</span>
 <span id="cb46-3"><a href="examples.html#cb46-3" tabindex="-1"></a><span class="fu">library</span>(fishSimTools)</span>
 <span id="cb46-4"><a href="examples.html#cb46-4" tabindex="-1"></a><span class="fu">library</span>(here)</span></code></pre></div>
-<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="examples.html#cb47-1" tabindex="-1"></a><span class="co"># Populate the life history object</span></span>
-<span id="cb47-2"><a href="examples.html#cb47-2" tabindex="-1"></a>LifeHistoryObj <span class="ot">&lt;-</span> <span class="fu">new</span>(<span class="st">&quot;LifeHistory&quot;</span>)</span>
-<span id="cb47-3"><a href="examples.html#cb47-3" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>title<span class="ot">&lt;-</span><span class="st">&quot;Hawaiian Uhu - Parrotfish&quot;</span></span>
-<span id="cb47-4"><a href="examples.html#cb47-4" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>speciesName<span class="ot">&lt;-</span><span class="st">&quot;Chlorurus perspicillatus&quot;</span></span>
-<span id="cb47-5"><a href="examples.html#cb47-5" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>Linf<span class="ot">&lt;-</span><span class="fl">53.2</span></span>
-<span id="cb47-6"><a href="examples.html#cb47-6" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>K<span class="ot">&lt;-</span><span class="fl">0.225</span></span>
-<span id="cb47-7"><a href="examples.html#cb47-7" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>t0<span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">1.48</span></span>
-<span id="cb47-8"><a href="examples.html#cb47-8" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>L50<span class="ot">&lt;-</span><span class="dv">35</span></span>
-<span id="cb47-9"><a href="examples.html#cb47-9" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>L95delta<span class="ot">&lt;-</span><span class="dv">5</span></span>
-<span id="cb47-10"><a href="examples.html#cb47-10" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>M<span class="ot">&lt;-</span><span class="fl">0.16</span></span>
-<span id="cb47-11"><a href="examples.html#cb47-11" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>L_type<span class="ot">&lt;-</span><span class="st">&quot;FL&quot;</span></span>
-<span id="cb47-12"><a href="examples.html#cb47-12" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>L_units<span class="ot">&lt;-</span><span class="st">&quot;cm&quot;</span></span>
-<span id="cb47-13"><a href="examples.html#cb47-13" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>LW_A<span class="ot">&lt;-</span><span class="fl">0.0136</span></span>
-<span id="cb47-14"><a href="examples.html#cb47-14" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>LW_B<span class="ot">&lt;-</span><span class="fl">3.109</span></span>
-<span id="cb47-15"><a href="examples.html#cb47-15" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>Steep<span class="ot">&lt;-</span><span class="fl">0.6</span></span>
-<span id="cb47-16"><a href="examples.html#cb47-16" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>isHermaph<span class="ot">&lt;-</span><span class="cn">TRUE</span></span>
-<span id="cb47-17"><a href="examples.html#cb47-17" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>H50<span class="ot">&lt;-</span><span class="fl">46.2</span></span>
-<span id="cb47-18"><a href="examples.html#cb47-18" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>H95delta<span class="ot">&lt;-</span><span class="fl">11.8</span></span>
-<span id="cb47-19"><a href="examples.html#cb47-19" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>recSD<span class="ot">&lt;-</span><span class="fl">0.6</span></span>
-<span id="cb47-20"><a href="examples.html#cb47-20" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>recRho<span class="ot">&lt;-</span><span class="dv">0</span></span>
-<span id="cb47-21"><a href="examples.html#cb47-21" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>R0<span class="ot">&lt;-</span><span class="dv">10000</span></span></code></pre></div>
-<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="examples.html#cb48-1" tabindex="-1"></a><span class="co"># populate the historical fishery object</span></span>
-<span id="cb48-2"><a href="examples.html#cb48-2" tabindex="-1"></a>HistFisheryObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;Fishery&quot;</span>)</span>
-<span id="cb48-3"><a href="examples.html#cb48-3" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>title<span class="ot">&lt;-</span><span class="st">&quot;Test&quot;</span></span>
-<span id="cb48-4"><a href="examples.html#cb48-4" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>vulType<span class="ot">&lt;-</span><span class="st">&quot;logistic&quot;</span></span>
-<span id="cb48-5"><a href="examples.html#cb48-5" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>vulParams<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="dv">40</span>, <span class="dv">1</span>)</span>
-<span id="cb48-6"><a href="examples.html#cb48-6" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>retType<span class="ot">&lt;-</span><span class="st">&quot;full&quot;</span></span>
-<span id="cb48-7"><a href="examples.html#cb48-7" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>retMax <span class="ot">&lt;-</span> <span class="dv">1</span></span>
-<span id="cb48-8"><a href="examples.html#cb48-8" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>Dmort <span class="ot">&lt;-</span> <span class="dv">0</span></span></code></pre></div>
-<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="examples.html#cb49-1" tabindex="-1"></a><span class="co">#Populate the time-area object</span></span>
-<span id="cb49-2"><a href="examples.html#cb49-2" tabindex="-1"></a><span class="co">#This setup will be used to produce a single-stock with no movement</span></span>
-<span id="cb49-3"><a href="examples.html#cb49-3" tabindex="-1"></a><span class="co">#fishSimGTG requires a minimum of two areas; however we will treat those areas as a homogeneous fish stock</span></span>
-<span id="cb49-4"><a href="examples.html#cb49-4" tabindex="-1"></a>TimeAreaObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;TimeArea&quot;</span>)</span>
-<span id="cb49-5"><a href="examples.html#cb49-5" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>title <span class="ot">=</span> <span class="st">&quot;Example&quot;</span></span>
-<span id="cb49-6"><a href="examples.html#cb49-6" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>gtg <span class="ot">=</span> <span class="dv">13</span></span>
-<span id="cb49-7"><a href="examples.html#cb49-7" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>areas <span class="ot">=</span> <span class="dv">2</span></span>
-<span id="cb49-8"><a href="examples.html#cb49-8" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>recArea <span class="ot">=</span> <span class="fu">c</span>(<span class="fl">0.99</span>, <span class="fl">0.01</span>)</span>
-<span id="cb49-9"><a href="examples.html#cb49-9" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>iterations <span class="ot">=</span> <span class="dv">3</span></span>
-<span id="cb49-10"><a href="examples.html#cb49-10" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>historicalYears <span class="ot">=</span> <span class="dv">50</span></span>
-<span id="cb49-11"><a href="examples.html#cb49-11" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>historicalBio <span class="ot">=</span> <span class="fl">0.5</span></span>
-<span id="cb49-12"><a href="examples.html#cb49-12" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>historicalBioType <span class="ot">=</span> <span class="st">&quot;relB&quot;</span></span>
-<span id="cb49-13"><a href="examples.html#cb49-13" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>move <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>, <span class="dv">0</span>,<span class="dv">1</span>), <span class="at">nrow=</span><span class="dv">2</span>, <span class="at">ncol=</span><span class="dv">2</span>, <span class="at">byrow=</span><span class="cn">FALSE</span>)</span>
-<span id="cb49-14"><a href="examples.html#cb49-14" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>historicalEffort<span class="ot">&lt;-</span><span class="fu">matrix</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">1</span>, <span class="at">nrow =</span> <span class="dv">50</span>, <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">byrow =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<pre><code>## Warning: package &#39;here&#39; was built under R version 4.4.3</code></pre>
+<pre><code>## here() starts at C:/Users/WilliamHarford/Documents/Cloud/Nature Analytics web apps/Packages and modules/fishSimGTG/docs</code></pre>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="examples.html#cb49-1" tabindex="-1"></a><span class="co"># Populate the life history object</span></span>
+<span id="cb49-2"><a href="examples.html#cb49-2" tabindex="-1"></a>LifeHistoryObj <span class="ot">&lt;-</span> <span class="fu">new</span>(<span class="st">&quot;LifeHistory&quot;</span>)</span>
+<span id="cb49-3"><a href="examples.html#cb49-3" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>title<span class="ot">&lt;-</span><span class="st">&quot;Hawaiian Uhu - Parrotfish&quot;</span></span>
+<span id="cb49-4"><a href="examples.html#cb49-4" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>speciesName<span class="ot">&lt;-</span><span class="st">&quot;Chlorurus perspicillatus&quot;</span></span>
+<span id="cb49-5"><a href="examples.html#cb49-5" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>Linf<span class="ot">&lt;-</span><span class="fl">53.2</span></span>
+<span id="cb49-6"><a href="examples.html#cb49-6" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>K<span class="ot">&lt;-</span><span class="fl">0.225</span></span>
+<span id="cb49-7"><a href="examples.html#cb49-7" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>t0<span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">1.48</span></span>
+<span id="cb49-8"><a href="examples.html#cb49-8" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>L50<span class="ot">&lt;-</span><span class="dv">35</span></span>
+<span id="cb49-9"><a href="examples.html#cb49-9" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>L95delta<span class="ot">&lt;-</span><span class="dv">5</span></span>
+<span id="cb49-10"><a href="examples.html#cb49-10" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>M<span class="ot">&lt;-</span><span class="fl">0.16</span></span>
+<span id="cb49-11"><a href="examples.html#cb49-11" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>L_type<span class="ot">&lt;-</span><span class="st">&quot;FL&quot;</span></span>
+<span id="cb49-12"><a href="examples.html#cb49-12" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>L_units<span class="ot">&lt;-</span><span class="st">&quot;cm&quot;</span></span>
+<span id="cb49-13"><a href="examples.html#cb49-13" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>LW_A<span class="ot">&lt;-</span><span class="fl">0.0136</span></span>
+<span id="cb49-14"><a href="examples.html#cb49-14" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>LW_B<span class="ot">&lt;-</span><span class="fl">3.109</span></span>
+<span id="cb49-15"><a href="examples.html#cb49-15" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>Steep<span class="ot">&lt;-</span><span class="fl">0.6</span></span>
+<span id="cb49-16"><a href="examples.html#cb49-16" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>isHermaph<span class="ot">&lt;-</span><span class="cn">TRUE</span></span>
+<span id="cb49-17"><a href="examples.html#cb49-17" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>H50<span class="ot">&lt;-</span><span class="fl">46.2</span></span>
+<span id="cb49-18"><a href="examples.html#cb49-18" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>H95delta<span class="ot">&lt;-</span><span class="fl">11.8</span></span>
+<span id="cb49-19"><a href="examples.html#cb49-19" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>recSD<span class="ot">&lt;-</span><span class="fl">0.6</span></span>
+<span id="cb49-20"><a href="examples.html#cb49-20" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>recRho<span class="ot">&lt;-</span><span class="dv">0</span></span>
+<span id="cb49-21"><a href="examples.html#cb49-21" tabindex="-1"></a>LifeHistoryObj<span class="sc">@</span>R0<span class="ot">&lt;-</span><span class="dv">10000</span></span></code></pre></div>
+<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="examples.html#cb50-1" tabindex="-1"></a><span class="co"># populate the historical fishery object</span></span>
+<span id="cb50-2"><a href="examples.html#cb50-2" tabindex="-1"></a>HistFisheryObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;Fishery&quot;</span>)</span>
+<span id="cb50-3"><a href="examples.html#cb50-3" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>title<span class="ot">&lt;-</span><span class="st">&quot;Test&quot;</span></span>
+<span id="cb50-4"><a href="examples.html#cb50-4" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>vulType<span class="ot">&lt;-</span><span class="st">&quot;logistic&quot;</span></span>
+<span id="cb50-5"><a href="examples.html#cb50-5" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>vulParams<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="dv">40</span>, <span class="dv">1</span>)</span>
+<span id="cb50-6"><a href="examples.html#cb50-6" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>retType<span class="ot">&lt;-</span><span class="st">&quot;full&quot;</span></span>
+<span id="cb50-7"><a href="examples.html#cb50-7" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>retMax <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb50-8"><a href="examples.html#cb50-8" tabindex="-1"></a>HistFisheryObj<span class="sc">@</span>Dmort <span class="ot">&lt;-</span> <span class="dv">0</span></span></code></pre></div>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="examples.html#cb51-1" tabindex="-1"></a><span class="co">#Populate the time-area object</span></span>
+<span id="cb51-2"><a href="examples.html#cb51-2" tabindex="-1"></a><span class="co">#This setup will be used to produce a single-stock with no movement</span></span>
+<span id="cb51-3"><a href="examples.html#cb51-3" tabindex="-1"></a><span class="co">#fishSimGTG requires a minimum of two areas; however we will treat those areas as a homogeneous fish stock</span></span>
+<span id="cb51-4"><a href="examples.html#cb51-4" tabindex="-1"></a>TimeAreaObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;TimeArea&quot;</span>)</span>
+<span id="cb51-5"><a href="examples.html#cb51-5" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>title <span class="ot">=</span> <span class="st">&quot;Example&quot;</span></span>
+<span id="cb51-6"><a href="examples.html#cb51-6" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>gtg <span class="ot">=</span> <span class="dv">13</span></span>
+<span id="cb51-7"><a href="examples.html#cb51-7" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>areas <span class="ot">=</span> <span class="dv">2</span></span>
+<span id="cb51-8"><a href="examples.html#cb51-8" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>recArea <span class="ot">=</span> <span class="fu">c</span>(<span class="fl">0.99</span>, <span class="fl">0.01</span>)</span>
+<span id="cb51-9"><a href="examples.html#cb51-9" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>iterations <span class="ot">=</span> <span class="dv">3</span></span>
+<span id="cb51-10"><a href="examples.html#cb51-10" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>historicalYears <span class="ot">=</span> <span class="dv">50</span></span>
+<span id="cb51-11"><a href="examples.html#cb51-11" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>historicalBio <span class="ot">=</span> <span class="fl">0.5</span></span>
+<span id="cb51-12"><a href="examples.html#cb51-12" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>historicalBioType <span class="ot">=</span> <span class="st">&quot;relB&quot;</span></span>
+<span id="cb51-13"><a href="examples.html#cb51-13" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>move <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>, <span class="dv">0</span>,<span class="dv">1</span>), <span class="at">nrow=</span><span class="dv">2</span>, <span class="at">ncol=</span><span class="dv">2</span>, <span class="at">byrow=</span><span class="cn">FALSE</span>)</span>
+<span id="cb51-14"><a href="examples.html#cb51-14" tabindex="-1"></a>TimeAreaObj<span class="sc">@</span>historicalEffort<span class="ot">&lt;-</span><span class="fu">matrix</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">1</span>, <span class="at">nrow =</span> <span class="dv">50</span>, <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">byrow =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 <p>The function <code>LHwrapper</code> can be used to verify the paramaterization of the <code>LifeHistoryObj</code> object. Set <code>doPlot</code> to <code>TRUE</code> to produce a plot of life history characteristics.</p>
-<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="examples.html#cb50-1" tabindex="-1"></a><span class="co">#To simply display to the console</span></span>
-<span id="cb50-2"><a href="examples.html#cb50-2" tabindex="-1"></a>lhOut<span class="ot">&lt;-</span><span class="fu">LHwrapper</span>(LifeHistoryObj, TimeAreaObj, <span class="at">doPlot =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="examples.html#cb52-1" tabindex="-1"></a><span class="co">#To simply display to the console</span></span>
+<span id="cb52-2"><a href="examples.html#cb52-2" tabindex="-1"></a>lhOut<span class="ot">&lt;-</span><span class="fu">LHwrapper</span>(LifeHistoryObj, TimeAreaObj, <span class="at">doPlot =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <div class="figure"><span style="display:block;" id="fig:lhgrouper"></span>
 <img src="docs/figures/lhgrouper-1.png" alt="Life history summary." width="2100" />
 <p class="caption">
 Figure 8.1: Life history summary.
 </p>
 </div>
-<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="examples.html#cb51-1" tabindex="-1"></a><span class="co">#To return life history details</span></span>
-<span id="cb51-2"><a href="examples.html#cb51-2" tabindex="-1"></a>lhOut</span></code></pre></div>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="examples.html#cb53-1" tabindex="-1"></a><span class="co">#To return life history details</span></span>
+<span id="cb53-2"><a href="examples.html#cb53-2" tabindex="-1"></a>lhOut</span></code></pre></div>
 <p>The function <code>selWrapper</code> can be used to verify the paramaterization of the <code>FisheryObj</code> object. Set <code>doPlot</code> to <code>TRUE</code> to produce a plot of fishery characteristics.</p>
-<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="examples.html#cb52-1" tabindex="-1"></a>selOut<span class="ot">&lt;-</span><span class="fu">selWrapper</span>(<span class="at">lh =</span> lhOut, TimeAreaObj, <span class="at">FisheryObj =</span> HistFisheryObj, <span class="at">doPlot =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="examples.html#cb54-1" tabindex="-1"></a>selOut<span class="ot">&lt;-</span><span class="fu">selWrapper</span>(<span class="at">lh =</span> lhOut, TimeAreaObj, <span class="at">FisheryObj =</span> HistFisheryObj, <span class="at">doPlot =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <div class="figure"><span style="display:block;" id="fig:selgrouper"></span>
 <img src="docs/figures/selgrouper-1.png" alt="Fishery summary." width="2100" />
 <p class="caption">
 Figure 8.2: Fishery summary.
 </p>
 </div>
-<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="examples.html#cb53-1" tabindex="-1"></a><span class="co">#To return fishery details</span></span>
-<span id="cb53-2"><a href="examples.html#cb53-2" tabindex="-1"></a>selOut</span></code></pre></div>
-<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="examples.html#cb54-1" tabindex="-1"></a><span class="co">#Populate the optional Stochastic object. </span></span>
-<span id="cb54-2"><a href="examples.html#cb54-2" tabindex="-1"></a><span class="co">#Here, initial biomass range is set. A value for each iteration is drawn from a uniform distribution</span></span>
-<span id="cb54-3"><a href="examples.html#cb54-3" tabindex="-1"></a>StochasticObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;Stochastic&quot;</span>)</span>
-<span id="cb54-4"><a href="examples.html#cb54-4" tabindex="-1"></a>StochasticObj<span class="sc">@</span>historicalBio <span class="ot">=</span> <span class="fu">c</span>(<span class="fl">0.3</span>, <span class="fl">0.6</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="examples.html#cb55-1" tabindex="-1"></a><span class="co">#To return fishery details</span></span>
+<span id="cb55-2"><a href="examples.html#cb55-2" tabindex="-1"></a>selOut</span></code></pre></div>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="examples.html#cb56-1" tabindex="-1"></a><span class="co">#Populate the optional Stochastic object. </span></span>
+<span id="cb56-2"><a href="examples.html#cb56-2" tabindex="-1"></a><span class="co">#Here, initial biomass range is set. A value for each iteration is drawn from a uniform distribution</span></span>
+<span id="cb56-3"><a href="examples.html#cb56-3" tabindex="-1"></a>StochasticObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;Stochastic&quot;</span>)</span>
+<span id="cb56-4"><a href="examples.html#cb56-4" tabindex="-1"></a>StochasticObj<span class="sc">@</span>historicalBio <span class="ot">=</span> <span class="fu">c</span>(<span class="fl">0.3</span>, <span class="fl">0.6</span>)</span></code></pre></div>
 <p>With the following objects specified, historical dynamics are simulated using the function <code>runProjection</code>.</p>
 <ul>
 <li>Life history object (<code>LifeHistoryObj</code>)</li>
@@ -319,16 +321,16 @@ Figure 8.2: Fishery summary.
 <li>Stochastic object (<code>StochasticObj</code>)</li>
 </ul>
 <p>Notice that only historical dynamics are simulated when MP objects <code>StrategyObj</code> and <code>ProFisheryObj_list</code> are omitted from <code>runProjection</code>. Below, the diagnostic plots produced by <code>runProjection</code> illustrate patterns in the historical dynamics.</p>
-<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="examples.html#cb55-1" tabindex="-1"></a><span class="co">#To return life history details</span></span>
-<span id="cb55-2"><a href="examples.html#cb55-2" tabindex="-1"></a><span class="fu">runProjection</span>(<span class="at">LifeHistoryObj =</span> LifeHistoryObj,</span>
-<span id="cb55-3"><a href="examples.html#cb55-3" tabindex="-1"></a>              <span class="at">TimeAreaObj =</span> TimeAreaObj,</span>
-<span id="cb55-4"><a href="examples.html#cb55-4" tabindex="-1"></a>              <span class="at">HistFisheryObj =</span> HistFisheryObj,</span>
-<span id="cb55-5"><a href="examples.html#cb55-5" tabindex="-1"></a>              <span class="at">StochasticObj =</span> StochasticObj,</span>
-<span id="cb55-6"><a href="examples.html#cb55-6" tabindex="-1"></a>              <span class="at">wd =</span> <span class="fu">here</span>(<span class="st">&#39;data-test&#39;</span>, <span class="st">&#39;Historical&#39;</span>),</span>
-<span id="cb55-7"><a href="examples.html#cb55-7" tabindex="-1"></a>              <span class="at">fileName =</span> <span class="st">&quot;HistoricalDy&quot;</span>,</span>
-<span id="cb55-8"><a href="examples.html#cb55-8" tabindex="-1"></a>              <span class="at">doPlot =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb55-9"><a href="examples.html#cb55-9" tabindex="-1"></a>              <span class="at">titleStrategy =</span> <span class="st">&quot;HistoricalDy&quot;</span></span>
-<span id="cb55-10"><a href="examples.html#cb55-10" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="examples.html#cb57-1" tabindex="-1"></a><span class="co">#To return life history details</span></span>
+<span id="cb57-2"><a href="examples.html#cb57-2" tabindex="-1"></a><span class="fu">runProjection</span>(<span class="at">LifeHistoryObj =</span> LifeHistoryObj,</span>
+<span id="cb57-3"><a href="examples.html#cb57-3" tabindex="-1"></a>              <span class="at">TimeAreaObj =</span> TimeAreaObj,</span>
+<span id="cb57-4"><a href="examples.html#cb57-4" tabindex="-1"></a>              <span class="at">HistFisheryObj =</span> HistFisheryObj,</span>
+<span id="cb57-5"><a href="examples.html#cb57-5" tabindex="-1"></a>              <span class="at">StochasticObj =</span> StochasticObj,</span>
+<span id="cb57-6"><a href="examples.html#cb57-6" tabindex="-1"></a>              <span class="at">wd =</span> <span class="fu">here</span>(<span class="st">&#39;data-test&#39;</span>, <span class="st">&#39;Historical&#39;</span>),</span>
+<span id="cb57-7"><a href="examples.html#cb57-7" tabindex="-1"></a>              <span class="at">fileName =</span> <span class="st">&quot;HistoricalDy&quot;</span>,</span>
+<span id="cb57-8"><a href="examples.html#cb57-8" tabindex="-1"></a>              <span class="at">doPlot =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb57-9"><a href="examples.html#cb57-9" tabindex="-1"></a>              <span class="at">titleStrategy =</span> <span class="st">&quot;HistoricalDy&quot;</span></span>
+<span id="cb57-10"><a href="examples.html#cb57-10" tabindex="-1"></a>)</span></code></pre></div>
 <pre><code>## [1] &quot;\n  #---------------\n  #Initial checks\n  #---------------\n  &quot;
 ## [1] &quot;Uncertainty in initial biomass: 0.3 to 0.6 relB created.&quot;
 ## [1] &quot;Uncertainty in life history parameters: none&quot;
@@ -337,7 +339,7 @@ Figure 8.2: Fishery summary.
 ## [1] &quot;Area 2 uncertainty in projection fishery selectivity parameters: none&quot;</code></pre>
 <pre><code>## [1] &quot;Simulation time in minutes: &quot;
 ##        user      system     elapsed 
-## 0.023666667 0.003666667 0.057833333</code></pre>
+## 0.023000000 0.002333333 0.031000000</code></pre>
 <div class="figure"><span style="display:block;" id="fig:unnamed-chunk-46"></span>
 <img src="data-test/Historical/HistoricalDy_SB_Area.png" alt="Spawning biomass by area" height="50%" />
 <p class="caption">
@@ -365,25 +367,25 @@ Figure 8.6: Relative spawning stock biomass, in aggregate across areas
 </div>
 <div id="fishery-projections" class="section level2 hasAnchor" number="8.2">
 <h2><span class="header-section-number">8.2</span> Fishery projections<a href="examples.html#fishery-projections" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="examples.html#cb58-1" tabindex="-1"></a>ProFisheryObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;Fishery&quot;</span>)</span>
-<span id="cb58-2"><a href="examples.html#cb58-2" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>title<span class="ot">&lt;-</span><span class="st">&quot;Test&quot;</span></span>
-<span id="cb58-3"><a href="examples.html#cb58-3" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>vulType<span class="ot">&lt;-</span><span class="st">&quot;logistic&quot;</span></span>
-<span id="cb58-4"><a href="examples.html#cb58-4" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>vulParams<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="dv">19</span>, <span class="fl">0.9</span>) <span class="co"># excel fishery-base row3 (is proj?)</span></span>
-<span id="cb58-5"><a href="examples.html#cb58-5" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>retType<span class="ot">&lt;-</span><span class="st">&quot;logistic&quot;</span></span>
-<span id="cb58-6"><a href="examples.html#cb58-6" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>retParams <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">22</span>, <span class="fl">0.1</span>)<span class="co">#excel fishery-base row3 (is proj?)</span></span>
-<span id="cb58-7"><a href="examples.html#cb58-7" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>retMax <span class="ot">&lt;-</span> <span class="dv">1</span></span>
-<span id="cb58-8"><a href="examples.html#cb58-8" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>Dmort <span class="ot">&lt;-</span> <span class="dv">0</span></span></code></pre></div>
+<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="examples.html#cb60-1" tabindex="-1"></a>ProFisheryObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;Fishery&quot;</span>)</span>
+<span id="cb60-2"><a href="examples.html#cb60-2" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>title<span class="ot">&lt;-</span><span class="st">&quot;Test&quot;</span></span>
+<span id="cb60-3"><a href="examples.html#cb60-3" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>vulType<span class="ot">&lt;-</span><span class="st">&quot;logistic&quot;</span></span>
+<span id="cb60-4"><a href="examples.html#cb60-4" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>vulParams<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="dv">19</span>, <span class="fl">0.9</span>) <span class="co"># excel fishery-base row3 (is proj?)</span></span>
+<span id="cb60-5"><a href="examples.html#cb60-5" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>retType<span class="ot">&lt;-</span><span class="st">&quot;logistic&quot;</span></span>
+<span id="cb60-6"><a href="examples.html#cb60-6" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>retParams <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">22</span>, <span class="fl">0.1</span>)<span class="co">#excel fishery-base row3 (is proj?)</span></span>
+<span id="cb60-7"><a href="examples.html#cb60-7" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>retMax <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb60-8"><a href="examples.html#cb60-8" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>Dmort <span class="ot">&lt;-</span> <span class="dv">0</span></span></code></pre></div>
 <div id="the-management-strategy" class="section level3 hasAnchor" number="8.2.1">
 <h3><span class="header-section-number">8.2.1</span> The management strategy<a href="examples.html#the-management-strategy" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>Implementing a 25% effort reduction</p>
-<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb59-1"><a href="examples.html#cb59-1" tabindex="-1"></a>StrategyObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;Strategy&quot;</span>)</span>
-<span id="cb59-2"><a href="examples.html#cb59-2" tabindex="-1"></a>StrategyObj<span class="sc">@</span>projectionYears <span class="ot">&lt;-</span> <span class="dv">50</span></span>
-<span id="cb59-3"><a href="examples.html#cb59-3" tabindex="-1"></a>StrategyObj<span class="sc">@</span>projectionName<span class="ot">&lt;-</span><span class="st">&quot;projectionStrategy&quot;</span></span>
-<span id="cb59-4"><a href="examples.html#cb59-4" tabindex="-1"></a><span class="co"># I took effort from row 3 corresponding to strategy 25% red</span></span>
-<span id="cb59-5"><a href="examples.html#cb59-5" tabindex="-1"></a>eff_vector<span class="ot">=</span><span class="fu">scan</span>(<span class="at">text=</span>(<span class="st">&quot;0    0   0   0   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1&quot;</span>))</span>
-<span id="cb59-6"><a href="examples.html#cb59-6" tabindex="-1"></a></span>
-<span id="cb59-7"><a href="examples.html#cb59-7" tabindex="-1"></a><span class="co"># StrategyObj@projectionParams&lt;-list(bag = c(-99    -99 -99 -99</span></span>
-<span id="cb59-8"><a href="examples.html#cb59-8" tabindex="-1"></a><span class="co"># ), effort = matrix(eff_vector, nrow=50, ncol=4, byrow = FALSE), CPUE = c(1,2), CPUEtype = &#39;retN&#39;) # CPUE is strategy excel proj_CPUE?</span></span></code></pre></div>
+<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="examples.html#cb61-1" tabindex="-1"></a>StrategyObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;Strategy&quot;</span>)</span>
+<span id="cb61-2"><a href="examples.html#cb61-2" tabindex="-1"></a>StrategyObj<span class="sc">@</span>projectionYears <span class="ot">&lt;-</span> <span class="dv">50</span></span>
+<span id="cb61-3"><a href="examples.html#cb61-3" tabindex="-1"></a>StrategyObj<span class="sc">@</span>projectionName<span class="ot">&lt;-</span><span class="st">&quot;projectionStrategy&quot;</span></span>
+<span id="cb61-4"><a href="examples.html#cb61-4" tabindex="-1"></a><span class="co"># I took effort from row 3 corresponding to strategy 25% red</span></span>
+<span id="cb61-5"><a href="examples.html#cb61-5" tabindex="-1"></a>eff_vector<span class="ot">=</span><span class="fu">scan</span>(<span class="at">text=</span>(<span class="st">&quot;0    0   0   0   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1.125   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1&quot;</span>))</span>
+<span id="cb61-6"><a href="examples.html#cb61-6" tabindex="-1"></a></span>
+<span id="cb61-7"><a href="examples.html#cb61-7" tabindex="-1"></a><span class="co"># StrategyObj@projectionParams&lt;-list(bag = c(-99    -99 -99 -99</span></span>
+<span id="cb61-8"><a href="examples.html#cb61-8" tabindex="-1"></a><span class="co"># ), effort = matrix(eff_vector, nrow=50, ncol=4, byrow = FALSE), CPUE = c(1,2), CPUEtype = &#39;retN&#39;) # CPUE is strategy excel proj_CPUE?</span></span></code></pre></div>
 </div>
 <div id="examples-projection" class="section level3 hasAnchor" number="8.2.2">
 <h3><span class="header-section-number">8.2.2</span> Projection modeling<a href="examples.html#examples-projection" class="anchor-section" aria-label="Anchor link to header"></a></h3>

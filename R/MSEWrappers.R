@@ -828,7 +828,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       #---------------------
 
       #SSB
-      png(filename=paste0(wd, "/", fileName, "_SB_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
+      png(filename=paste0(wd, "/", fileName, "_SB_Area.png"), width=9, height=3.5*ceiling(dt$TimeAreaObj@areas/2), units="in", res=96, bg="white",pointsize=12)
       par(mfrow=c(ceiling(dt$TimeAreaObj@areas/2),2), mar=c(4,4,3,1))
       for(m in 1:dt$TimeAreaObj@areas) {
         plot(dt$dynamics$SB[,1,m], type="l", las=1, ylab="", xlab = "Year", col=rb[1], ylim=c(min(dt$dynamics$SB[,,m]), max(dt$dynamics$SB[,,m])), main = "Spawning biomass")
@@ -843,7 +843,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
 
       #Catch
-      png(filename=paste0(wd, "/", fileName, "_catchB_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
+      png(filename=paste0(wd, "/", fileName, "_catchB_Area.png"), width=9, height=3.5*ceiling(dt$TimeAreaObj@areas/2), units="in", res=96, bg="white",pointsize=12)
       par(mfrow=c(ceiling(dt$TimeAreaObj@areas/2),2), mar=c(4,4,3,1))
       for(m in 1:dt$TimeAreaObj@areas) {
         plot(dt$dynamics$catchB[,1,m], type="l", las=1, ylab="", xlab = "Year", col=rb[1], ylim=c(min(dt$dynamics$catchB[,,m]), max(dt$dynamics$catchB[,,m])), main = "catch in weight")
@@ -857,7 +857,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       dev.off()
 
       #F
-      png(filename=paste0(wd, "/", fileName, "_F_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
+      png(filename=paste0(wd, "/", fileName, "_F_Area.png"), width=9, height=3.5*ceiling(dt$TimeAreaObj@areas/2), units="in", res=96, bg="white",pointsize=12)
       par(mfrow=c(ceiling(dt$TimeAreaObj@areas/2),2), mar=c(4,4,3,1))
       for(m in 1:dt$TimeAreaObj@areas) {
         plot(dt$dynamics$Ftotal[,1,m], type="l", las=1, ylab="", xlab = "Year", col=rb[1], ylim=c(min(dt$dynamics$Ftotal[,,m]), max(dt$dynamics$Ftotal[,,m])), main = "Fishing mortality")
@@ -872,7 +872,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
 
       #rel change in SSB
-      png(filename=paste0(wd, "/", fileName, "_SBchange_Area.png"), width=9, height=7, units="in", res=300, bg="white",pointsize=12)
+      png(filename=paste0(wd, "/", fileName, "_SBchange_Area.png"), width=9, height=3.5*ceiling(dt$TimeAreaObj@areas/2), units="in", res=96, bg="white",pointsize=12)
       par(mfrow=c(ceiling(dt$TimeAreaObj@areas/2),2), mar=c(4,4,3,1))
       for(m in 1:dt$TimeAreaObj@areas) {
         plot(dt$dynamics$SB[,1,m]/dt$dynamics$SB[1,1,m], type="l", las=1, ylab="", col=rb[1], ylim=c(0,2), main = "Relative spawning biomass")
