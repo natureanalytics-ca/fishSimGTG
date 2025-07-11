@@ -290,3 +290,19 @@ setClass("LBSPRarray",
          )
 )
 
+
+#-----------------------
+# obs model indices
+#-----------------------
+
+setClass("Index",
+         representation(
+           indexID = "character",
+           title = "character",
+           useWeight = "logical",         # TRUE=biomass, FALSE=numbers
+           survey_design = "list",
+           selectivity_hist_list = "list",      # Historical selectivity objects (FI only)
+           selectivity_proj_list = "list"       # Projection selectivity objects (FI only)
+
+         )
+)
