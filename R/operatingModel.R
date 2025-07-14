@@ -1672,7 +1672,7 @@ plotIndex_simple <- function(index_result, save_plot = FALSE,
 
 
 # modifications
-calculate_single_Index  <- function(simulation_result, IndexObj){
+calculate_single_Index  <- function(IndexObj){
 
   # define the dimensions (to get the structure of the simulation)
   years <- dim(VB)[1]       #total years hist+future
