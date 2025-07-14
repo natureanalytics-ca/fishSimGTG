@@ -1195,6 +1195,13 @@ MoveMat<-function(Surv_in, Move_in, area_in){
 # Obs model indices
 #-----------------------------------------
 
+#Roxygen header
+#'Observation models function for testing
+#'
+#' @param simulation_result Output from runProjection
+#' @param IndexObj A Index object
+#' @export
+
 calculateIndex  <- function(simulation_result, IndexObj){
 
   # define the dimensions (to get the structure of the simulation)
@@ -1596,6 +1603,14 @@ calculateIndex  <- function(simulation_result, IndexObj){
 #---Step 4: simple plotting function to explore the sim index---#
 #---------------------------------------------------------------#
 
+#Roxygen header
+#'Plot function for observation models for testing
+#'
+#' @param index_result Output from index Object
+#' @param save_plot saving plot
+#' @param filename file name
+#' @export
+
 plotIndex_simple <- function(index_result, save_plot = FALSE,
                              filename = "index_simple.jpeg") {
 
@@ -1672,6 +1687,12 @@ plotIndex_simple <- function(index_result, save_plot = FALSE,
 
 
 # modifications
+#Roxygen header
+#'Function for integrating observation models
+#'
+#' @param IndexObj A Index object
+#' @export
+
 calculate_single_Index  <- function(IndexObj){
 
   # define the dimensions (to get the structure of the simulation)

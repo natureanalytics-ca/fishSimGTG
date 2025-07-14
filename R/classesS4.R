@@ -294,6 +294,11 @@ setClass("LBSPRarray",
 #-----------------------
 # obs model indices
 #-----------------------
+#Roxygen header
+#'Index object
+#'
+#'An S4 object that holds the output of Observation models.
+#' @importFrom methods new
 
 setClass("Index",
          representation(
