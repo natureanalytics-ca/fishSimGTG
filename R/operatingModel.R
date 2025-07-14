@@ -1881,8 +1881,8 @@ calculate_single_Index  <- function(simulation_result, IndexObj){
 
 
     #loop through each iterations/ years combination
-    for(iter in 1:iterations) {
-      for(year in 1:years) {
+    #for(iter in 1:iterations) {
+      #for(year in 1:years) {
 
         #check if CPUE data exists in this year
         #only calculates CPUE/Surveys for years where data is collected
@@ -2065,10 +2065,10 @@ calculate_single_Index  <- function(simulation_result, IndexObj){
           observation_return[[paste0(index_name, "_selectivity_hist_idx")]] <- if(design$indextype == "FI") design$selectivity_hist_idx else NA
           observation_return[[paste0(index_name, "_selectivity_proj_idx")]] <- if(design$indextype == "FI") design$selectivity_proj_idx else NA
         }
-      } # end year
+      #} # end year
       return(observation_return)
     }
-  } # end iteration
+  #} # end iteration
 } # close the fucntion
 
       #End of the fucntion
