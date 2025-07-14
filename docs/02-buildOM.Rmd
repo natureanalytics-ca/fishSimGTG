@@ -343,3 +343,156 @@ StochasticObj@histFisheryVul=matrix(c(9,11,0.07,0.13), nrow=2, ncol=2,byrow=FALS
 ```
 
 There are additional slots in the `StochasticObj` object that modify fishery projections (`ProFisheryObj`), which will be described in detail in a separate section.
+
+## Initial conditions
+
+&nbsp;&nbsp;&nbsp;&nbsp;This modeling framework was developed to create historical dynamics of fish stocks that begin (i.e., year 0) in a fished state, meaning that fishing mortality (and consequently fishing effort) are greater than zero in the initial equilibrium year (year 0). Thus, the modeling framework is not suitable for circumstances for initializing the model in an unfished or pre-fishing state. Accordingly, initial depletion (spawning biomass relative to unfished spawning biomass) should always be less than 1.0.  An alternative formulation is available where initial ‘depletion’ can instead be specified as initial Spawning Potential Ratio (SPR). SPR is spawning biomass per recruit relative to unfished spawning biomass per recruit). Subsequently, the population is initialized as follows. First, equilibrium age-structure is determined for the given depletion or SPR level assuming area-specific recruitment fractions, \(\rho_i\), but no movement, resulting in an equilibrium fishing mortality rate and equilibrium abundance scaled relative to the specified \(R_0\). Second, a burn-in period is used to project the population forward for \(A\)x4 years at the estimated equilibrium fishing mortality rate, allowing a stable age distribution between areas to be obtained through migration.
+
+## Historical dynamics
+
+This example illustrates specification of an operating model (OM) and simulation of historical dynamics.
+
+```{r, eval=TRUE, echo=TRUE}
+# Load necessary package
+library(fishSimGTG)
+library(fishSimTools)
+library(here)
+```
+
+### Populate the life history object
+
+```{r, eval=TRUE, echo=TRUE}
+
+LifeHistoryObj <- new("LifeHistory")
+LifeHistoryObj@title<-"Hawaiian Uhu - Parrotfish"
+LifeHistoryObj@speciesName<-"Chlorurus perspicillatus"
+LifeHistoryObj@Linf<-53.2
+LifeHistoryObj@K<-0.225
+LifeHistoryObj@t0<- -1.48
+LifeHistoryObj@L50<-35
+LifeHistoryObj@L95delta<-5
+LifeHistoryObj@M<-0.16
+LifeHistoryObj@L_type<-"FL"
+LifeHistoryObj@L_units<-"cm"
+LifeHistoryObj@LW_A<-0.0136
+LifeHistoryObj@LW_B<-3.109
+LifeHistoryObj@Steep<-0.6
+LifeHistoryObj@isHermaph<-TRUE
+LifeHistoryObj@H50<-46.2
+LifeHistoryObj@H95delta<-11.8
+LifeHistoryObj@recSD<-0.6
+LifeHistoryObj@recRho<-0
+LifeHistoryObj@R0<-10000
+```
+
+### Populate the historical fishery object
+
+```{r, eval=TRUE, echo=TRUE}
+
+HistFisheryObj<-new("Fishery")
+HistFisheryObj@title<-"Test"
+HistFisheryObj@vulType<-"logistic"
+HistFisheryObj@vulParams<-c(40, 1)
+HistFisheryObj@retType<-"full"
+HistFisheryObj@retMax <- 1
+HistFisheryObj@Dmort <- 0
+```
+
+### Populate the time-area object
+
+```{r, eval=TRUE, echo=TRUE}
+
+#This setup will be used to produce a single-stock with no movement.
+#fishSimGTG requires specifying a minimum of two areas. 
+#However, we will treat those areas as a homogeneous fish stock by applying the same F to each area (see TimeAreaObj@historicalEffort)
+
+TimeAreaObj<-new("TimeArea")
+TimeAreaObj@title = "Example"
+TimeAreaObj@gtg = 13
+TimeAreaObj@areas = 2
+TimeAreaObj@recArea = c(0.99, 0.01)
+TimeAreaObj@iterations = 3
+TimeAreaObj@historicalYears = 50
+TimeAreaObj@historicalBio = 0.5
+TimeAreaObj@historicalBioType = "relB"
+TimeAreaObj@move <- matrix(c(1,0, 0,1), nrow=2, ncol=2, byrow=FALSE)
+TimeAreaObj@historicalEffort<-matrix(1:1, nrow = 50, ncol = 2, byrow = FALSE)
+
+```
+
+### Review life history characteristics
+
+The function `LHwrapper` can be used to verify the paramaterization of the `LifeHistoryObj` object. Set `doPlot` to `TRUE` to produce a plot of life history characteristics. 
+
+```{r lhgrouper, eval=TRUE, echo=TRUE, fig.cap= "Life history summary."}
+#To simply display to the console
+lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj, doPlot = TRUE)
+```
+
+```{r, eval=FALSE, echo=TRUE}
+#To return life history details
+lhOut
+```
+
+### Review fishery characteristics
+
+The function `selWrapper` can be used to verify the paramaterization of the `FisheryObj` object. Set `doPlot` to `TRUE` to produce a plot of fishery characteristics. 
+
+```{r selgrouper, eval=TRUE, echo=TRUE, fig.cap= "Fishery summary."}
+selOut<-selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = TRUE)
+```
+
+```{r, eval=FALSE, echo=TRUE}
+#To return fishery details
+selOut
+```
+
+### Populate optional key uncertainties
+
+```{r, eval=TRUE, echo=TRUE}
+#Populate the optional Stochastic object. 
+#Here, initial biomass range is set. A value for each iteration is drawn from a uniform distribution
+StochasticObj<-new("Stochastic")
+StochasticObj@historicalBio = c(0.3, 0.6)
+``` 
+
+### Generate historical dynamics 
+
+With the following objects specified, historical dynamics are simulated using the function `runProjection` (See Section \@ref(mse)).
+
+- Life history object (`LifeHistoryObj`)
+- Historical fishery object (`HistFisheryObj`)
+- Time-area object (`TimeAreaObj`)
+- (optional) Stochastic object (`StochasticObj`)
+
+Notice that only historical dynamics are simulated when MP objects `StrategyObj` and `ProFisheryObj_list` are omitted from `runProjection`. Below, the diagnostic plots produced by `runProjection` illustrate patterns in the historical dynamics.
+
+```{r, eval=TRUE, echo=TRUE}
+#To return life history details
+runProjection(LifeHistoryObj = LifeHistoryObj,
+              TimeAreaObj = TimeAreaObj,
+              HistFisheryObj = HistFisheryObj,
+              StochasticObj = StochasticObj,
+              wd = here('data-test', 'Historical'),
+              fileName = "HistoricalDy",
+              doPlot = TRUE,
+              titleStrategy = "HistoricalDy"
+)
+```
+
+```{r, fig.cap="Spawning biomass by area", echo=FALSE}
+knitr::include_graphics("data-test/Historical/HistoricalDy_SB_Area.png")
+```
+
+```{r, fig.cap="Catch biomass by area", echo=FALSE, out.height="50%"}
+knitr::include_graphics("data-test/Historical/HistoricalDy_catchB_Area.png")
+```
+
+```{r, fig.cap="Fishing mortality by area- Higher_option2", echo=FALSE, out.width="100%"}
+knitr::include_graphics("data-test/Historical/HistoricalDy_F_Area.png")
+```
+
+```{r, fig.cap="Relative spawning stock biomass, in aggregate across areas", echo=FALSE, out.width="100%"}
+knitr::include_graphics("data-test/Historical/HistoricalDy_SBrel.png")
+```
+

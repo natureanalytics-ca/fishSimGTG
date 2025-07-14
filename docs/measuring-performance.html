@@ -28,7 +28,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   
-<link rel="prev" href="management-strategy-evaluation.html"/>
+<link rel="prev" href="mse.html"/>
 <link rel="next" href="examples.html"/>
 <script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
@@ -169,10 +169,9 @@ div.csl-indent {
 <ul>
 <li class="chapter" data-level="2.1" data-path="om.html"><a href="om.html#population-dynamics"><i class="fa fa-check"></i><b>2.1</b> Population dynamics</a></li>
 <li class="chapter" data-level="2.2" data-path="om.html"><a href="om.html#life-history"><i class="fa fa-check"></i><b>2.2</b> Life history</a></li>
-<li class="chapter" data-level="2.3" data-path="om.html"><a href="om.html#initial-conditions"><i class="fa fa-check"></i><b>2.3</b> Initial conditions</a></li>
-<li class="chapter" data-level="2.4" data-path="om.html"><a href="om.html#fishery-dynamics"><i class="fa fa-check"></i><b>2.4</b> Fishery dynamics</a></li>
-<li class="chapter" data-level="2.5" data-path="om.html"><a href="om.html#observation-and-monitoring"><i class="fa fa-check"></i><b>2.5</b> Observation and monitoring</a></li>
-<li class="chapter" data-level="2.6" data-path="om.html"><a href="om.html#growth-type-group"><i class="fa fa-check"></i><b>2.6</b> Growth-type group</a></li>
+<li class="chapter" data-level="2.3" data-path="om.html"><a href="om.html#fishery-dynamics"><i class="fa fa-check"></i><b>2.3</b> Fishery dynamics</a></li>
+<li class="chapter" data-level="2.4" data-path="om.html"><a href="om.html#observation-and-monitoring"><i class="fa fa-check"></i><b>2.4</b> Observation and monitoring</a></li>
+<li class="chapter" data-level="2.5" data-path="om.html"><a href="om.html#growth-type-group"><i class="fa fa-check"></i><b>2.5</b> Growth-type group</a></li>
 </ul></li>
 <li class="chapter" data-level="3" data-path="om-pop.html"><a href="om-pop.html"><i class="fa fa-check"></i><b>3</b> Operating Model (OM)</a>
 <ul>
@@ -190,6 +189,17 @@ div.csl-indent {
 <li class="chapter" data-level="3.4.1" data-path="om-pop.html"><a href="om-pop.html#uncertainty-in-life-history"><i class="fa fa-check"></i><b>3.4.1</b> Uncertainty in life history</a></li>
 <li class="chapter" data-level="3.4.2" data-path="om-pop.html"><a href="om-pop.html#uncertainty-in-the-historical-fishery"><i class="fa fa-check"></i><b>3.4.2</b> Uncertainty in the historical fishery</a></li>
 </ul></li>
+<li class="chapter" data-level="3.5" data-path="om-pop.html"><a href="om-pop.html#initial-conditions"><i class="fa fa-check"></i><b>3.5</b> Initial conditions</a></li>
+<li class="chapter" data-level="3.6" data-path="om-pop.html"><a href="om-pop.html#historical-dynamics"><i class="fa fa-check"></i><b>3.6</b> Historical dynamics</a>
+<ul>
+<li class="chapter" data-level="3.6.1" data-path="om-pop.html"><a href="om-pop.html#populate-the-life-history-object"><i class="fa fa-check"></i><b>3.6.1</b> Populate the life history object</a></li>
+<li class="chapter" data-level="3.6.2" data-path="om-pop.html"><a href="om-pop.html#populate-the-historical-fishery-object"><i class="fa fa-check"></i><b>3.6.2</b> Populate the historical fishery object</a></li>
+<li class="chapter" data-level="3.6.3" data-path="om-pop.html"><a href="om-pop.html#populate-the-time-area-object"><i class="fa fa-check"></i><b>3.6.3</b> Populate the time-area object</a></li>
+<li class="chapter" data-level="3.6.4" data-path="om-pop.html"><a href="om-pop.html#review-life-history-characteristics"><i class="fa fa-check"></i><b>3.6.4</b> Review life history characteristics</a></li>
+<li class="chapter" data-level="3.6.5" data-path="om-pop.html"><a href="om-pop.html#review-fishery-characteristics"><i class="fa fa-check"></i><b>3.6.5</b> Review fishery characteristics</a></li>
+<li class="chapter" data-level="3.6.6" data-path="om-pop.html"><a href="om-pop.html#populate-optional-key-uncertainties"><i class="fa fa-check"></i><b>3.6.6</b> Populate optional key uncertainties</a></li>
+<li class="chapter" data-level="3.6.7" data-path="om-pop.html"><a href="om-pop.html#generate-historical-dynamics"><i class="fa fa-check"></i><b>3.6.7</b> Generate historical dynamics</a></li>
+</ul></li>
 </ul></li>
 <li class="chapter" data-level="4" data-path="observation-sub-model.html"><a href="observation-sub-model.html"><i class="fa fa-check"></i><b>4</b> Observation sub-model</a></li>
 <li class="chapter" data-level="5" data-path="management-procedure-mp.html"><a href="management-procedure-mp.html"><i class="fa fa-check"></i><b>5</b> Management Procedure (MP)</a>
@@ -201,16 +211,23 @@ div.csl-indent {
 <li class="chapter" data-level="5.2.2" data-path="management-procedure-mp.html"><a href="management-procedure-mp.html#uncertainty-in-the-projection-fishery"><i class="fa fa-check"></i><b>5.2.2</b> Uncertainty in the projection fishery</a></li>
 </ul></li>
 <li class="chapter" data-level="5.3" data-path="management-procedure-mp.html"><a href="management-procedure-mp.html#mp-template"><i class="fa fa-check"></i><b>5.3</b> MP Template</a></li>
+<li class="chapter" data-level="5.4" data-path="management-procedure-mp.html"><a href="management-procedure-mp.html#mp-lib"><i class="fa fa-check"></i><b>5.4</b> MP library</a></li>
 </ul></li>
-<li class="chapter" data-level="6" data-path="management-strategy-evaluation.html"><a href="management-strategy-evaluation.html"><i class="fa fa-check"></i><b>6</b> Management strategy evaluation</a></li>
+<li class="chapter" data-level="6" data-path="mse.html"><a href="mse.html"><i class="fa fa-check"></i><b>6</b> Management strategy evaluation</a></li>
 <li class="chapter" data-level="7" data-path="measuring-performance.html"><a href="measuring-performance.html"><i class="fa fa-check"></i><b>7</b> Measuring performance</a></li>
 <li class="chapter" data-level="8" data-path="examples.html"><a href="examples.html"><i class="fa fa-check"></i><b>8</b> Examples</a>
 <ul>
-<li class="chapter" data-level="8.1" data-path="examples.html"><a href="examples.html#historical-dynamics"><i class="fa fa-check"></i><b>8.1</b> Historical dynamics</a></li>
-<li class="chapter" data-level="8.2" data-path="examples.html"><a href="examples.html#fishery-projections"><i class="fa fa-check"></i><b>8.2</b> Fishery projections</a>
+<li class="chapter" data-level="8.1" data-path="examples.html"><a href="examples.html#examples-projection"><i class="fa fa-check"></i><b>8.1</b> Projection modeling</a>
 <ul>
-<li class="chapter" data-level="8.2.1" data-path="examples.html"><a href="examples.html#the-management-strategy"><i class="fa fa-check"></i><b>8.2.1</b> The management strategy</a></li>
-<li class="chapter" data-level="8.2.2" data-path="examples.html"><a href="examples.html#examples-projection"><i class="fa fa-check"></i><b>8.2.2</b> Projection modeling</a></li>
+<li class="chapter" data-level="8.1.1" data-path="examples.html"><a href="examples.html#populate-the-life-history-object-1"><i class="fa fa-check"></i><b>8.1.1</b> Populate the life history object</a></li>
+<li class="chapter" data-level="8.1.2" data-path="examples.html"><a href="examples.html#populate-the-historical-fishery-object-1"><i class="fa fa-check"></i><b>8.1.2</b> Populate the historical fishery object</a></li>
+<li class="chapter" data-level="8.1.3" data-path="examples.html"><a href="examples.html#populate-the-time-area-object-1"><i class="fa fa-check"></i><b>8.1.3</b> Populate the time-area object</a></li>
+<li class="chapter" data-level="8.1.4" data-path="examples.html"><a href="examples.html#review-life-history-characteristics-1"><i class="fa fa-check"></i><b>8.1.4</b> Review life history characteristics</a></li>
+<li class="chapter" data-level="8.1.5" data-path="examples.html"><a href="examples.html#review-fishery-characteristics-1"><i class="fa fa-check"></i><b>8.1.5</b> Review fishery characteristics</a></li>
+<li class="chapter" data-level="8.1.6" data-path="examples.html"><a href="examples.html#include-uncertainty"><i class="fa fa-check"></i><b>8.1.6</b> Include uncertainty</a></li>
+<li class="chapter" data-level="8.1.7" data-path="examples.html"><a href="examples.html#specify-projection-conditions"><i class="fa fa-check"></i><b>8.1.7</b> Specify projection conditions</a></li>
+<li class="chapter" data-level="8.1.8" data-path="examples.html"><a href="examples.html#running-projections"><i class="fa fa-check"></i><b>8.1.8</b> Running projections</a></li>
+<li class="chapter" data-level="8.1.9" data-path="examples.html"><a href="examples.html#simple-batch-processing"><i class="fa fa-check"></i><b>8.1.9</b> Simple batch processing</a></li>
 </ul></li>
 </ul></li>
 <li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
@@ -244,7 +261,7 @@ div.csl-indent {
           </div>
         </div>
       </div>
-<a href="management-strategy-evaluation.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="mse.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
 <a href="examples.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
@@ -259,17 +276,7 @@ div.csl-indent {
 <script>
 gitbook.require(["gitbook"], function(gitbook) {
 gitbook.start({
-  "sharing": {
-    "github": false,
-    "facebook": true,
-    "twitter": true,
-    "linkedin": false,
-    "weibo": false,
-    "instapaper": false,
-    "vk": false,
-    "whatsapp": false,
-    "all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
-  },
+  "sharing": null,
   "fontsettings": {
     "theme": "white",
     "family": "sans",

@@ -273,3 +273,4 @@ templateMP <- function(phase, dataObject) {
 }
 ```
 
+## MP library {#mp-lib}

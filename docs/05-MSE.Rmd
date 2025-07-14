@@ -1,5 +1,5 @@
 
-# Management strategy evaluation
+# Management strategy evaluation {#mse}
 
 Coming soon.....
 

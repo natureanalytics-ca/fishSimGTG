@@ -1,75 +1,106 @@
+# Examples
 
-# Examples {#examples}
+## Projection modeling {#examples-projection}
 
-## Historical dynamics
+This example demonstrates implementation of Projection Modeling. Projection modeling differs from an MP in that projections consist of 'static' actions such as a size limit or constant fishing effort, whereas MPs are 'dynamic' responses to updated information (e.g., pre-agreed responses to observations of the fishery system). While making such projections are strictly speaking not the same MPs, setting up projection modeling follows the same coding in **FishSimGTG** and relies on specification of a `StrategyObj`.
 
-This example illustrates specification of an operating model (OM) and simulation of historical dynamics. See Section \@ref(om-pop) for details on how to populate the OM.
+Below, a complex OM is defined with three areas. Projection modeling is used to evaluate a suite of management options, including size limits, effort reductions (such as seasonal closures or time-day closures). All projections are developed under the assumption that fishing effort is re-allocated from closed areas to open areas, rather than being removed from the fishery.
+
+### Populate the life history object
+
+See Section \@ref(om-pop) for details on how to populate the Operating Model.
 
 ```{r, eval=TRUE, echo=TRUE}
 # Load necessary package
 library(fishSimGTG)
 library(fishSimTools)
-library(here)
 ```
 
 ```{r, eval=TRUE, echo=TRUE}
-# Populate the life history object
 LifeHistoryObj <- new("LifeHistory")
-LifeHistoryObj@title<-"Hawaiian Uhu - Parrotfish"
-LifeHistoryObj@speciesName<-"Chlorurus perspicillatus"
-LifeHistoryObj@Linf<-53.2
-LifeHistoryObj@K<-0.225
-LifeHistoryObj@t0<- -1.48
-LifeHistoryObj@L50<-35
-LifeHistoryObj@L95delta<-5
-LifeHistoryObj@M<-0.16
+LifeHistoryObj@title<-"Honeycomb grouper"
+LifeHistoryObj@speciesName<-"EpinephelusMerra"
+LifeHistoryObj@shortDescription<-"example multiple areas"
+LifeHistoryObj@Linf<-24.4
+LifeHistoryObj@K<-0.2
+LifeHistoryObj@t0<- 0
+LifeHistoryObj@L50<-14.1
+LifeHistoryObj@L95delta<-2.1
+LifeHistoryObj@M<-0.29
 LifeHistoryObj@L_type<-"FL"
 LifeHistoryObj@L_units<-"cm"
-LifeHistoryObj@LW_A<-0.0136
-LifeHistoryObj@LW_B<-3.109
-LifeHistoryObj@Steep<-0.6
-LifeHistoryObj@isHermaph<-TRUE
-LifeHistoryObj@H50<-46.2
-LifeHistoryObj@H95delta<-11.8
+LifeHistoryObj@LW_A<-0.016
+LifeHistoryObj@LW_B<-2.966
+LifeHistoryObj@Walpha_units<-"g"
+LifeHistoryObj@Steep<-0.69
 LifeHistoryObj@recSD<-0.6
 LifeHistoryObj@recRho<-0
+LifeHistoryObj@isHermaph<-FALSE #ignored for demo purposes
 LifeHistoryObj@R0<-10000
 ```
 
+### Populate the historical fishery object
+
+This structure assumes a fishery operating during the historical time with same fishery characteristics in each area.
+
 ```{r, eval=TRUE, echo=TRUE}
-# populate the historical fishery object
 HistFisheryObj<-new("Fishery")
 HistFisheryObj@title<-"Test"
 HistFisheryObj@vulType<-"logistic"
-HistFisheryObj@vulParams<-c(40, 1)
+HistFisheryObj@vulParams<-c(12, 1)
 HistFisheryObj@retType<-"full"
 HistFisheryObj@retMax <- 1
 HistFisheryObj@Dmort <- 0
 ```
 
-```{r, eval=TRUE, echo=TRUE}
-#Populate the time-area object
-#This setup will be used to produce a single-stock with no movement
-#fishSimGTG requires a minimum of two areas; however we will treat those areas as a homogeneous fish stock
-TimeAreaObj<-new("TimeArea")
-TimeAreaObj@title = "Example"
-TimeAreaObj@gtg = 13
-TimeAreaObj@areas = 2
-TimeAreaObj@recArea = c(0.99, 0.01)
-TimeAreaObj@iterations = 3
-TimeAreaObj@historicalYears = 50
-TimeAreaObj@historicalBio = 0.5
-TimeAreaObj@historicalBioType = "relB"
-TimeAreaObj@move <- matrix(c(1,0, 0,1), nrow=2, ncol=2, byrow=FALSE)
-TimeAreaObj@historicalEffort<-matrix(1:1, nrow = 50, ncol = 2, byrow = FALSE)
+### Populate the time-area object
 
+The three areas are specified to recieve approximately equal numbers of recruits. The historical dynamics are simulated to reflect an initial depletion level of 0.5, followed by a stable level of fishing effort for 10 years.
+
+```{r, eval=TRUE, echo=TRUE}
+# I want to run the low movement scenario
+TimeAreaObj<-new("TimeArea")
+TimeAreaObj@title <- "Test"
+TimeAreaObj@gtg <- 13
+TimeAreaObj@areas <- 3
+TimeAreaObj@recArea <- c(0.33, 0.33,0.34)
+TimeAreaObj@iterations <- 100
+TimeAreaObj@historicalYears <- 10
+TimeAreaObj@historicalBio <- 0.5
+TimeAreaObj@historicalBioType <- "relB"
+TimeAreaObj@move <- matrix(c(
+  0.9, 0.05, 0.05,
+  0.05, 0.9, 0.05,
+  0.05, 0.05, 0.9), nrow=3, ncol=3, byrow=TRUE)
+TimeAreaObj@historicalEffort <- matrix(1:1, nrow = 50, ncol = 3, byrow = FALSE)
 ```
 
-The function `LHwrapper` can be used to verify the paramaterization of the `LifeHistoryObj` object. Set `doPlot` to `TRUE` to produce a plot of life history characteristics. 
+The slot `TimeAreaObj@move` defines the proportion of abundance migrating to other areas. Columns are 'from area' and rows are 'to area'. 
 
-```{r lhgrouper, eval=TRUE, echo=TRUE, fig.cap= "Life history summary."}
+```{r, eval=TRUE, echo=TRUE}
+
+#E.g. A two-area model: 
+#        [,1]                     [,2]
+# [1,]   Area 1 staying in 1      Area 2 going to 1
+# [,2]   Area 1 going to 2        Area 2 statying in 2
+
+#To specify no movement in a two-area model, use:
+matrix(c(1,0, 0,1), nrow=2, ncol=2, byrow=FALSE)
+```
+
+In the current example, 90% of individuals do not change areas annually, with 5% going to each of the other two adjacent areas.
+
+```{r, eval=TRUE, echo=TRUE}
+#In our current example:
+TimeAreaObj@move
+```
+
+
+### Review life history characteristics
+
+```{r, eval=TRUE, echo=TRUE, fig.cap= "Life history schedules of honeycomb grouper."}
 #To simply display to the console
-lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj, doPlot = TRUE)
+lhOut <- LHwrapper(LifeHistoryObj, TimeAreaObj, doPlot = TRUE)
 ```
 
 ```{r, eval=FALSE, echo=TRUE}
@@ -77,90 +108,103 @@ lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj, doPlot = TRUE)
 lhOut
 ```
 
-The function `selWrapper` can be used to verify the paramaterization of the `FisheryObj` object. Set `doPlot` to `TRUE` to produce a plot of fishery characteristics. 
-
-```{r selgrouper, eval=TRUE, echo=TRUE, fig.cap= "Fishery summary."}
-selOut<-selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = TRUE)
+```{r, eval=TRUE, echo=FALSE}
+#To simply display to the console
+lhOut <- LHwrapper(LifeHistoryObj, TimeAreaObj, doPlot = FALSE)
 ```
 
-```{r, eval=FALSE, echo=TRUE}
-#To return fishery details
-selOut
+### Review fishery characteristics
+
+```{r, eval=TRUE, echo=TRUE, fig.cap= "Logistic selectivity function."}
+selOut <- selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = TRUE)
 ```
+
+### Include uncertainty
+
+In this example, uniform distributions are specified to reflect uncertainty in life history and historical fishery vulnerability.
 
 ```{r, eval=TRUE, echo=TRUE}
-#Populate the optional Stochastic object. 
-#Here, initial biomass range is set. A value for each iteration is drawn from a uniform distribution
 StochasticObj<-new("Stochastic")
-StochasticObj@historicalBio = c(0.3, 0.6)
+StochasticObj@historicalBio <- c(0.2, 0.6)
+StochasticObj@Linf <- c(24.4, 29.8)
+StochasticObj@K <- c(0.2, 0.97)
+StochasticObj@L50 <- c(14.1, 16.8)
+StochasticObj@L95delta <- c(2.1, 2.5)
+StochasticObj@M <- c(0.29, 0.43)
+StochasticObj@Steep <- c(0.69, 0.84)
+StochasticObj@histFisheryVul <- matrix(c(10,14,0.5,1), nrow=2, ncol=2,byrow=FALSE)
+StochasticObj@sameFisheryVul <- TRUE
 ``` 
 
-With the following objects specified, historical dynamics are simulated using the function `runProjection`.
-
-- Life history object (`LifeHistoryObj`)
-- Historical fishery object (`HistFisheryObj`)
-- Time-area object (`TimeAreaObj`)
-- Stochastic object (`StochasticObj`)
-
-Notice that only historical dynamics are simulated when MP objects `StrategyObj` and `ProFisheryObj_list` are omitted from `runProjection`. Below, the diagnostic plots produced by `runProjection` illustrate patterns in the historical dynamics.
+In the `HistFisheryObj`, `HistFisheryObj@vulType<-"logistic"`, thus requiring two input parameters to describe the logistic vulnerability function. To introduce uncertainty into these two parameters, a 2 x 2 matrix is required with columns reflecting number of parameters and rows representing minimum and maximum values for each parameter.  
 
 ```{r, eval=TRUE, echo=TRUE}
-#To return life history details
-runProjection(LifeHistoryObj = LifeHistoryObj,
-              TimeAreaObj = TimeAreaObj,
-              HistFisheryObj = HistFisheryObj,
-              StochasticObj = StochasticObj,
-              wd = here('data-test', 'Historical'),
-              fileName = "HistoricalDy",
-              doPlot = TRUE,
-              titleStrategy = "HistoricalDy"
-)
+StochasticObj@histFisheryVul
 ```
 
-```{r, fig.cap="Spawning biomass by area", echo=FALSE, out.height = "50%"}
-knitr::include_graphics("data-test/Historical/HistoricalDy_SB_Area.png")
-```
+### Specify projection conditions
 
-```{r, fig.cap="Catch biomass by area", echo=FALSE}
-knitr::include_graphics("data-test/Historical/HistoricalDy_catchB_Area.png")
-```
-
-```{r, fig.cap="Fishing mortality by area- Higher_option2", echo=FALSE, out.width="100%"}
-knitr::include_graphics("data-test/Historical/HistoricalDy_F_Area.png")
-```
-
-```{r, fig.cap="Relative spawning stock biomass, in aggregate across areas", echo=FALSE, out.width="100%"}
-knitr::include_graphics("data-test/Historical/HistoricalDy_SBrel.png")
-```
-
-
-
-
-## Fishery projections
+Like defining an MP, projection modeling requires two additional S4 objects are needed: `ProFisheryObj` and `StrategyObj`. The forward projection fishery object is specified to implement a size limit of 14 cm (see `ProFisheryObj@retType` and `ProFisheryObj@retParams`). Notice that `StochasticObj@sameFisheryVul=TRUE`, so the uncertainty range for vulnerability in the historical time period will also be applied to the projection time period, ignoring `ProFisheryObj@vulType` and `ProFisheryObj@vulParams`. Thus, in this example, fishery selectivity is consistent between historical and projection time periods, but a size limit is implemented by modifying retention (and correspondingly assuming discard mortality is zero `ProFisheryObj@Dmort <- 0`).
 
 ```{r, eval=TRUE, echo=TRUE}
-ProFisheryObj<-new("Fishery")
-ProFisheryObj@title<-"Test"
-ProFisheryObj@vulType<-"logistic"
-ProFisheryObj@vulParams<-c(19, 0.9) # excel fishery-base row3 (is proj?)
-ProFisheryObj@retType<-"logistic"
-ProFisheryObj@retParams <- c(22, 0.1)#excel fishery-base row3 (is proj?)
+ProFisheryObj <- new("Fishery")
+ProFisheryObj@title <- "Test"
+ProFisheryObj@vulType <- "logistic"
+ProFisheryObj@vulParams <- c(12, 1)
+ProFisheryObj@retType <- "logistic"
+ProFisheryObj@retParams <- c(14, 0.1)
 ProFisheryObj@retMax <- 1
 ProFisheryObj@Dmort <- 0
+
+#Finally, we need to define fishery characteristics for each area in the OM.
+#In this case, we will assume each area has the same fishery characteristics
+ProFisheryObj_list <- list(ProFisheryObj, ProFisheryObj, ProFisheryObj)
 ```
 
-### The management strategy
+The second additional object is the `StrategyObj`. The built in MP named `projectionStrategy` contains a variety of controls of static changes to fishery management, including control of fishing effort. The strategy considered is to close one area permanently and assume effort from the closed area will be dispersed equally to the remain two areas.  
 
-Implementing a 25% effort reduction
+See MP library in section \@ref(mp-lib) for details
 
 ```{r, eval=TRUE, echo=TRUE}
 StrategyObj<-new("Strategy")
-StrategyObj@projectionYears <- 50
+StrategyObj@projectionYears <- 25
 StrategyObj@projectionName<-"projectionStrategy"
-# I took effort from row 3 corresponding to strategy 25% red
-eff_vector=scan(text=("0	0	0	0	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1.125	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1"))
-
-# StrategyObj@projectionParams<-list(bag = c(-99	-99	-99	-99
-# ), effort = matrix(eff_vector, nrow=50, ncol=4, byrow = FALSE), CPUE = c(1,2), CPUEtype = 'retN') # CPUE is strategy excel proj_CPUE?
+StrategyObj@projectionParams<-list(
+  bag = c(-99	-99	-99), 
+  effort = c(rep(1.5, 25), rep(0, 25), rep(1.5, 25))
+)
 ```
-### Projection modeling {#examples-projection}
+
+### Running projections
+
+```{r, eval=FALSE, echo=TRUE}
+runProjection(
+  LifeHistoryObj = LifeHistoryObj,
+  TimeAreaObj = TimeAreaObj,
+  HistFisheryObj = HistFisheryObj,
+  ProFisheryObj_list = ProFisheryObj_list,
+  StrategyObj = StrategyObj,
+  StochasticObj = StochasticObj,
+  wd = here("data-test", "Kole"),
+  fileName = "Size_option1",
+  doPlot = TRUE,
+  titleStrategy = "Min size 14 cm"
+)
+```
+
+Next, we present some of the diagnostic plots produced by `runProjection()`.
+
+```{r fig-SB-H-opt1, fig.cap="Spawning biomass by area- Size_option1", eval = FALSE, echo=FALSE, out.width="100%"}
+knitr::include_graphics("data-test/Kole/Size_option1_SB_Area.png")
+```
+
+```{r fig-catch-H-opt1, fig.cap="Catch biomass by area- Size_option1", eval = FALSE, echo=FALSE, out.width="100%"}
+knitr::include_graphics("data-test/Kole/Size_option1_catchB_Area.png")
+```
+
+```{r, fig.cap="Relative spawning stock biomass, in aggregate across areas", eval = FALSE, echo=FALSE, out.width="100%"}
+knitr::include_graphics("data-test/Kole/Size_option1_SBrel.png")
+```
+
+### Simple batch processing
+
