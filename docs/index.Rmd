@@ -51,6 +51,8 @@ devtools::install_github("natureanalytics-ca/fishSimGTG")
 devtools::install_github("natureanalytics-ca/fishSimTools")
 ```
 
+The `devtools` package is necessary because it allows us to install these core packages directly from GitHub, ensuring we have the latest versions and updates.
+
 4. **Load the Required Packages**:
 
 ```{r,eval=FALSE}
@@ -58,9 +60,7 @@ library(fishSimGTG)
 library(fishSimTools)
 ```
 
-The core packages required to run the simulation are `fishSimGTG` and `fishSimTools`. The `devtools` package is necessary because it allows us to install these core packages directly from GitHub, ensuring we have the latest versions and updates.
-
-
+The core packages required to run the simulation are `fishSimGTG` and `fishSimTools`. 
 ## How to use FishSimGTG?
 
 The **FishSimGTG** package can be used to construct an operating model (OM) that simulates population and fishery dynamics, including data collection and the application of user-customized management procedures. The OM consists of several S4-type objects, such as the `LifeHistory` object, `Fishery` object, and `TimeArea` object, etc. These objects store parameters and information in slots, which users can access using the `@` symbol.

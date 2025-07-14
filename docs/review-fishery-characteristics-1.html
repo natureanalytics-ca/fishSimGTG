@@ -4,18 +4,18 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>FishSimGTG: Population dynamics simulation</title>
+  <title>9 Review fishery characteristics | FishSimGTG: Population dynamics simulation</title>
   <meta name="description" content="This document includes the description of FishSimGTG" />
   <meta name="generator" content="bookdown 0.43 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="FishSimGTG: Population dynamics simulation" />
+  <meta property="og:title" content="9 Review fishery characteristics | FishSimGTG: Population dynamics simulation" />
   <meta property="og:type" content="book" />
   
   <meta property="og:description" content="This document includes the description of FishSimGTG" />
   <meta name="github-repo" content="natureanalytics-ca/fishSimGTG" />
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="FishSimGTG: Population dynamics simulation" />
+  <meta name="twitter:title" content="9 Review fishery characteristics | FishSimGTG: Population dynamics simulation" />
   
   <meta name="twitter:description" content="This document includes the description of FishSimGTG" />
   
@@ -28,8 +28,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   
-
-<link rel="next" href="om.html"/>
+<link rel="prev" href="examples.html"/>
+<link rel="next" href="references.html"/>
 <script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
@@ -223,12 +223,12 @@ div.csl-indent {
 <li class="chapter" data-level="8.1.2" data-path="examples.html"><a href="examples.html#populate-the-historical-fishery-object-1"><i class="fa fa-check"></i><b>8.1.2</b> Populate the historical fishery object</a></li>
 <li class="chapter" data-level="8.1.3" data-path="examples.html"><a href="examples.html#populate-the-time-area-object-1"><i class="fa fa-check"></i><b>8.1.3</b> Populate the time-area object</a></li>
 <li class="chapter" data-level="8.1.4" data-path="examples.html"><a href="examples.html#review-life-history-characteristics-1"><i class="fa fa-check"></i><b>8.1.4</b> Review life history characteristics</a></li>
-<li class="chapter" data-level="8.1.5" data-path="examples.html"><a href="examples.html#review-fishery-characteristics-1"><i class="fa fa-check"></i><b>8.1.5</b> Review fishery characteristics</a></li>
-<li class="chapter" data-level="8.1.6" data-path="examples.html"><a href="examples.html#include-uncertainty"><i class="fa fa-check"></i><b>8.1.6</b> Include uncertainty</a></li>
-<li class="chapter" data-level="8.1.7" data-path="examples.html"><a href="examples.html#specify-projection-conditions"><i class="fa fa-check"></i><b>8.1.7</b> Specify projection conditions</a></li>
-<li class="chapter" data-level="8.1.8" data-path="examples.html"><a href="examples.html#running-projections"><i class="fa fa-check"></i><b>8.1.8</b> Running projections</a></li>
-<li class="chapter" data-level="8.1.9" data-path="examples.html"><a href="examples.html#simple-batch-processing"><i class="fa fa-check"></i><b>8.1.9</b> Simple batch processing</a></li>
 </ul></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="review-fishery-characteristics-1.html"><a href="review-fishery-characteristics-1.html"><i class="fa fa-check"></i><b>9</b> Review fishery characteristics</a>
+<ul>
+<li class="chapter" data-level="9.0.1" data-path="review-fishery-characteristics-1.html"><a href="review-fishery-characteristics-1.html#include-uncertainty"><i class="fa fa-check"></i><b>9.0.1</b> Include uncertainty</a></li>
+<li class="chapter" data-level="9.0.2" data-path="review-fishery-characteristics-1.html"><a href="review-fishery-characteristics-1.html#specify-projection-conditions"><i class="fa fa-check"></i><b>9.0.2</b> Specify projection conditions</a></li>
 </ul></li>
 <li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
 <li class="divider"></li>
@@ -251,61 +251,52 @@ div.csl-indent {
           <div class="page-inner">
 
             <section class="normal" id="section-">
-<div id="header">
-<h1 class="title">FishSimGTG: Population dynamics simulation</h1>
-<p class="author"><em><div style="text-align: center;">
-<p>Nature Analytics<br />
-<br>
-Version 1.0.7
-<br>
-2025-07-11</p>
-</div></em></p>
+<div id="review-fishery-characteristics-1" class="section level1 hasAnchor" number="9">
+<h1><span class="header-section-number">9</span> Review fishery characteristics<a href="review-fishery-characteristics-1.html#review-fishery-characteristics-1" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div class="sourceCode" id="cb68"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb68-1"><a href="review-fishery-characteristics-1.html#cb68-1" tabindex="-1"></a>selOut <span class="ot">&lt;-</span> <span class="fu">selWrapper</span>(<span class="at">lh =</span> lhOut, TimeAreaObj, <span class="at">FisheryObj =</span> HistFisheryObj, <span class="at">doPlot =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="figure"><span style="display:block;" id="fig:unnamed-chunk-59"></span>
+<img src="docs/figures/unnamed-chunk-59-1.png" alt="Logistic selectivity function." width="2100" />
+<p class="caption">
+Figure 9.1: Logistic selectivity function.
+</p>
 </div>
-<div id="what-is-fishsimgtg" class="section level1 hasAnchor" number="1">
-<h1><span class="header-section-number">1</span> What is FishSimGTG?<a href="index.html#what-is-fishsimgtg" class="anchor-section" aria-label="Anchor link to header"></a></h1>
-<p><strong>FishSimGTG</strong> is an R package that conducts numerical modeling of fish populations, including management strategy evaluation (MSE) and is an age-structured model that represents multiple concurrent cohorts using the growth-type-group methodology <span class="citation">(<a href="#ref-walters_fisheries_2004">Walters and Martell 2004</a>)</span>. This framework is typically used to quantify trade-offs among competing management strategies or management options in terms of expected achievement of fishery management objectives. These trade-offs emerge from modeling results that are obtained from analysis methods like management strategy evaluation (MSE) or population dynamics projection. Calculation of trade-offs can play a meaningful role in supporting the development fishery management plans and fishery rule making. Simulations are implemented in the R statistical computing environment <span class="citation">(<a href="#ref-r_core_team_r_2022">R Core Team 2022</a>)</span>. This framework is not a ‘black box’ software, and thus, it is intended to be customized to address specific questions related to fishery management.</p>
-<div id="installation-and-required-packages" class="section level2 hasAnchor" number="1.1">
-<h2><span class="header-section-number">1.1</span> Installation and required packages<a href="index.html#installation-and-required-packages" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p><strong>FishSimGTG</strong> is coded in R <span class="citation">(<a href="#ref-r_core_team_r_2022">R Core Team 2022</a>)</span> and requires some basic packages that can be installed as follows:</p>
-<ol style="list-style-type: decimal">
-<li><p><strong>Install R</strong>:</p>
-<ul>
-<li>Go to the <a href="https://cran.r-project.org/">CRAN website</a>.</li>
-<li>Download and install the appropriate version of R for your operating system (Windows, macOS, or Linux).</li>
-</ul></li>
-<li><p><strong>Install RStudio</strong>:</p>
-<ul>
-<li>Go to the <a href="https://www.rstudio.com/products/rstudio/download/">RStudio website</a>.</li>
-<li>Download and install RStudio Desktop (free version).</li>
-</ul></li>
-<li><p><strong>Installing Required Packages</strong>:</p></li>
-</ol>
-<p>The user can install the necessary packages to run the simulation and visualize the outputs by using the following R commands:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="index.html#cb1-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;devtools&quot;</span>)</span>
-<span id="cb1-2"><a href="index.html#cb1-2" tabindex="-1"></a><span class="fu">library</span>(devtools)</span>
-<span id="cb1-3"><a href="index.html#cb1-3" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="index.html#cb1-4" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;natureanalytics-ca/fishSimGTG&quot;</span>)</span>
-<span id="cb1-5"><a href="index.html#cb1-5" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;natureanalytics-ca/fishSimTools&quot;</span>)</span></code></pre></div>
-<p>The <code>devtools</code> package is necessary because it allows us to install these core packages directly from GitHub, ensuring we have the latest versions and updates.</p>
-<ol start="4" style="list-style-type: decimal">
-<li><strong>Load the Required Packages</strong>:</li>
-</ol>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="index.html#cb2-1" tabindex="-1"></a><span class="fu">library</span>(fishSimGTG)</span>
-<span id="cb2-2"><a href="index.html#cb2-2" tabindex="-1"></a><span class="fu">library</span>(fishSimTools)</span></code></pre></div>
-<p>The core packages required to run the simulation are <code>fishSimGTG</code> and <code>fishSimTools</code>.
-## How to use FishSimGTG?</p>
-<p>The <strong>FishSimGTG</strong> package can be used to construct an operating model (OM) that simulates population and fishery dynamics, including data collection and the application of user-customized management procedures. The OM consists of several S4-type objects, such as the <code>LifeHistory</code> object, <code>Fishery</code> object, and <code>TimeArea</code> object, etc. These objects store parameters and information in slots, which users can access using the <code>@</code> symbol.</p>
-<p>This user guide provides a full description of the S4 object components and instructions on how to populate each object to create the OM.</p>
+<div id="include-uncertainty" class="section level3 hasAnchor" number="9.0.1">
+<h3><span class="header-section-number">9.0.1</span> Include uncertainty<a href="review-fishery-characteristics-1.html#include-uncertainty" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>In this example, uniform distributions are specified to reflect uncertainty in life history and historical fishery vulnerability</p>
+<div class="sourceCode" id="cb69"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb69-1"><a href="review-fishery-characteristics-1.html#cb69-1" tabindex="-1"></a>StochasticObj<span class="ot">&lt;-</span><span class="fu">new</span>(<span class="st">&quot;Stochastic&quot;</span>)</span>
+<span id="cb69-2"><a href="review-fishery-characteristics-1.html#cb69-2" tabindex="-1"></a>StochasticObj<span class="sc">@</span>historicalBio <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.2</span>, <span class="fl">0.6</span>)</span>
+<span id="cb69-3"><a href="review-fishery-characteristics-1.html#cb69-3" tabindex="-1"></a>StochasticObj<span class="sc">@</span>Linf <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">24.4</span>, <span class="fl">29.8</span>)</span>
+<span id="cb69-4"><a href="review-fishery-characteristics-1.html#cb69-4" tabindex="-1"></a>StochasticObj<span class="sc">@</span>K <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.2</span>, <span class="fl">0.97</span>)</span>
+<span id="cb69-5"><a href="review-fishery-characteristics-1.html#cb69-5" tabindex="-1"></a>StochasticObj<span class="sc">@</span>L50 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">14.1</span>, <span class="fl">16.8</span>)</span>
+<span id="cb69-6"><a href="review-fishery-characteristics-1.html#cb69-6" tabindex="-1"></a>StochasticObj<span class="sc">@</span>L95delta <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">2.1</span>, <span class="fl">2.5</span>)</span>
+<span id="cb69-7"><a href="review-fishery-characteristics-1.html#cb69-7" tabindex="-1"></a>StochasticObj<span class="sc">@</span>M <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.29</span>, <span class="fl">0.43</span>)</span>
+<span id="cb69-8"><a href="review-fishery-characteristics-1.html#cb69-8" tabindex="-1"></a>StochasticObj<span class="sc">@</span>Steep <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.69</span>, <span class="fl">0.84</span>)</span>
+<span id="cb69-9"><a href="review-fishery-characteristics-1.html#cb69-9" tabindex="-1"></a>StochasticObj<span class="sc">@</span>histFisheryVul <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">18.05</span>,<span class="fl">19.95</span>,<span class="fl">0.86</span>,<span class="fl">0.95</span>), <span class="at">nrow=</span><span class="dv">2</span>, <span class="at">ncol=</span><span class="dv">2</span>,<span class="at">byrow=</span><span class="cn">FALSE</span>)</span>
+<span id="cb69-10"><a href="review-fishery-characteristics-1.html#cb69-10" tabindex="-1"></a>StochasticObj<span class="sc">@</span>sameFisheryVul <span class="ot">&lt;-</span> <span class="cn">TRUE</span></span></code></pre></div>
+<p>In the <code>HistFisheryObj</code>, <code>HistFisheryObj@vulType&lt;-"logistic"</code>, thus requiring two input parameters to describe the logistic vulnerability function. To introduce uncertainty into these two parameters, a 2 x 2 matrix is required with columns reflecting number of parameters and rows representing minimum and maximum values for each parameter.</p>
+<div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb70-1"><a href="review-fishery-characteristics-1.html#cb70-1" tabindex="-1"></a>StochasticObj<span class="sc">@</span>histFisheryVul</span></code></pre></div>
+<pre><code>##       [,1] [,2]
+## [1,] 18.05 0.86
+## [2,] 19.95 0.95</code></pre>
+</div>
+<div id="specify-projection-conditions" class="section level3 hasAnchor" number="9.0.2">
+<h3><span class="header-section-number">9.0.2</span> Specify projection conditions<a href="review-fishery-characteristics-1.html#specify-projection-conditions" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Like defining an MP, projection modeling requires two additional S4 objects are needed: <code>ProFisheryObj</code> and <code>StrategyObj</code>. The forward projection fishery object is specified to implement a size limit of 22 cm (see <code>ProFisheryObj@retType</code> and <code>ProFisheryObj@retParams</code>). Notice that <code>StochasticObj@sameFisheryVul=TRUE</code>, so the uncertainty range for vulnerability in the historical time period will also be applied to the projection time period, ignoring <code>ProFisheryObj@vulType</code> and <code>ProFisheryObj@vulParams</code>. Thus, in this example, fishery selectivity is consistent between historical and projection time periods, but a size limit is implemented by modifying retention (and correspondingly assuming discard mortality is zero <code>ProFisheryObj@Dmort &lt;- 0</code>).</p>
+<div class="sourceCode" id="cb72"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb72-1"><a href="review-fishery-characteristics-1.html#cb72-1" tabindex="-1"></a>ProFisheryObj <span class="ot">&lt;-</span> <span class="fu">new</span>(<span class="st">&quot;Fishery&quot;</span>)</span>
+<span id="cb72-2"><a href="review-fishery-characteristics-1.html#cb72-2" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>title <span class="ot">&lt;-</span> <span class="st">&quot;Test&quot;</span></span>
+<span id="cb72-3"><a href="review-fishery-characteristics-1.html#cb72-3" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>vulType <span class="ot">&lt;-</span> <span class="st">&quot;logistic&quot;</span></span>
+<span id="cb72-4"><a href="review-fishery-characteristics-1.html#cb72-4" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>vulParams <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">19</span>, <span class="fl">0.9</span>)</span>
+<span id="cb72-5"><a href="review-fishery-characteristics-1.html#cb72-5" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>retType <span class="ot">&lt;-</span> <span class="st">&quot;logistic&quot;</span></span>
+<span id="cb72-6"><a href="review-fishery-characteristics-1.html#cb72-6" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>retParams <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">22</span>, <span class="fl">0.1</span>)</span>
+<span id="cb72-7"><a href="review-fishery-characteristics-1.html#cb72-7" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>retMax <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb72-8"><a href="review-fishery-characteristics-1.html#cb72-8" tabindex="-1"></a>ProFisheryObj<span class="sc">@</span>Dmort <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb72-9"><a href="review-fishery-characteristics-1.html#cb72-9" tabindex="-1"></a></span>
+<span id="cb72-10"><a href="review-fishery-characteristics-1.html#cb72-10" tabindex="-1"></a><span class="co">#Finally, we need to define fishery characteristics for each area in the OM.</span></span>
+<span id="cb72-11"><a href="review-fishery-characteristics-1.html#cb72-11" tabindex="-1"></a><span class="co">#In this case, we will assume each area has the same fishery characteristics</span></span>
+<span id="cb72-12"><a href="review-fishery-characteristics-1.html#cb72-12" tabindex="-1"></a>ProFisheryObj_list <span class="ot">&lt;-</span> <span class="fu">list</span>(ProFisheryObj, ProFisheryObj, ProFisheryObj)</span></code></pre></div>
+<p>The second additional object is the <code>StrategyObj</code>. The built in MP named <code>projectionStrategy</code> contains a variety of controls of static changes to fishery management, including control of fishing effort. The strategy considered is to close one area permanently and assume effort from the closed area will be dispersed equally to the remain two areas.</p>
+<p>See MP library in section <a href="management-procedure-mp.html#mp-lib">5.4</a> for details</p>
 
-</div>
-</div>
-<h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
-<div id="ref-r_core_team_r_2022" class="csl-entry">
-R Core Team. 2022. <em>R: <span>A</span> <span>Language</span> and <span>Environment</span> for <span>Statistical</span> <span>Computing</span></em>. Vienna, Austria: R Foundation for Statistical Computing. <a href="https://www.R-project.org/">https://www.R-project.org/</a>.
-</div>
-<div id="ref-walters_fisheries_2004" class="csl-entry">
-Walters, Carl J, and Steven JD Martell. 2004. <em>Fisheries Ecology and Management</em>. Princeton University Press.
 </div>
 </div>
             </section>
@@ -313,8 +304,8 @@ Walters, Carl J, and Steven JD Martell. 2004. <em>Fisheries Ecology and Manageme
           </div>
         </div>
       </div>
-
-<a href="om.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="examples.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="references.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>
@@ -335,7 +326,7 @@ gitbook.start({
     "size": 2
   },
   "edit": {
-    "link": "https://github.com/USERNAME/REPO/edit/BRANCH/index.Rmd",
+    "link": "https://github.com/USERNAME/REPO/edit/BRANCH/07-Example.Rmd",
     "text": "Edit"
   },
   "history": {

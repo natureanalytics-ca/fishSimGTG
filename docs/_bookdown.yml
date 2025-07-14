@@ -3,13 +3,15 @@ language:
   ui:
     chapter_name: ""
 split_bib: false
-output_dir: "C:/Users/WilliamHarford/Documents/Cloud/Nature Analytics web apps/Packages and modules/fishSimGTG/docs"
+output_dir: "."
 rmd_files: [
   "index.Rmd",
   "01-PopDy.Rmd",
   "02-buildOM.Rmd",
-  "03-MPs.Rmd",
-  "04-Running_the_closed_loop.Rmd",
-  "05-Simulation_results.Rmd",
-  "07-references.Rmd"
+  "03-ObservationModel.Rmd",
+  "04-MPs.Rmd",
+  "05-MSE.Rmd",
+  "06-PerformanceMeasures.Rmd",
+  "07-Example.Rmd",
+  "08-references.Rmd"
 ]

@@ -1,5 +1,5 @@
 
-# Description of the Operating Model (OM) {#om}
+# Technical description {#om}
 
 &nbsp;&nbsp;&nbsp;&nbsp;This section describes the base configuration of the population dynamics equations used in the simulation framework. Please be aware that this configuration can be tailored to specific applications. An operating model is a mathematical representation of the biology of a fish stock, the fishery that operates on the fish stock, and ways in which the data is collected. The operating model should also include a sub-model that reflects how the management regulations are implemented and are adhered to in practice [@punt_management_2016].
 
@@ -115,10 +115,6 @@ A=\ ceiling\left(-\frac{\log{\left(0.01\right)}}{M}\right) \tag{eq. 12} \label{e
 \]
 
 Uncertainty in life history can be accounted for by specifying parameter ranges, rather than point estimates for most life history parameters. Each iteration will produce a unique set of life history parameters based on independent draws from uniform distributions that correspond to the specified minimum and maximum for each parameter.
-
-## Initial conditions
-
-&nbsp;&nbsp;&nbsp;&nbsp;This modeling framework was developed to create historical dynamics of fish stocks that begin (i.e., year 0) in a fished state, meaning that fishing mortality (and consequently fishing effort) are greater than zero in the initial equilibrium year (year 0). Thus, the modeling framework is not suitable for circumstances for initializing the model in an unfished or pre-fishing state. Accordingly, initial depletion (spawning biomass relative to unfished spawning biomass) should always be less than 1.0.  An alternative formulation is available where initial ‘depletion’ can instead be specified as initial Spawning Potential Ratio (SPR). SPR is spawning biomass per recruit relative to unfished spawning biomass per recruit). Subsequently, the population is initialized as follows. First, equilibrium age-structure is determined for the given depletion or SPR level assuming area-specific recruitment fractions, \(\rho_i\), but no movement, resulting in an equilibrium fishing mortality rate and equilibrium abundance scaled relative to the specified \(R_0\). Second, a burn-in period is used to project the population forward for \(A\)x4 years at the estimated equilibrium fishing mortality rate, allowing a stable age distribution between areas to be obtained through migration.
 
 ## Fishery dynamics
 
