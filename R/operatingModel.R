@@ -1693,8 +1693,8 @@ plotIndex_simple <- function(index_result, save_plot = FALSE,
 #' @param IndexObj A Index object
 #' @export
 
-calculate_single_Index  <- function(IndexObj){
-
+calculate_single_Index  <- function(dataObject){
+  for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
   # define the dimensions (to get the structure of the simulation)
   years <- dim(VB)[1]       #total years hist+future
   iterations <- dim(VB)[2]  #total iterations
@@ -2087,9 +2087,10 @@ calculate_single_Index  <- function(IndexObj){
           observation_return[[paste0(index_name, "_selectivity_proj_idx")]] <- if(design$indextype == "FI") design$selectivity_proj_idx else NA
         }
       #} # end year
-      return(observation_return)
+
     }
   #} # end iteration
+  return(observation_return)
 } # close the fucntion
 
       #End of the fucntion
