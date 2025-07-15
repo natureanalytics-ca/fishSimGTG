@@ -7,7 +7,8 @@ rm(list=ls())
 #source("obs_models_fishSimGTG_updated.R")
 #load fishSimGTG
 #library(fishSimGTG)
-
+# used to test the fucntions to see if everything is working
+devtools::load_all()
 library(ggplot2)
 
 # Create simple examples of each class to understand their structure
@@ -49,7 +50,7 @@ ta@title = "Test"
 ta@gtg = 13
 ta@areas = 2
 ta@recArea = c(0.99, 0.01)
-ta@iterations = 10
+ta@iterations = 2
 ta@historicalYears = 10
 ta@historicalBio = 0.5
 ta@historicalBioType = "relB" # or SPR
@@ -155,7 +156,7 @@ testMP <- function(phase, dataObject) {
 
     #User defines variable names for returned list, as this info will be used in Phase 2 (HCR)
     #return(list()) #e.g., return(list(year = j, iteration = k, CPUE = 1.4))
-    return(calculate_single_Index(IndexObj))
+    return(calculate_single_Index(dataObject))
   }
 
   ########
@@ -194,18 +195,22 @@ strategy@title <- "testing Obs"           # add a descriptive name
 strategy@projectionYears <- 10                  #future projection
 strategy@projectionName <- "testMP" # Which function to use - next: the parameters of projectionStrategy
 
-# Step 1: Create the CPUE Index object with the new structure
+#---------------------------------------------------------------------------------------#
+# Observation model 1: Simulation of one CPUE (biomass) index covering both areas       #
+#---------------------------------------------------------------------------------------#
+
+# Create a new Index class
 cpueB1 <- new("Index")
 cpueB1@indexID <- "One cpueB1 - all_areas"
 cpueB1@title <- "One cpueB1 - all_areas"
 cpueB1@useWeight <- TRUE                # CPUE in biomass
 
-# Step 2: Define the survey design with cpue specific parameters
+# Define the survey design with cpue specific parameters
 cpueB1@survey_design <- list(
   list(
     indextype = "FD",                          # new: add indextype to EACH index design
     areas = c(1, 2),                           # this CPUE covers both areas (1, 2)
-    indexYears = 2:21,                      # all years have data (collect data every year)
+    indexYears = 2:21,                         # all years have data (collect data every year)
     q_hist_bounds = c(0.00008, 0.00012),       # historical period - qbounds: 0.00008-0.00012
     q_proj_bounds = c(0.0001, 0.0003),         # projection period - qbounds: 0.0001-0.0003
     hyperstability_hist_bounds = c(0.85, 1.05),# historical - hypersbounds: 0.85-1.05
@@ -215,13 +220,13 @@ cpueB1@survey_design <- list(
   )
 )
 
-# Step 3: FD indices (CPUE) - empty list for FD data
+# FD indices (CPUE) - empty list for FD data
 cpueB1@selectivity_hist_list <- list()
 cpueB1@selectivity_proj_list <- list()
 
 
 # Now run the simulation
-result_cpue_bio <- runProjection(
+runProjection(
   LifeHistoryObj = lh,
   TimeAreaObj = ta,
   HistFisheryObj = fishery,
@@ -229,8 +234,127 @@ result_cpue_bio <- runProjection(
   StrategyObj = strategy,
   StochasticObj = stochastic,
   IndexObj = cpueB1,
-  customToCluster = testMP,
+  customToCluster = "testMP",
   wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
-  fileName = "test_run_MP_Bcpue",
+  fileName = "test_run_MP_Bcpue1",
   doPlot = TRUE
 )
+
+X1<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_Bcpue1")
+
+
+
+#---------------------------------------------------------------------------------------#
+# Observation model 2: Simulation of one CPUE (biomass) index covering both areas       #
+#---------------------------------------------------------------------------------------#
+cpueB2 <- new("Index")
+cpueB2@indexID <- "Two_CPUE_programs_all_areas"
+cpueB2@title <- "Two CPUE Programs - Both Cover All Areas"
+cpueB2@useWeight <- TRUE                # CPUE in biomass
+
+cpueB2@survey_design <- list(
+
+  # CPUE 1
+  list(
+    indextype = "FD",
+    areas = c(1, 2),                              # covers all areas
+    indexYears = 2:21,                            # annual data collection
+    q_hist_bounds = c(0.0001, 0.00015),           # historical: 0.0001-0.00015
+    q_proj_bounds = c(0.00015, 0.0003),           # projection: 0.00015-0.0003
+    hyperstability_hist_bounds = c(0.9, 1.1),     # historical: 0.9-1.1
+    hyperstability_proj_bounds = c(0.85, 1.05),   # projection: 0.85-1.05
+    obsError_CV_hist_bounds = c(0.2, 0.3),        # historical CV: 0.2-0.3
+    obsError_CV_proj_bounds = c(0.15, 0.25)       # projection CV: 0.15-0.25 (better precision)
+  ),
+
+  # CPUE 2
+  list(
+    indextype = "FD",
+    areas = c(1, 2),                                     # also covers all areas
+    indexYears = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),  # data collected every other year
+    q_hist_bounds = c(0.0001, 0.00015),                  # historical: 0.0001- 0.00015
+    q_proj_bounds = c(0.00015, 0.0003),                  # projection: 0.00015- 0.0003
+    hyperstability_hist_bounds = c(0.9, 1.1),            # historical: 0.9-1.1
+    hyperstability_proj_bounds = c(0.85, 1.05),          # projection: 0.85-1.05
+    obsError_CV_hist_bounds = c(0.2, 0.3),               # historical CV: 0.2-0.3
+    obsError_CV_proj_bounds = c(0.15, 0.25)              # projection CV: 0.15-0.25 (some improvement)
+  )
+)
+
+# FD indices (CPUE) - empty selectivity lists for FD data
+cpueB2@selectivity_hist_list <- list()
+cpueB2@selectivity_proj_list <- list()
+
+# Now run the simulation
+runProjection(
+  LifeHistoryObj = lh,
+  TimeAreaObj = ta,
+  HistFisheryObj = fishery,
+  ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj),
+  StrategyObj = strategy,
+  StochasticObj = stochastic,
+  IndexObj = cpueB2,
+  customToCluster = "testMP",
+  wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
+  fileName = "test_run_MP_Bcpue2",
+  doPlot = TRUE
+)
+
+X2<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_Bcpue2")
+
+
+#-----------------------------------------------------------------------
+# Observation model 3: Two CPUE Biomass - Only Area 1
+#-----------------------------------------------------------------------
+cpueB3 <- new("Index")
+cpueB3@indexID <- "Two_CPUE_programs_only_area1"
+cpueB3@title <- "Two CPUE Programs - Cover only Area 1"
+cpueB3@useWeight <- TRUE                # CPUE in biomass
+cpueB3@survey_design <- list(
+  # CPUE 1
+  list(
+    indextype = "FD",
+    areas = c(1),                              # covers  area 1
+    indexYears = 2:21,                      # annual data collection
+    q_hist_bounds = c(0.0001, 0.00015),        # historical: 0.0001-0.00015
+    q_proj_bounds = c(0.00015, 0.0003),        # projection: 0.00015-0.0003
+    hyperstability_hist_bounds = c(0.9, 1.1),  # historical: 0.9-1.1
+    hyperstability_proj_bounds = c(0.85, 1.05),# projection: 0.85-1.05
+    obsError_CV_hist_bounds = c(0.2, 0.3),     # historical CV: 0.2-0.3
+    obsError_CV_proj_bounds = c(0.15, 0.25)    # projection CV: 0.15-0.25 (better precision)
+  ),
+
+  # CPUE 2
+  list(
+    indextype = "FD",
+    areas = c(1),                                        # also covers Area 1
+    indexYears = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),  # data collected every other year
+    q_hist_bounds = c(0.0001, 0.00015),                  # historical: 0.0001- 0.00015
+    q_proj_bounds = c(0.00015, 0.0003),                  # projection: 0.00015- 0.0003
+    hyperstability_hist_bounds = c(0.9, 1.1),            # historical: 0.9-1.1
+    hyperstability_proj_bounds = c(0.85, 1.05),          # projection: 0.85-1.05
+    obsError_CV_hist_bounds = c(0.2, 0.3),               # historical CV: 0.2-0.3
+    obsError_CV_proj_bounds = c(0.15, 0.25)              # projection CV: 0.15-0.25 (some improvement)
+  )
+)
+cpueB3@selectivity_hist_list <- list()
+cpueB3@selectivity_proj_list <- list()
+
+# Now run the simulation
+runProjection(
+  LifeHistoryObj = lh,
+  TimeAreaObj = ta,
+  HistFisheryObj = fishery,
+  ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj),
+  StrategyObj = strategy,
+  StochasticObj = stochastic,
+  IndexObj = cpueB3,
+  customToCluster = "testMP",
+  wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
+  fileName = "test_run_MP_Bcpue3",
+  doPlot = TRUE
+)
+
+X3<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_Bcpue3")
+
+
