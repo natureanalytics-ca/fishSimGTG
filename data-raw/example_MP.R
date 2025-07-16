@@ -195,6 +195,8 @@ strategy@title <- "testing Obs"           # add a descriptive name
 strategy@projectionYears <- 10                  #future projection
 strategy@projectionName <- "testMP" # Which function to use - next: the parameters of projectionStrategy
 
+
+
 #---------------------------------------------------------------------------------------#
 # Observation model 1: Simulation of one CPUE (biomass) index covering both areas       #
 #---------------------------------------------------------------------------------------#
@@ -241,11 +243,144 @@ runProjection(
 )
 
 X1<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_Bcpue1")
+X1$HCR$decisionData
+X1$HCR$decisionData$CPUE_1
+
+#--------------------------------------#
+# Plot function for observation models #
+#--------------------------------------#
+
+#testing plot fucntion
+#tibble_data=X1$HCR$decisionData
 
 
+plotIndex_tibble <- function(tibble_data, save_plot = FALSE,
+                             filename = "index_plot.jpeg") {
+
+  # extract data from the tibble
+  title <- unique(tibble_data$title)   #unique gets unique values (removes duplicates)
+  historical_end <- unique(tibble_data$historical_end)
+
+  # identify CPUE/Survey columns (the actual index values)
+  # find the columns names
+  # find the pattern name with grep (must start (^) with CPUE_|Survey_    and have one or more digists(\\d+) $= ends here)
+  index_columns <- grep("^(CPUE_|Survey_)\\d+$", names(tibble_data), value = TRUE)
+
+  # create a empty data frame to prepare data for plotting
+  all_data <- data.frame()
+
+
+  # index_col (a column) = eg. "CPUE_1"
+  for(index_col in index_columns) {
+    # get the corresponding columns
+    indextype_col <- paste0(index_col, "_indextype")
+    areas_col <- paste0(index_col, "_areas")
+    indexyears_col <- paste0(index_col, "_indexYears")
+
+    # extract indexYears for this index
+    index_years_str <- unique(tibble_data[[indexyears_col]])[1]
+    #  "2_3_4_5_6_7_8_9_10_11_12_13_14_15_16_17_18_19_20_21"
+    index_years <- as.numeric(unlist(strsplit(index_years_str, "_")))  # Splits string by "_"
+    #2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
+    # get index type and areas for panel naming
+    index_type <- unique(tibble_data[[indextype_col]])[1]
+    areas_str <- unique(tibble_data[[areas_col]])[1]
+
+    # create panel name
+    panel_name <- paste(index_col, "-", "Area(s)", areas_str)
+
+    # prepare data for this index
+    index_data <- tibble_data %>%
+      select(k, j, all_of(index_col)) %>%
+      rename(
+        iteration = k,
+        year = j,
+        value = !!sym(index_col) #!!sym=creates a "symbol" representing the column name CPUE_1- !! =unquote = CPUE_1
+      ) %>%
+      filter(!is.na(value)) %>%
+      mutate(
+        panel = panel_name,
+        type = "Iterations",
+        iteration_label = paste0("Iter_", iteration)
+      )
+
+    # calculate median across iterations for each year
+    # drops remove the grouping after summarising
+    median_data <- index_data %>%
+      group_by(year, panel) %>%
+      summarise(
+        value = median(value, na.rm = TRUE),
+        .groups = "drop"
+      ) %>%
+      #text labels created using later for plotting
+      mutate(
+        type = "Median",
+        iteration = "Median",
+        iteration_label = "Median"
+      )
+
+    # set NA for years not in indexYears (to match original behavior)
+    all_years <- min(tibble_data$j):max(tibble_data$j)
+    missing_years <- setdiff(all_years, index_years)
+
+    if(length(missing_years) > 0) {
+      missing_data <- data.frame(
+        year = missing_years,
+        value = NA,
+        panel = panel_name,
+        type = "Median",
+        iteration = "Median",
+        iteration_label = "Median"
+      )
+      median_data <- rbind(median_data, missing_data)
+    }
+
+    # combine iteration and median data
+    combined_data <- rbind(
+      index_data %>% select(year, value, panel, type, iteration_label),
+      median_data %>% select(year, value, panel, type, iteration_label)
+    )
+
+    all_data <- rbind(all_data, combined_data)
+  }
+
+  # create the plot (matching original style)
+  p <- ggplot(all_data, aes(x = year, y = value)) +
+    geom_line(data = subset(all_data, type == "Iterations" & !is.na(value)),
+              aes(group = iteration_label),
+              color = "steelblue", alpha = 0.6, size = 0.5) +
+    geom_point(data = subset(all_data, type == "Iterations" & !is.na(value)),
+               color = "steelblue", alpha = 0.7, size = 1) +
+    geom_line(data = subset(all_data, type == "Median" & !is.na(value)),
+              color = "black", size = 1.2) +
+    geom_point(data = subset(all_data, type == "Median" & !is.na(value)),
+               color = "black", size = 1.5) +
+    facet_wrap(~ panel, scales = "free_y") +
+    geom_vline(xintercept = historical_end, linetype = "dashed", color = "red") +
+    labs(title = title, x = "Year", y = "Index Value") +
+    theme_minimal() +
+    theme(
+      strip.text = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+
+  if(save_plot) {
+    ggsave(filename, plot = p, width = 12, height = 8, dpi = 300)
+    cat("Plot saved as:", filename, "\n")
+  }
+
+  return(p)
+}
+
+
+
+p1 <- plotIndex_tibble(X1$HCR$decisionData,
+                       save_plot = TRUE,
+                       filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_CPUEB1.jpeg")
 
 #---------------------------------------------------------------------------------------#
-# Observation model 2: Simulation of one CPUE (biomass) index covering both areas       #
+# Observation model 2: Simulation of two CPUE (biomass) index covering both areas       #
 #---------------------------------------------------------------------------------------#
 cpueB2 <- new("Index")
 cpueB2@indexID <- "Two_CPUE_programs_all_areas"
@@ -301,10 +436,21 @@ runProjection(
 )
 
 X2<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_Bcpue2")
+X2$HCR$decisionData
+X2$HCR$decisionData$areas_total
+X2$HCR$decisionData$CPUE_1_areas
+X2$HCR$decisionData$CPUE_1
+X2$HCR$decisionData$CPUE_2_areas
+X2$HCR$decisionData$CPUE_2
+
+
+p2 <- plotIndex_tibble(X2$HCR$decisionData,
+                       save_plot = TRUE,
+                       filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_CPUEB2.jpeg")
 
 
 #-----------------------------------------------------------------------
-# Observation model 3: Two CPUE Biomass - Only Area 1
+# Observation model 3: Two CPUE Biomass - Only in Area 1
 #-----------------------------------------------------------------------
 cpueB3 <- new("Index")
 cpueB3@indexID <- "Two_CPUE_programs_only_area1"
@@ -356,5 +502,359 @@ runProjection(
 )
 
 X3<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_Bcpue3")
+X3$HCR$decisionData$CPUE_1
+X3$HCR$decisionData$CPUE_2
 
 
+#---------------------------------------------------------------------------------------#
+# Observation model 4: Simulation of two CPUE (numbers) index covering both areas       #
+#---------------------------------------------------------------------------------------#
+cpueN4 <- new("Index")
+cpueN4@indexID <- "Two_CPUE_programs_all_areas"
+cpueN4@title <- "Two CPUE Programs - Both Cover All Areas"
+cpueN4@useWeight <- FALSE                # CPUE in numbers
+
+cpueN4@survey_design <- list(
+
+  # CPUE 1
+  list(
+    indextype = "FD",
+    areas = c(1, 2),                              # covers all areas
+    indexYears = 2:21,                            # annual data collection
+    q_hist_bounds = c(0.0001, 0.00015),           # historical: 0.0001-0.00015
+    q_proj_bounds = c(0.00015, 0.0003),           # projection: 0.00015-0.0003
+    hyperstability_hist_bounds = c(0.9, 1.1),     # historical: 0.9-1.1
+    hyperstability_proj_bounds = c(0.85, 1.05),   # projection: 0.85-1.05
+    obsError_CV_hist_bounds = c(0.2, 0.3),        # historical CV: 0.2-0.3
+    obsError_CV_proj_bounds = c(0.15, 0.25)       # projection CV: 0.15-0.25 (better precision)
+  ),
+
+  # CPUE 2
+  list(
+    indextype = "FD",
+    areas = c(1, 2),                                     # also covers all areas
+    indexYears = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),  # data collected every other year
+    q_hist_bounds = c(0.0001, 0.00015),                  # historical: 0.0001- 0.00015
+    q_proj_bounds = c(0.00015, 0.0003),                  # projection: 0.00015- 0.0003
+    hyperstability_hist_bounds = c(0.9, 1.1),            # historical: 0.9-1.1
+    hyperstability_proj_bounds = c(0.85, 1.05),          # projection: 0.85-1.05
+    obsError_CV_hist_bounds = c(0.2, 0.3),               # historical CV: 0.2-0.3
+    obsError_CV_proj_bounds = c(0.15, 0.25)              # projection CV: 0.15-0.25 (some improvement)
+  )
+)
+
+# FD indices (CPUE) - empty selectivity lists for FD data
+cpueN4@selectivity_hist_list <- list()
+cpueN4@selectivity_proj_list <- list()
+
+# Now run the simulation
+runProjection(
+  LifeHistoryObj = lh,
+  TimeAreaObj = ta,
+  HistFisheryObj = fishery,
+  ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj),
+  StrategyObj = strategy,
+  StochasticObj = stochastic,
+  IndexObj = cpueB2,
+  customToCluster = "testMP",
+  wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
+  fileName = "test_run_MP_Ncpue4",
+  doPlot = TRUE
+)
+
+X4<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_Ncpue4")
+X4$HCR$decisionData
+X4$HCR$decisionData$areas_total
+X4$HCR$decisionData$CPUE_1_areas
+X4$HCR$decisionData$CPUE_1
+X4$HCR$decisionData$CPUE_2_areas
+X4$HCR$decisionData$CPUE_2
+
+#---------------------------------------------------------------------------------------#
+# Observation model 5: Simulation of two Survey (biomass) index covering both areas     #
+#---------------------------------------------------------------------------------------#
+
+SurveyB5 <- new("Index")
+SurveyB5@indexID <- "Two_survey_programs_all_areas"
+SurveyB5@title <- "Two survey Programs - Both Cover All Areas"
+SurveyB5@useWeight <- TRUE                # survey in biomass
+SurveyB5@survey_design <- list(
+
+  # survey 1
+  list(
+    indextype = "FI",
+    areas = c(1, 2),                    # covers all areas
+    indexYears = 2:21,               # annual data collection
+    survey_timing = 1,
+    selectivity_hist_idx = 1,           # uses survey_sel1_hist
+    selectivity_proj_idx = 1,           # uses survey_sel1_proj
+    q_hist_bounds = c(0.0001, 0.00015),       # historical: 0.0001-0.00015
+    q_proj_bounds = c(0.00015, 0.0003),       # projection: 0.00015-0.0003
+    hyperstability_hist_bounds = c(0.9, 1.1),     # historical: 0.9-1.1
+    hyperstability_proj_bounds = c(0.85, 1.05),   # projection: 0.85-1.05
+    obsError_CV_hist_bounds = c(0.2, 0.3),        # historical CV: 0.2-0.3
+    obsError_CV_proj_bounds = c(0.15, 0.25)       # projection CV: 0.15-0.25 (better precision)
+  ),
+
+  # survey 2
+  list(
+    indextype = "FI",
+    areas = c(1, 2),                    # also covers all areas
+    indexYears = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),  # data collected every other year
+    survey_timing = 1,
+    selectivity_hist_idx = 2,           # uses survey_sel2_hist
+    selectivity_proj_idx = 2,           # uses survey_sel2_proj
+    q_hist_bounds = c(0.0001, 0.00015),       # historical: 0.0001- 0.00015
+    q_proj_bounds = c(0.00015, 0.0003),      # projection: 0.00015- 0.0003
+    hyperstability_hist_bounds = c(0.9, 1.1),     # historical: 0.9-1.1
+    hyperstability_proj_bounds = c(0.85, 1.05),     # projection: 0.85-1.05
+    obsError_CV_hist_bounds = c(0.2, 0.3),       # historical CV: 0.2-0.3
+    obsError_CV_proj_bounds = c(0.15, 0.25)        # projection CV: 0.15-0.25 (some improvement)
+  )
+)
+
+# Survey Selectivity 1 (hist)
+survey_sel1_hist <- new("Fishery")
+survey_sel1_hist@title <- "Survey 1 - Historical"
+survey_sel1_hist@vulType <- "logistic"
+survey_sel1_hist@vulParams <- c(6, 1.0)
+survey_sel1_hist@retType <- "full"
+survey_sel1_hist@retMax <- 1.0
+survey_sel1_hist@Dmort <- 0.0
+
+# Survey Selectivity 2 (hist)
+survey_sel2_hist <- new("Fishery")
+survey_sel2_hist@title <- "Survey 2 - Historical"
+survey_sel2_hist@vulType <- "logistic"
+survey_sel2_hist@vulParams <- c(12, 2.0)
+survey_sel2_hist@retType <- "full"
+survey_sel2_hist@retMax <- 1.0
+survey_sel2_hist@Dmort <- 0.0
+
+# Survey Selectivity 1 (proj)
+survey_sel1_proj <- new("Fishery")
+survey_sel1_proj@title <- "Survey 1 - Projection"
+survey_sel1_proj@vulType <- "logistic"
+survey_sel1_proj@vulParams <- c(5, 0.8)
+survey_sel1_proj@retType <- "full"
+survey_sel1_proj@retMax <- 1.0
+survey_sel1_proj@Dmort <- 0.0
+
+# Survey Selectivity 2 (proj)
+survey_sel2_proj <- new("Fishery")
+survey_sel2_proj@title <- "Survey 2 - Projection"
+survey_sel2_proj@vulType <- "logistic"
+survey_sel2_proj@vulParams <- c(11, 1.8)   # slightly different
+survey_sel2_proj@retType <- "full"
+survey_sel2_proj@retMax <- 1.0
+survey_sel2_proj@Dmort <- 0.0
+
+
+# Step 3: FI indices (survey) -  selectivity lists
+SurveyB5@selectivity_hist_list <- list(survey_sel1_hist, survey_sel2_hist)
+SurveyB5@selectivity_proj_list <- list(survey_sel1_proj, survey_sel2_proj)
+
+# Now run the simulation
+runProjection(
+  LifeHistoryObj = lh,
+  TimeAreaObj = ta,
+  HistFisheryObj = fishery,
+  ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj),
+  StrategyObj = strategy,
+  StochasticObj = stochastic,
+  IndexObj = SurveyB5,
+  customToCluster = "testMP",
+  wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
+  fileName = "test_run_MP_Bsurvey5",
+  doPlot = TRUE
+)
+
+X5<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_Bsurvey5")
+X5$HCR$decisionData
+
+
+
+#---------------------------------------------------------------------------------------#
+# Observation model 6: Simulation of two Survey (numbers) index covering both areas     #
+#---------------------------------------------------------------------------------------#
+
+SurveyN6 <- new("Index")
+SurveyN6@indexID <- "Two_survey_programs_all_areas"
+SurveyN6@title <- "Two survey Programs - Both Cover All Areas"
+SurveyN6@useWeight <- FALSE                # survey in numbers
+SurveyN6@survey_design <- list(
+
+  # survey 1
+  list(
+    indextype = "FI",
+    areas = c(1, 2),                    # covers all areas
+    indexYears = 2:21,               # annual data collection
+    survey_timing = 1,
+    selectivity_hist_idx = 1,           # uses survey_sel1_hist
+    selectivity_proj_idx = 1,           # uses survey_sel1_proj
+    q_hist_bounds = c(0.0001, 0.00015),       # historical: 0.0001-0.00015
+    q_proj_bounds = c(0.00015, 0.0003),       # projection: 0.00015-0.0003
+    hyperstability_hist_bounds = c(0.9, 1.1),     # historical: 0.9-1.1
+    hyperstability_proj_bounds = c(0.85, 1.05),   # projection: 0.85-1.05
+    obsError_CV_hist_bounds = c(0.2, 0.3),        # historical CV: 0.2-0.3
+    obsError_CV_proj_bounds = c(0.15, 0.25)       # projection CV: 0.15-0.25 (better precision)
+  ),
+
+  # survey 2
+  list(
+    indextype = "FI",
+    areas = c(1, 2),                    # also covers all areas
+    indexYears = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),  # data collected every other year
+    survey_timing = 1,
+    selectivity_hist_idx = 2,           # uses survey_sel2_hist
+    selectivity_proj_idx = 2,           # uses survey_sel2_proj
+    q_hist_bounds = c(0.0001, 0.00015),       # historical: 0.0001- 0.00015
+    q_proj_bounds = c(0.00015, 0.0003),      # projection: 0.00015- 0.0003
+    hyperstability_hist_bounds = c(0.9, 1.1),     # historical: 0.9-1.1
+    hyperstability_proj_bounds = c(0.85, 1.05),     # projection: 0.85-1.05
+    obsError_CV_hist_bounds = c(0.2, 0.3),       # historical CV: 0.2-0.3
+    obsError_CV_proj_bounds = c(0.15, 0.25)        # projection CV: 0.15-0.25 (some improvement)
+  )
+)
+
+# Survey Selectivity 1 (hist)
+survey_sel1_hist <- new("Fishery")
+survey_sel1_hist@title <- "Survey 1 - Historical"
+survey_sel1_hist@vulType <- "logistic"
+survey_sel1_hist@vulParams <- c(6, 1.0)
+survey_sel1_hist@retType <- "full"
+survey_sel1_hist@retMax <- 1.0
+survey_sel1_hist@Dmort <- 0.0
+
+# Survey Selectivity 2 (hist)
+survey_sel2_hist <- new("Fishery")
+survey_sel2_hist@title <- "Survey 2 - Historical"
+survey_sel2_hist@vulType <- "logistic"
+survey_sel2_hist@vulParams <- c(12, 2.0)
+survey_sel2_hist@retType <- "full"
+survey_sel2_hist@retMax <- 1.0
+survey_sel2_hist@Dmort <- 0.0
+
+# Survey Selectivity 1 (proj)
+survey_sel1_proj <- new("Fishery")
+survey_sel1_proj@title <- "Survey 1 - Projection"
+survey_sel1_proj@vulType <- "logistic"
+survey_sel1_proj@vulParams <- c(5, 0.8)
+survey_sel1_proj@retType <- "full"
+survey_sel1_proj@retMax <- 1.0
+survey_sel1_proj@Dmort <- 0.0
+
+# Survey Selectivity 2 (proj)
+survey_sel2_proj <- new("Fishery")
+survey_sel2_proj@title <- "Survey 2 - Projection"
+survey_sel2_proj@vulType <- "logistic"
+survey_sel2_proj@vulParams <- c(11, 1.8)   # slightly different
+survey_sel2_proj@retType <- "full"
+survey_sel2_proj@retMax <- 1.0
+survey_sel2_proj@Dmort <- 0.0
+
+
+# Step 3: FI indices (survey) -  selectivity lists
+SurveyN6@selectivity_hist_list <- list(survey_sel1_hist, survey_sel2_hist)
+SurveyN6@selectivity_proj_list <- list(survey_sel1_proj, survey_sel2_proj)
+
+# Now run the simulation
+runProjection(
+  LifeHistoryObj = lh,
+  TimeAreaObj = ta,
+  HistFisheryObj = fishery,
+  ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj),
+  StrategyObj = strategy,
+  StochasticObj = stochastic,
+  IndexObj = SurveyN6,
+  customToCluster = "testMP",
+  wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
+  fileName = "test_run_MP_Nsurvey6",
+  doPlot = TRUE
+)
+
+X6<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_Nsurvey6")
+X6$HCR$decisionData
+
+
+#---------------------------------------------------------------------------------------#
+# Observation model 7: Simulation of CPUE (FD) + Survey (FI)  index covering both areas (biomass)    #
+#---------------------------------------------------------------------------------------#
+
+mixed_biomass <- new("Index")
+mixed_biomass@indexID <- "Mixed_CPUE_and_Survey_Biomass"
+mixed_biomass@title <- "Mixed CPUE and  Survey Biomass"
+mixed_biomass@useWeight <- TRUE                # biomass
+
+# Define MIXED survey designs
+mixed_biomass@survey_design <- list(
+
+  # CPUE (FD)
+  list(
+    indextype = "FD",
+    areas = c(1, 2),                    # covers both areas
+    indexYears = 2:21,               # annual data collection
+    q_hist_bounds = c(0.0001, 0.00015),       # historical period
+    q_proj_bounds = c(0.00012, 0.0002),       # projection period
+    hyperstability_hist_bounds = c(0.9, 1.1),     # historical
+    hyperstability_proj_bounds = c(0.85, 1.05),   # projection
+    obsError_CV_hist_bounds = c(0.2, 0.3),        # Historical CV
+    obsError_CV_proj_bounds = c(0.15, 0.25)       # Projection CV (improved precision)
+    # Note: No selectivity parameters needed for FD
+  ),
+
+  # Survey (FI)
+  list(
+    indextype = "FI",
+    areas = c(1, 2),                    # covers both areas
+    indexYears = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),
+    survey_timing = 1,
+    selectivity_hist_idx = 1,           # uses survey_sel1_hist
+    selectivity_proj_idx = 1,           # uses survey_sel1_proj
+    q_hist_bounds = c(0.00008, 0.00012),      # historical period
+    q_proj_bounds = c(0.0001, 0.00016),       # projection period
+    hyperstability_hist_bounds = c(0.95, 1.05),   # historical
+    hyperstability_proj_bounds = c(0.9, 1.1),     # projection
+    obsError_CV_hist_bounds = c(0.15, 0.25),      # Historical CV
+    obsError_CV_proj_bounds = c(0.1, 0.2)         # Projection CV (better precision)
+  )
+)
+# Survey Selectivity 1 (hist)
+survey_sel1_hist <- new("Fishery")
+survey_sel1_hist@title <- "Survey 1 - Historical"
+survey_sel1_hist@vulType <- "logistic"
+survey_sel1_hist@vulParams <- c(6, 1.0)
+survey_sel1_hist@retType <- "full"
+survey_sel1_hist@retMax <- 1.0
+survey_sel1_hist@Dmort <- 0.0
+
+# Survey Selectivity 1 (proj)
+survey_sel1_proj <- new("Fishery")
+survey_sel1_proj@title <- "Survey 1 - Projection"
+survey_sel1_proj@vulType <- "logistic"
+survey_sel1_proj@vulParams <- c(5, 0.8)
+survey_sel1_proj@retType <- "full"
+survey_sel1_proj@retMax <- 1.0
+survey_sel1_proj@Dmort <- 0.0
+
+# survey selectivity
+mixed_biomass@selectivity_hist_list <- list(survey_sel1_hist)
+mixed_biomass@selectivity_proj_list <- list(survey_sel1_proj)
+
+# Now run the simulation
+runProjection(
+  LifeHistoryObj = lh,
+  TimeAreaObj = ta,
+  HistFisheryObj = fishery,
+  ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj),
+  StrategyObj = strategy,
+  StochasticObj = stochastic,
+  IndexObj = SurveyN6,
+  customToCluster = "testMP",
+  wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
+  fileName = "test_run_MP_BMixed7",
+  doPlot = TRUE
+)
+
+X7<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_BMixed7")
+X7$HCR$decisionData$historical_end
