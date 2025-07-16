@@ -297,7 +297,7 @@ plotIndex_tibble <- function(tibble_data, save_plot = FALSE,
         year = j,
         value = !!sym(index_col) #!!sym=creates a "symbol" representing the column name CPUE_1- !! =unquote = CPUE_1
       ) %>%
-      filter(!is.na(value)) %>%
+      #filter(!is.na(value)) %>%
       mutate(
         panel = panel_name,
         type = "Iterations",
@@ -343,21 +343,37 @@ plotIndex_tibble <- function(tibble_data, save_plot = FALSE,
 
     all_data <- rbind(all_data, combined_data)
   }
+  #Y-axis label based on data type
+  use_weight <- unique(tibble_data$useWeight)[1]
+  final_indextype <- unique(tibble_data$final_indextype)[1]
+
+  if(final_indextype == "FD") {
+    # Fishery Dependent (CPUE)
+    y_label <- if(use_weight) "CPUE (biomass)" else "CPUE (numbers)"
+  } else if(final_indextype == "FI") {
+    # Fishery Independent (Survey)
+    y_label <- if(use_weight) "Survey (biomass)" else "Survey (numbers)"
+  } else {
+    # Mixed types
+    y_label <- if(use_weight) "Index (biomass)" else "Index (numbers)"
+  }
+
+
 
   # create the plot (matching original style)
   p <- ggplot(all_data, aes(x = year, y = value)) +
-    geom_line(data = plot_data_iterations,
+    geom_line(data = subset(all_data, type == "Iterations"),
               aes(group = iteration_label),
               color = "steelblue", alpha = 0.6, size = 0.5) +
-    geom_point(data = plot_data_iterations,
+    geom_point(data = subset(all_data, type == "Iterations" & !is.na(value)),
                color = "steelblue", alpha = 0.7, size = 1) +
-    geom_line(data = plot_data_median,
+    geom_line(data = subset(all_data, type == "Median"),
               color = "black", size = 1.2) +
-    geom_point(data = plot_data_median,
+    geom_point(data = subset(all_data, type == "Median" & !is.na(value)),
                color = "black", size = 1.5) +
     facet_wrap(~ panel, scales = "free_y") +
     geom_vline(xintercept = historical_end, linetype = "dashed", color = "red") +
-    labs(title = title, x = "Year", y = "Index Value") +
+    labs(title = title, x = "Year", y = y_label) +
     theme_minimal() +
     theme(
       strip.text = element_text(size = 10),
@@ -380,6 +396,7 @@ p1 <- plotIndex_tibble(X1$HCR$decisionData,
                        save_plot = TRUE,
                        filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_CPUEB1.jpeg")
 
+p1
 #---------------------------------------------------------------------------------------#
 # Observation model 2: Simulation of two CPUE (biomass) index covering both areas       #
 #---------------------------------------------------------------------------------------#
@@ -449,7 +466,7 @@ p2 <- plotIndex_tibble(X2$HCR$decisionData,
                        save_plot = TRUE,
                        filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_CPUEB2.jpeg")
 
-
+p2
 #-----------------------------------------------------------------------
 # Observation model 3: Two CPUE Biomass - Only in Area 1
 #-----------------------------------------------------------------------
@@ -506,6 +523,12 @@ X3<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Ko
 X3$HCR$decisionData$CPUE_1
 X3$HCR$decisionData$CPUE_2
 
+p3 <- plotIndex_tibble(X3$HCR$decisionData,
+                       save_plot = TRUE,
+                       filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_CPUEB3.jpeg")
+
+p3
+
 
 #---------------------------------------------------------------------------------------#
 # Observation model 4: Simulation of two CPUE (numbers) index covering both areas       #
@@ -556,7 +579,7 @@ runProjection(
   ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj),
   StrategyObj = strategy,
   StochasticObj = stochastic,
-  IndexObj = cpueB2,
+  IndexObj = cpueN4,
   customToCluster = "testMP",
   wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
   fileName = "test_run_MP_Ncpue4",
@@ -570,6 +593,12 @@ X4$HCR$decisionData$CPUE_1_areas
 X4$HCR$decisionData$CPUE_1
 X4$HCR$decisionData$CPUE_2_areas
 X4$HCR$decisionData$CPUE_2
+
+p4 <- plotIndex_tibble(X4$HCR$decisionData,
+                       save_plot = TRUE,
+                       filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_CPUEN4.jpeg")
+
+p4
 
 #---------------------------------------------------------------------------------------#
 # Observation model 5: Simulation of two Survey (biomass) index covering both areas     #
@@ -673,7 +702,11 @@ runProjection(
 X5<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_Bsurvey5")
 X5$HCR$decisionData
 
+p5 <- plotIndex_tibble(X5$HCR$decisionData,
+                       save_plot = TRUE,
+                       filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_SurveyB5.jpeg")
 
+p5
 
 #---------------------------------------------------------------------------------------#
 # Observation model 6: Simulation of two Survey (numbers) index covering both areas     #
@@ -777,6 +810,12 @@ runProjection(
 X6<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_Nsurvey6")
 X6$HCR$decisionData
 
+p6 <- plotIndex_tibble(X6$HCR$decisionData,
+                       save_plot = TRUE,
+                       filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_SurveyN6.jpeg")
+
+p6
+
 
 #---------------------------------------------------------------------------------------#
 # Observation model 7: Simulation of CPUE (FD) + Survey (FI)  index covering both areas (biomass)    #
@@ -850,7 +889,7 @@ runProjection(
   ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj),
   StrategyObj = strategy,
   StochasticObj = stochastic,
-  IndexObj = SurveyN6,
+  IndexObj = mixed_biomass,
   customToCluster = "testMP",
   wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
   fileName = "test_run_MP_BMixed7",
@@ -859,3 +898,46 @@ runProjection(
 
 X7<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_BMixed7")
 X7$HCR$decisionData$historical_end
+
+p7 <- plotIndex_tibble(X7$HCR$decisionData,
+                       save_plot = TRUE,
+                       filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_BMixed7.jpeg")
+
+p7
+
+
+
+
+# Function to create year / iteration table
+
+create_year_iteration_table <- function(data, index_col) {
+  # get subset with non-NA values
+  subset_data <- data[!is.na(data[[index_col]]), c("k", "j", index_col)]
+  # get unique years and iterations
+  years <- sort(unique(subset_data$j))
+  iterations <- sort(unique(subset_data$k))
+  # create empty matrix
+  result_matrix <- matrix(NA,
+                          nrow = length(years),
+                          ncol = length(iterations),
+                          dimnames = list(paste0("Year_", years),
+                                          paste0("Iter_", iterations)))
+
+  # fill the matrix
+  for(i in 1:nrow(subset_data)) {
+    year_pos <- which(years == subset_data$j[i])
+    iter_pos <- which(iterations == subset_data$k[i])
+    result_matrix[year_pos, iter_pos] <- subset_data[[index_col]][i]
+  }
+
+  return(result_matrix)
+}
+
+X7$HCR$decisionData$CPUE_1
+X7$HCR$decisionData$Survey_2
+
+cpue_data <- create_year_iteration_table(X7$HCR$decisionData, "CPUE_1")
+survey_data <- create_year_iteration_table(X7$HCR$decisionData, "Survey_2")
+
+
+
