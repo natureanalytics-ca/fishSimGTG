@@ -346,14 +346,14 @@ plotIndex_tibble <- function(tibble_data, save_plot = FALSE,
 
   # create the plot (matching original style)
   p <- ggplot(all_data, aes(x = year, y = value)) +
-    geom_line(data = subset(all_data, type == "Iterations" & !is.na(value)),
+    geom_line(data = plot_data_iterations,
               aes(group = iteration_label),
               color = "steelblue", alpha = 0.6, size = 0.5) +
-    geom_point(data = subset(all_data, type == "Iterations" & !is.na(value)),
+    geom_point(data = plot_data_iterations,
                color = "steelblue", alpha = 0.7, size = 1) +
-    geom_line(data = subset(all_data, type == "Median" & !is.na(value)),
+    geom_line(data = plot_data_median,
               color = "black", size = 1.2) +
-    geom_point(data = subset(all_data, type == "Median" & !is.na(value)),
+    geom_point(data = plot_data_median,
                color = "black", size = 1.5) +
     facet_wrap(~ panel, scales = "free_y") +
     geom_vline(xintercept = historical_end, linetype = "dashed", color = "red") +
@@ -364,6 +364,7 @@ plotIndex_tibble <- function(tibble_data, save_plot = FALSE,
       plot.title = element_text(hjust = 0.5),
       axis.text.x = element_text(angle = 45, hjust = 1)
     )
+
 
   if(save_plot) {
     ggsave(filename, plot = p, width = 12, height = 8, dpi = 300)
