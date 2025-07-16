@@ -1775,25 +1775,6 @@ calculate_single_Index  <- function(dataObject){
   } # close loop for specific surveys/CPUE validations
 
 
-  #checking requirements based on index type and data required
-  #check if any survey is FI or any survey uses numbers (needs N arrays)
-
-  # index = FI or If use weight is F , stop I need N
-  # for each element d in the survey_design list (any= at least one element)
-  # cehck if the survey index type is FI
-  # or if weigth is set to F
-  # Set needs_N to TRUE if:
-  # Any survey is of type "FI" (fishery-independent), or useWeight is FALSE
-  # needs_N <- any(sapply(IndexObj@survey_design, function(d) d$indextype == "FI")) || !IndexObj@useWeight
-  # if(needs_N) {
-  #   if(is.null(simulation_result$dynamics$N)) {
-  #     stop("Survey indices (FI) and numbers indices require N arrays. Run simulation with doDiagnostic=TRUE")
-  #   } else {
-  #     cat("Note: Using N data from iteration 1 for all iterations (testing mode)\n")
-  #   }
-  # }
-
-
   # NEW
   # Results list (initialize empty list) to store multiple indices
 
@@ -1878,32 +1859,6 @@ calculate_single_Index  <- function(dataObject){
     }
 
 
-    # initialize results for the survey/cpue
-    # creates empty matrix [years × iterations] to store index values
-
-    #NEW:
-    #remove the area_matrix
-
-    # similar idea to what I did with LC obs
-    # area_matrix <- array(NA, dim = c(years, iterations))
-    # rownames(area_matrix) <- paste0("Year_", 1:years)
-    # colnames(area_matrix) <- paste0("Iter_", 1:iterations)
-
-
-    # # name based on areas covered  y survey/CPUE
-    # if(length(design$areas) == 1) {
-    #   matrix_name <- paste0("Area_", design$areas[1])
-    # } else {
-    #   matrix_name <- paste0("Areas_", paste(design$areas, collapse = "_"))
-    # }
-    # # stores matrix in named list
-    # indices_by_area <- list()
-    # indices_by_area[[matrix_name]] <- area_matrix
-
-
-    #loop through each iterations/ years combination
-    #for(iter in 1:iterations) {
-      #for(year in 1:years) {
 
         #check if CPUE data exists in this year
         #only calculates CPUE/Surveys for years where data is collected
@@ -2055,12 +2010,6 @@ calculate_single_Index  <- function(dataObject){
             index_value <- index_value * obs_error
           }
 
-          #NEW
-
-          # remove the the matrix to store the index and repleace by the tibble formatting
-
-          # #store the final index value in the matrix
-          # indices_by_area[[matrix_name]][year, iter] <- index_value
 
           # Adding more columns to the tibble
           # add to the tibble with appropriate column name (create column name like "CPUE_1" or "Survey_2")
@@ -2086,54 +2035,7 @@ calculate_single_Index  <- function(dataObject){
           observation_return[[paste0(index_name, "_selectivity_hist_idx")]] <- if(design$indextype == "FI") design$selectivity_hist_idx else NA
           observation_return[[paste0(index_name, "_selectivity_proj_idx")]] <- if(design$indextype == "FI") design$selectivity_proj_idx else NA
         }
-      #} # end year
-
     }
-  #} # end iteration
   return(observation_return)
 } # close the fucntion
 
-      #End of the fucntion
-
-    #NEW: not needed in new reporting fromat
-
-    # store results for this survey/CPUE
-    # results_list[[index_idx]] <- list(
-    #   areas = design$areas,
-    #   indextype = design$indextype,
-    #   indexYears = design$indexYears,
-    #   survey_timing = if(design$indextype == "FI") design$survey_timing else NA,
-    #   selectivity_hist_idx = if(design$indextype == "FI") design$selectivity_hist_idx else NA,
-    #   selectivity_proj_idx = if(design$indextype == "FI") design$selectivity_proj_idx else NA,
-    #   indices = indices_by_area
-    # )
-  # }
-  #
-  # # name results (name index)
-  # names(results_list) <- paste0(ifelse(sapply(IndexObj@survey_design, function(d) d$indextype) == "FI", "Survey_", "CPUE_"), 1:n_indices)
-
-  # Determine the actual index type (FD, FI, or Mixed)
-  #NEW - Moved up
-  #actual_types <- unique(sapply(IndexObj@survey_design, function(d) d$indextype))
-  # if(length(actual_types) == 1) {
-  #   # all indices are the same type
-  #   final_indextype <- actual_types[1]  # "FD" or "FI"
-  # } else {
-  #   # mixed types
-  #   final_indextype <- "Mixed"
-  # }
-
-  # return results
-#   return(list(
-#     indexID = IndexObj@indexID,
-#     title = IndexObj@title,
-#     indextype = final_indextype, # "Mixed",  # indicate this can contain both FD and FI
-#     useWeight = IndexObj@useWeight,
-#     indices = results_list,
-#     years_total = years,
-#     iterations_total = iterations,
-#     areas_total = total_areas,
-#     historical_end = historical_end,
-#     n_indices = n_indices
-#   ))
-# }
