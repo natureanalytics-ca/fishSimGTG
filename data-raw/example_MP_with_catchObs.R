@@ -1123,3 +1123,37 @@ p2
 
 
 
+
+#simple function to organize data -  to create year / iteration table (if needed)
+
+create_year_iteration_table <- function(data, index_col) {
+  # get subset with non-NA values
+  subset_data <- data[!is.na(data[[index_col]]), c("k", "j", index_col)]
+  # get unique years and iterations
+  years <- sort(unique(subset_data$j))
+  iterations <- sort(unique(subset_data$k))
+  # create empty matrix
+  result_matrix <- matrix(NA,
+                          nrow = length(years),
+                          ncol = length(iterations),
+                          dimnames = list(paste0("Year_", years),
+                                          paste0("Iter_", iterations)))
+
+  # fill the matrix
+  for(i in 1:nrow(subset_data)) {
+    year_pos <- which(years == subset_data$j[i])
+    iter_pos <- which(iterations == subset_data$k[i])
+    result_matrix[year_pos, iter_pos] <- subset_data[[index_col]][i]
+  }
+
+  return(result_matrix)
+}
+
+out7$HCR$decisionData$CPUE_1
+out7$HCR$decisionData$Survey_2
+out7$HCR$decisionData$observed_catch
+
+cpue_data <- create_year_iteration_table(out7$HCR$decisionData, "CPUE_1")
+survey_data <- create_year_iteration_table(out7$HCR$decisionData, "Survey_2")
+catch_data <- create_year_iteration_table(out7$HCR$decisionData, "observed_catch")
+
