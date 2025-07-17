@@ -2073,16 +2073,19 @@ calculate_single_CatchObs <- function(dataObject) {
   # calculate if this year has catch observations
   if(j %in% CatchObsObj@catchYears) {
 
+    # adding year position (useful when data are not available every years)
+    catch_year_position <- which(CatchObsObj@catchYears == j)
+
     # reporting rate for each year (to simulate over reporitng or under reporting)
-    R_t <- CatchObsObj@reporting_rates[j]
+    R_t <- CatchObsObj@reporting_rates[catch_year_position]
 
     # CV obs bounds for this year and sample a CV value for each iteration
-    if(nrow(CatchObsObj@obs_CVs) >= j && ncol(CatchObsObj@obs_CVs) == 2) {
-      cv_min <- CatchObsObj@obs_CVs[j, 1]
-      cv_max <- CatchObsObj@obs_CVs[j, 2]
+    if(nrow(CatchObsObj@obs_CVs) >= catch_year_position && ncol(CatchObsObj@obs_CVs) == 2) {
+      cv_min <- CatchObsObj@obs_CVs[catch_year_position, 1]
+      cv_max <- CatchObsObj@obs_CVs[catch_year_position, 2]
       obs_CV <- runif(1, min = cv_min, max = cv_max)
     } else {
-      stop(paste("obs_CVs matrix must have 2 columns (min, max) and at least", j, "rows"))
+      stop(paste("obs_CVs matrix must have 2 columns (min, max) and at least", length(CatchObsObj@catchYears), "rows"))
     }
 
 
