@@ -238,16 +238,17 @@ cpueB1@survey_design <- list(
 cpueB1@selectivity_hist_list <- list()
 cpueB1@selectivity_proj_list <- list()
 
-
+#-----------------------------------------------#
+#------------NEW--------------------------------#
+#-----------------------------------------------#
 # Create a new Catchobs class
-
 catch_obs1 <- new("CatchObs",
-                      catchID = "commercial_catch",
-                      title = "commercial catch observations",
+                      catchID = "Fishery Catch",
+                      title = "Fishery catch observations",
                       areas = c(1, 2),  # Both areas like CPUE
                       catchYears = 2:21,  # Same years as CPUE
-                      reporting_rates = c(seq(0.6, 1, length=10), rep(1, 11)),  # Improving historical, non systematic bias in projection
-                      obs_CVs = matrix(c(rep(0.2, 21), rep(0.4, 21)), ncol=2))  # CV bounds: 0.2-0.4 for all years
+                      reporting_rates = c(seq(0.6, 1, length=10), rep(1, 10)),  # Improving historical, non systematic bias in projection
+                      obs_CVs = matrix(c(rep(0.2, 20), rep(0.4, 20)), ncol=2))  # CV bounds: 0.2-0.4 for all years
 
 
 # Now run the simulation
@@ -268,9 +269,9 @@ runProjection(
 
 out1<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_with_catch_obs")
 out1$HCR$decisionData
+out1$HCR$decisionData$CPUE_1
 out1$HCR$decisionData$observed_catch
 out1$dynamics$Ftotal
-
 
 
 #--------------------------------------#
@@ -419,7 +420,9 @@ plotIndex_tibble <- function(tibble_data, save_plot = FALSE,
 
 
 
-# plot fucntion adapted for catch obs data
+#--------------------------------------------#
+# Plot function for catch observation models #
+#--------------------------------------------#
 
 plotCatch_tibble <- function(tibble_data, save_plot = FALSE,
                              filename = "catch_plot.jpeg") {
@@ -546,4 +549,103 @@ p2
 #higer F in the projection period exaplain the increases in catchs
 out1$dynamics$Ftotal
 
-#     ...... ADD more examples
+
+#---------------------------------------------------------------------------------------#
+# EXAMPLE 2                                                                             #
+# Observation model 2: Simulation of two CPUE (biomass) index covering both areas       #
+# adding catch observtion model                                                         #
+#---------------------------------------------------------------------------------------#
+
+#Define the new Index class
+cpueB2 <- new("Index")
+cpueB2@indexID <- "Two_CPUE_programs_all_areas"
+cpueB2@title <- "Two CPUE Programs - Both Cover All Areas"
+cpueB2@useWeight <- TRUE                # CPUE in biomass
+
+cpueB2@survey_design <- list(
+
+  # CPUE 1
+  list(
+    indextype = "FD",
+    areas = c(1, 2),                              # covers all areas
+    indexYears = 2:21,                            # annual data collection
+    q_hist_bounds = c(0.0001, 0.00015),           # historical: 0.0001-0.00015
+    q_proj_bounds = c(0.00015, 0.0003),           # projection: 0.00015-0.0003
+    hyperstability_hist_bounds = c(0.9, 1.1),     # historical: 0.9-1.1
+    hyperstability_proj_bounds = c(0.85, 1.05),   # projection: 0.85-1.05
+    obsError_CV_hist_bounds = c(0.2, 0.3),        # historical CV: 0.2-0.3
+    obsError_CV_proj_bounds = c(0.15, 0.25)       # projection CV: 0.15-0.25 (better precision)
+  ),
+
+  # CPUE 2
+  list(
+    indextype = "FD",
+    areas = c(1, 2),                                     # also covers all areas
+    indexYears = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),  # data collected every other year
+    q_hist_bounds = c(0.0001, 0.00015),                  # historical: 0.0001- 0.00015
+    q_proj_bounds = c(0.00015, 0.0003),                  # projection: 0.00015- 0.0003
+    hyperstability_hist_bounds = c(0.9, 1.1),            # historical: 0.9-1.1
+    hyperstability_proj_bounds = c(0.85, 1.05),          # projection: 0.85-1.05
+    obsError_CV_hist_bounds = c(0.2, 0.3),               # historical CV: 0.2-0.3
+    obsError_CV_proj_bounds = c(0.15, 0.25)              # projection CV: 0.15-0.25 (some improvement)
+  )
+)
+
+# FD indices (CPUE) - empty selectivity lists for FD data
+cpueB2@selectivity_hist_list <- list()
+cpueB2@selectivity_proj_list <- list()
+
+
+# Define CVs for CatchObs class
+total_years <- strategy@projectionYears+ta@historicalYears+1
+end_hist <- ta@historicalYears+1
+cv_periods <- matrix(nrow = total_years, ncol = 2)
+
+for(j in 2:total_years) {
+  if(j <= end_hist) {
+    cv_periods[j, ] <- c(0.2, 0.4)  # Historical: CV between 0.2-0.4
+  } else {
+    cv_periods[j, ] <- c(0.1, 0.2)  # Projection: CV between 0.1-0.2
+  }
+}
+
+#Define the new CatchObs class
+catch_obs2 <- new("CatchObs",
+                  catchID = "period_specific_CV",
+                  title = "Different CV bounds by period",
+                  areas = c(1, 2),
+                  catchYears = 2:total_years,
+                  #improving reporting rates over time
+                  reporting_rates = seq(0.5, 0.9, length.out = total_years-1),
+                  #more precise catch record for the projection period
+                  obs_CVs = cv_periods)
+
+
+# Now run the simulation
+runProjection(
+  LifeHistoryObj = lh,
+  TimeAreaObj = ta,
+  HistFisheryObj = fishery,
+  ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj),
+  StrategyObj = strategy,
+  StochasticObj = stochastic,
+  IndexObj = cpueB2,
+  CatchObsObj = catch_obs2,
+  customToCluster = "testMP",
+  wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
+  fileName = "test_run_MP_with_catch_obs2",
+  doPlot = TRUE
+)
+
+out2<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_with_catch_obs2")
+out2$HCR$decisionData
+out2$HCR$decisionData$CPUE_1
+out2$HCR$decisionData$observed_catch
+out2$dynamics$Ftotal
+
+
+p2 <- plotIndex_tibble(out2$HCR$decisionData,
+                       save_plot = TRUE,
+                       filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_CPUEB2.jpeg")
+
+p2
