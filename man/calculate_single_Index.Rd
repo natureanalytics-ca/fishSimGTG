@@ -4,7 +4,7 @@
 \alias{calculate_single_Index}
 \title{Function for integrating observation models}
 \usage{
-calculate_single_Index(IndexObj)
+calculate_single_Index(dataObject)
 }
 \arguments{
 \item{IndexObj}{A Index object}
