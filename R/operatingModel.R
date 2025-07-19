@@ -2173,10 +2173,10 @@ calculate_single_CatchObs <- function(dataObject) {
 #Roxygen header
 #'Function for integrating length composition observation models
 #'
-#' @param LCompObs A Length Comp observation model object
+#' @param LengthCompObj A Length Comp observation model object
 #' @export
 
-calculateLengthCompIndex  <- function(dataObject) {
+calculate_single_LengthComp  <- function(dataObject) {
 
   # unpack dataObject
   for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
@@ -2184,7 +2184,7 @@ calculateLengthCompIndex  <- function(dataObject) {
 
 
   # get dimensions from simulation
-  years <- years <- dim(VB)[1]
+  years <- dim(VB)[1]
   total_areas <- dim(VB)[3]
   iterations <- dim(VB)[2]
   historical_years <- TimeAreaObj@historicalYears
