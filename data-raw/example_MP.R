@@ -7,7 +7,7 @@ rm(list=ls())
 #source("obs_models_fishSimGTG_updated.R")
 #load fishSimGTG
 #library(fishSimGTG)
-
+devtools::load_all()
 library(ggplot2)
 
 # Create simple examples of each class to understand their structure
@@ -49,7 +49,7 @@ ta@title = "Test"
 ta@gtg = 13
 ta@areas = 2
 ta@recArea = c(0.99, 0.01)
-ta@iterations = 10
+ta@iterations = 2
 ta@historicalYears = 10
 ta@historicalBio = 0.5
 ta@historicalBioType = "relB" # or SPR
@@ -221,7 +221,7 @@ cpueB1@selectivity_proj_list <- list()
 
 
 # Now run the simulation
-result_cpue_bio <- runProjection(
+runProjection(
   LifeHistoryObj = lh,
   TimeAreaObj = ta,
   HistFisheryObj = fishery,
@@ -229,8 +229,8 @@ result_cpue_bio <- runProjection(
   StrategyObj = strategy,
   StochasticObj = stochastic,
   IndexObj = cpueB1,
-  customToCluster = testMP,
-  wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
+  customToCluster = "testMP",
+  wd = here(),
   fileName = "test_run_MP_Bcpue",
   doPlot = TRUE
 )
