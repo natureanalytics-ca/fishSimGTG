@@ -12,6 +12,7 @@ runProjection(
   StrategyObj = NULL,
   StochasticObj = NULL,
   IndexObj = NULL,
+  CatchObsObj = NULL,
   wd,
   fileName,
   seed = 1,

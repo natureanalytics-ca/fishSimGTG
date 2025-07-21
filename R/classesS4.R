@@ -311,3 +311,47 @@ setClass("Index",
 
          )
 )
+
+
+#-----------------------
+# obs model catch
+#-----------------------
+#Roxygen header
+#'Catch observation object
+#'
+#'An S4 object that holds catch observation model parameters
+#' @importFrom methods new
+
+setClass("CatchObs",
+         representation(
+           catchID = "character",
+           title = "character",
+           areas = "numeric",                    # Areas where catch is observed
+           catchYears = "numeric",               # Years with catch records
+           reporting_rates = "numeric",          # Rt for each year (length = total years)
+           obs_CVs = "matrix"                   # CV obs error for each year - changed to a matrix  with rows = years, and cols (min, max)
+         )
+)
+
+
+#-----------------------
+# obs model length composition
+#-----------------------
+#Roxygen header
+#'Length composition observation object
+#'
+#'An S4 object that holds length composition observation  parameters
+#' @importFrom methods new
+
+setClass("LCompObs",
+         representation(
+           indexID = "character",
+           title = "character",
+           survey_design  = "list",
+           selectivity_hist_list = "list",
+           selectivity_proj_list = "list",
+           survey_timing = "numeric",              # FI Survey timing (0-1, fraction of year)- as a placeholder for now
+           length_cv = "numeric",                 # CV for individual length variability
+           length_bin_width= "numeric"
+         )
+)
