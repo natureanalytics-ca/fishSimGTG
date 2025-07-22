@@ -2345,7 +2345,7 @@ calculate_single_LengthComp  <- function(dataObject) {
               # apply FI (surveys) selectivity
               selected_data <- numbers_at_age * selectivity$vul[[gtg]][age]
 
-
+              # need to ask bill if can we add Z to data bject
               #survey timing correction (exp(-total_mortality * LengthCompObj@survey_timing))
               survey_timing_correction <- 1 #survey timing correction (placeholder - set to 1 for now)
               #when integrating into fishSimGTG - will be something like this:
@@ -2411,7 +2411,7 @@ calculate_single_LengthComp  <- function(dataObject) {
               ## assuming there are some fish already in this bin (from previous GTG/age combination
               ## assuming there are already 75 fish in bin 11
               # N_length[11, 1, 1] <- 75  # starting with 75 fish already there
-              ## we found more fish from your specific example: GTG 1, Age 4
+              ## we found more fish from  specific example: GTG 1, Age 4
               #selected_data <- simulation_result$dynamics$N[[1]][4, 1, 1]  # = 107.968
 
               #current_count <- N_length[11, 1, 1] =75
