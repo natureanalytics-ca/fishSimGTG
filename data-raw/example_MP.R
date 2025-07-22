@@ -7,7 +7,9 @@ rm(list=ls())
 #source("obs_models_fishSimGTG_updated.R")
 #load fishSimGTG
 #library(fishSimGTG)
+
 # used to test the fucntions to see if everything is working
+
 devtools::load_all()
 library(ggplot2)
 
