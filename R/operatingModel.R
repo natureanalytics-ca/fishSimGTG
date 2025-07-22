@@ -1862,7 +1862,7 @@ calculate_single_Index  <- function(dataObject){
 
         #check if CPUE data exists in this year
         #only calculates CPUE/Surveys for years where data is collected
-        if(j %in% design$indexYears) {
+        if((j-1) %in% design$indexYears) {
 
           # Create a branch to account for index covering (sampling) only one area
           # or covering multiple areas
@@ -2039,6 +2039,25 @@ calculate_single_Index  <- function(dataObject){
   return(observation_return)
 } # close the fucntion
 
+# Note need to add survey time correction - Ask Bill (  age GTG Z????)
+# better to calculate total mortality arrays and report in data Object
+# Need to calculate total mortality Z arrays (F* sel)+ M
+# Z_age_gtg <- (Ftotal[j, k, area] * selectivity[[gtg]][age])+lh$LifeHistory@M
+
+
+# I used this approach in my OM
+# ## index  survey for each block
+# if( j >= idsyr_blk1 & j < idsyr_blk2 )
+#   itSurv_blk1[j] = qsurv1 * sum(Nat[j,]*sel_s[j,]*waa_s[j,] * exp(-zt[j,]*fyrsurv1) )* exp( (tau_devs_surv1[j] )*obs_error-(tausurv1^2)/2)
+# if( j >= idsyr_blk2)
+#   itSurv_blk2[j] = qsurv2 * sum(Nat[j,]*sel_s[j,]*waa_s[j,] * exp(-zt[j,]*fyrsurv1) )* exp( (tau_devs_surv2[j] )*obs_error-(tausurv2^2)/2)
+# itSurv<-c(itSurv_blk1[1:idnyr_blk1],itSurv_blk2[idsyr_blk2:idnyr_blk2])
+
+# and for length comp:
+# TrueSurvCat[j,] =  Nat[j,] * sel_s[j,] *exp(-zt[j,]*fyrsurv1)                    ## True survey catch-at-age: question here, should I correct bt the time the survey occur
+# pSurvCat[j,] = (TrueSurvCat[j,] + tiny ) / sum(TrueSurvCat[j,] + tiny)           ## Calc. true prop-at-age (survey)
+# cat_sur_mvlog[j,] = mvlogistAgeComps(pSurvCat[j,],taupaasurv,id_seed=s+1000)
+
 
 #Roxygen header
 #'Function for integrating observation models
@@ -2071,10 +2090,10 @@ calculate_single_CatchObs <- function(dataObject) {
   )
 
   # calculate if this year has catch observations
-  if(j %in% CatchObsObj@catchYears) {
+  if((j-1) %in% CatchObsObj@catchYears) {
 
     # adding year position (useful when data are not available every years)
-    catch_year_position <- which(CatchObsObj@catchYears == j)
+    catch_year_position <- which(CatchObsObj@catchYears == (j-1))
 
     # reporting rate for each year (to simulate over reporitng or under reporting)
     R_t <- CatchObsObj@reporting_rates[catch_year_position]
@@ -2271,7 +2290,7 @@ calculate_single_LengthComp  <- function(dataObject) {
 
     # check if this data collection program samples in current year
     # program samples are collected in this year (this year has sampling)
-    if(j %in% design$years) {
+    if((j-1) %in% design$years) {
 
 
       # selectivity for FI programas
@@ -2426,7 +2445,7 @@ calculate_single_LengthComp  <- function(dataObject) {
       }
 
       # get sample size for this year
-      year_idx <- which(design$years == j)
+      year_idx <- which(design$years == (j-1))
       sample_size <- design$sample_sizes[year_idx]
 
       # multinomial sampling
