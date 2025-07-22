@@ -1393,6 +1393,159 @@ p2
 
 
 #plotting length composition
+plotLengthComp_distributions <- function(tibble_data, program_name,
+                                         years_to_plot = NULL,
+                                         show_iterations = TRUE,
+                                         save_plot = FALSE,
+                                         filename = "length_comp_distributions.jpeg") {
+
+  # get number of length bins and basic info
+  n_bins <- unique(tibble_data$n_length_bins)[1]
+  length_bin_width <- unique(tibble_data$length_bin_width)[1]
+  title <- unique(tibble_data$title)[1]
+
+  # get years with data
+  sample_size_col <- paste0(program_name, "_sample_size")
+  years_with_data <- sort(unique(tibble_data$j[!is.na(tibble_data[[sample_size_col]])]))
+
+  #convert to user years
+  user_years_with_data <- years_with_data - 1
+
+  #which years to plot
+  if(is.null(years_to_plot)) {
+    years_to_plot <- user_years_with_data  # all years with data
+  }
+
+  # convert user years back to simulation years for data extraction
+  sim_years_to_plot <- years_to_plot + 1
+
+  #create data frame for plotting
+  plot_data <- data.frame()
+
+  for(sim_year in sim_years_to_plot) {
+    if(!sim_year %in% years_with_data) {
+      cat("No data for year", sim_year-1, "(user year)\n")
+      next
+    }
+
+    #get data for this year
+    year_data <- tibble_data[tibble_data$j == sim_year, ]
+
+    if(nrow(year_data) == 0) next
+
+    #extract proportions for each iteration
+    for(iter in unique(year_data$k)) {
+      iter_data <- year_data[year_data$k == iter, ]
+
+      if(nrow(iter_data) == 0) next
+
+      #get length composition proportions
+      proportions <- numeric(n_bins)
+      for(bin in 1:n_bins) {
+        col_name <- paste0(program_name, "_prop_bin_", bin)
+        if(col_name %in% names(iter_data) && !is.na(iter_data[[col_name]][1])) {
+          proportions[bin] <- iter_data[[col_name]][1]
+        }
+      }
+
+      # include if there is actual data (not all zeros)
+      if(sum(proportions) > 0) {
+        #create length bins (center of each bin)
+        length_bins <- seq(length_bin_width/2, n_bins * length_bin_width - length_bin_width/2, by = length_bin_width)
+
+        iteration_df <- data.frame(
+          length_bin = length_bins,
+          proportion = proportions,
+          user_year = sim_year - 1,  #convert to user year
+          iteration = iter,
+          year_label = paste("Year", sim_year - 1)
+        )
+
+        plot_data <- rbind(plot_data, iteration_df)
+      }
+    }
+  }
+
+  #calculate median across iterations for each year and length bin
+  median_data <- plot_data %>%
+    group_by(user_year, length_bin, year_label) %>%
+    summarise(
+      median_proportion = median(proportion, na.rm = TRUE),
+      .groups = "drop"
+    )
+
+  #convert year label to ordered factor (so the years are shown organizd)
+  plot_data$year_label <- factor(plot_data$year_label,
+                                 levels = paste("Year", sort(unique(plot_data$user_year))))
+  median_data$year_label <- factor(median_data$year_label,
+                                   levels = paste("Year", sort(unique(median_data$user_year))))
+
+
+
+  #create the plot
+  p <- ggplot()
+
+  if(show_iterations) {
+    #ndividual iterations as thin lines
+    p <- p + geom_line(data = plot_data,
+                       aes(x = length_bin, y = proportion, group = interaction(user_year, iteration)),
+                       color = "lightblue", alpha = 0.3, size = 0.3)
+  }
+
+  #median line
+  p <- p + geom_line(data = median_data,
+                     aes(x = length_bin, y = median_proportion),
+                     color = "darkblue", size = 1.2) +
+    geom_point(data = median_data,
+               aes(x = length_bin, y = median_proportion),
+               color = "darkblue", size = 0.8) +
+    facet_wrap(~ year_label, scales = "free_y") +
+    labs(
+      title = paste("Length Composition Distributions -", program_name),
+      subtitle = paste("Data from:", title),
+      x = "Length (cm)",
+      y = "Proportion"
+    ) +
+    theme_minimal() +
+    theme(
+      strip.text = element_text(size = 10, face = "bold"),
+      plot.title = element_text(hjust = 0.5),
+      plot.subtitle = element_text(hjust = 0.5),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+
+  if(save_plot) {
+    ggsave(filename, plot = p, width = 12, height = 8, dpi = 300)
+    cat("Length composition plot saved as:", filename, "\n")
+  }
+
+  return(p)
+}
+
+p1 <- plotLengthComp_distributions(
+  out7$HCR$decisionData,
+  program_name = "Fishery_1",
+  years_to_plot = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),  # User years
+  show_iterations = TRUE,
+  save_plot = TRUE,
+  filename = "FD_length_distributions.jpeg"
+)
+p1
+
+p2 <- plotLengthComp_distributions(
+  out7$HCR$decisionData,
+  program_name = "Survey_2",
+  years_to_plot = c(6, 8, 10, 12, 14, 16, 18, 20),  # User years
+  show_iterations = TRUE,
+  save_plot = TRUE,
+  filename = "FI_length_distributions.jpeg"
+)
+p2
+
+
+
+
+
 
 
 
