@@ -136,6 +136,7 @@ setClass("Fishery",
 #'Inputs for number of gtg, time step, and areas
 #' @param title A title for the object, useful for displaying the contents of the object
 #' @param gtg Number of growth-type groups
+#' @param gtgCV Optional. CV on Linf across gtg. Leave empty to use default of 0.1.
 #' @param areas Number of areas in the model, must be greater than 1.
 #' @param recArea A vector of length areas. Fraction of recruitment to each area with values summing to 1.
 #' @param move A matrix of migration rates of dimensions areas x areas
@@ -150,6 +151,7 @@ setClass("TimeArea",
          representation(
            title = "character",
            gtg = "numeric",
+           gtgCV = "numeric",
            areas = "numeric",
            recArea = "numeric",
            move = "matrix",
@@ -227,6 +229,8 @@ setClass("Strategy",
 #' @param histFisheryDmort A matrix 1 cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces HistFisheryObj@Dmort. Range sampled at each iteration using a uniform distribution.
 #' @param proFisheryDmort_list A list containing number of objects equal to areas. Each object is a matrix 1 cols and 2 rows, with rows 1 and 2 containing a min and a max for parameter corresponding to column n. If entered, replaces ProFisheryObj@Dmort. Range sampled at each iteration using a uniform distribution.
 #' @param sameFisheryDmort Logical. Indicates whether values generated for histFisheryDmort should be applied so that historical and projection parameter values are identical. TRUE also overrides any input in proFisheryDmort_list
+#' @param histEffortSD A vector of length 2 that contains a min and a max. Min and max used to sample a unique value for each iteration by sampling from uniform distribution. Value for each iteration then used to produce inter-annual variation (log-normal deviation) in historical effort trend.
+
 #' @importFrom methods new
 
 setClass("Stochastic",
@@ -251,7 +255,8 @@ setClass("Stochastic",
            sameFisheryRet = "logical",
            histFisheryDmort = "matrix",
            proFisheryDmort_list = "list",
-           sameFisheryDmort = "logical"
+           sameFisheryDmort = "logical",
+           histEffortSD = "numeric"
          )
 )
 

@@ -48,11 +48,13 @@ LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1, doPlot = FALS
     NULL
   } else {
 
+
     #----------------
     #How many gtg?
     #----------------
     gtg <- TimeAreaObj@gtg
     CVLinf<-0.1
+    if(length(TimeAreaObj@gtgCV) > 0 && TimeAreaObj@gtgCV > 0) CVLinf<-TimeAreaObj@gtgCV
     maxsd<-2 #number of standard deviations from mean Linf
     SDLinf<-LifeHistoryObj@Linf*CVLinf
     if(gtg == 1){
@@ -738,19 +740,20 @@ histEffortDev<-function(TimeAreaObj, StochasticObj){
     iterations <- floor(TimeAreaObj@iterations)
     effortSD <- rep(0, iterations)
     if(is(StochasticObj, "Stochastic") &&
-       length(StochasticObj@histEffortCV) > 1 &&
-       StochasticObj@histEffortCV[1] >= 0 &&
-       StochasticObj@histEffortCV[2] >= 0 &&
-       StochasticObj@histEffortCV[2] >= StochasticObj@histEffortCV[1]
+       length(StochasticObj@histEffortSD) > 1 &&
+       StochasticObj@histEffortSD[1] >= 0 &&
+       StochasticObj@histEffortSD[2] >= 0 &&
+       StochasticObj@histEffortSD[2] >= StochasticObj@histEffortSD[1]
     ) {
-      effortSD<-runif(iterations, min = StochasticObj@histEffortCV[1], max = StochasticObj@histEffortCV[2])
+      effortSD<-runif(iterations, min = StochasticObj@histEffortSD[1], max = StochasticObj@histEffortSD[2])
     }
 
     years <- 1 + TimeAreaObj@historicalYears
-    Emult<-array(1:1, dim=c(years, iterations))
+    areas <- TimeAreaObj@areas
+    Emult<-array(1:1, dim=c(years, iterations, areas))
     for (k in 1:iterations){
-      eps<-rnorm(years,0,effortSD[k])
-      Emult[,k]<-exp(eps-effortSD[k]*effortSD[k]/2)
+      eps<-rnorm(years*areas,0,effortSD[k])
+      Emult[,k,]<-exp(eps-effortSD[k]*effortSD[k]/2)
     }
     return(list(Emult=Emult))
   }
@@ -2046,7 +2049,7 @@ calculate_single_Index  <- function(dataObject){
           if(hyperstability_area != 1) {
             index_value <- q_area_year * (area_value^hyperstability_area)
           } else {
-            index_value <- q_area_year * area_value
+            index_value <- q_area_year*area_value
           }
 
           #add observation error with bias correction
@@ -2253,9 +2256,6 @@ calculate_single_LengthComp  <- function(dataObject) {
   iterations <- dim(VB)[2]
   historical_years <- TimeAreaObj@historicalYears
   historical_end <- 1 + historical_years
-
-  # creates life history object
-  #lh <- LHwrapper(LifeHistoryObj, TimeAreaObj) # I think I do not need it
 
   # length bins setup
   # find the range of lengths across all GTGs and ages - useful to define bins

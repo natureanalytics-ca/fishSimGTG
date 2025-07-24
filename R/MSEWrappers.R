@@ -17,7 +17,7 @@ evalMSE<-function(inputObject){
   #------------------
   #Unpack dataObject
   #------------------
-  TimeAreaObj <- StrategyObj <- LifeHistoryObj <- HistFisheryObj <- ProFisheryObj_list <- iterations <- iter <- Ddev <- Edev <- LHdev <- Sdev <- Cdev <- Edev <- RdevMatrix <- doDiagnostic <- NULL
+  TimeAreaObj <- StrategyObj <- LifeHistoryObj <- HistFisheryObj <- ProFisheryObj_list <- iterations <- iter <- Ddev <- Edev <- LHdev <- Sdev <- Cdev <- Edev <- histEffortDev <- RdevMatrix <- doDiagnostic <- NULL
   for(r in 1:NROW(inputObject)) assign(names(inputObject)[r], inputObject[[r]])
 
   controlRuleYear<-c(FALSE, rep(FALSE,(TimeAreaObj@historicalYears)), rep(TRUE, ifelse(is(StrategyObj, "Strategy")  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)))
@@ -38,7 +38,6 @@ evalMSE<-function(inputObject){
   SPR<-array(dim=c(years, iterations))
   relSB<-array(dim=c(years, iterations))
   recN<-array(dim=c(years, iterations))
-
 
   #Optional exports for diagnostic mode
   Nexport<-NULL
@@ -177,16 +176,6 @@ evalMSE<-function(inputObject){
       }
     }
 
-
-    # # VH: add this section to report whn diagnostic is TRUE only for iter 1 catch at age in numbers and biomass
-    # if(doDiagnostic & k==iter[1]) {
-    #   # Initialize catch-at-age arrays for diagnostic
-    #   catchNage<-list()
-    #   for(l in 1:lh$gtg){
-    #     catchNage[[l]]<-array(dim=c(ageClasses, years, areas))
-    #   }
-    # }
-
     # Replaced by:
     #Initialize catch-at-age arrays
     catchNage<-list()
@@ -204,33 +193,13 @@ evalMSE<-function(inputObject){
       RB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist[[m]]$keep[[x]]*lh$W[[x]])))
       Ftotal[1,k,m] <- is$Feq
 
-    # #VH: calculate the ctach at age in numbers and biomass (matrices)
-    #   # Calculate catch matrices by gtg and age
-    #   if(doDiagnostic & k==iter[1]) {
-    #   for(l in 1:lh$gtg){
-    #     catchNage_tmp <- Ftotal[1,k,m]*selHist[[m]]$keep[[l]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[l]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[l]]-lh$LifeHistory@M))*N[[l]][,1,m]
-    #     catchNage[[l]][,1,m] <- catchNage_tmp
-    #     }
-    #   }
-
-    # Replaced by:
-
-    #VH: calculate catch at age in numbers and biomass (always for observation models, like N)
-    # Calculate catch matrices by gtg and age
+      #Calculate catch matrices by gtg and age
       for(l in 1:lh$gtg){
         catchNage_tmp <- Ftotal[1,k,m]*selHist[[m]]$keep[[l]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[l]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[l]]-lh$LifeHistory@M))*N[[l]][,1,m]
         catchNage[[l]][,1,m] <- catchNage_tmp
       }
-
-      #Bill: to be deleted:
-      #catchN[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[1,k,m]*selHist[[m]]$keep[[x]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
-      #catchB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[1,k,m]*selHist[[m]]$keep[[x]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
-
-      #Bill: replace with:
       catchN[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(catchNage[[x]][,1,m])))
       catchB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*catchNage[[x]][,1,m])))
-
-      #Bill: unchanged
       discN[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[1,k,m]*selHist[[m]]$discard[[x]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
       discB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[1,k,m]*selHist[[m]]$discard[[x]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
     }
@@ -259,7 +228,6 @@ evalMSE<-function(inputObject){
                          SB=SB,
                          VB=VB,
                          RB=RB,
-                         catchNage = catchNage, #Bill added
                          catchN=catchN,
                          catchB=catchB,
                          discN=discN,
@@ -291,7 +259,6 @@ evalMSE<-function(inputObject){
                          SB=SB,
                          VB=VB,
                          RB=RB,
-                         catchNage = catchNage, #Bill added
                          catchN=catchN,
                          catchB=catchB,
                          discN=discN,
@@ -324,32 +291,13 @@ evalMSE<-function(inputObject){
         xRow<-which(decisionLocal$year==j & decisionLocal$iteration==k & decisionLocal$area==m)
         Ftotal[j,k,m] <- decisionLocal$Flocal[xRow]
 
-      #VH: calculate catch matrices by gtg and age
-        # for(l in 1:lh$gtg){
-        #   catchNage_tmp <- Ftotal[j,k,m]*selGroup[[m]]$keep[[l]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[l]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[l]]-lh$LifeHistory@M))*N[[l]][,j,m]
-        #
-        #   if(doDiagnostic & k==iter[1]) {
-        #     catchNage[[l]][,j,m] <- catchNage_tmp
-        #   }
-        # }
-
-        #replace by:
         for(l in 1:lh$gtg){
           catchNage_tmp <- Ftotal[j,k,m]*selGroup[[m]]$keep[[l]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[l]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[l]]-lh$LifeHistory@M))*N[[l]][,j,m]
           catchNage[[l]][,j,m] <- catchNage_tmp
         }
 
-
-        #Bill: to be replaced:
-        #catchN[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[j,k,m]*selGroup[[m]]$keep[[x]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
-        #catchB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[j,k,m]*selGroup[[m]]$keep[[x]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
-
-        #Bill replace with:
-        #Bill: replace with:
-        catchN[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(catchNage[[x]][,1,m])))
-        catchB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*catchNage[[x]][,1,m])))
-
-        #Bill: no changes here:
+        catchN[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(catchNage[[x]][,j,m])))
+        catchB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*catchNage[[x]][,j,m])))
         discN[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[j,k,m]*selGroup[[m]]$discard[[x]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
         discB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[j,k,m]*selGroup[[m]]$discard[[x]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
       }
@@ -385,7 +333,6 @@ evalMSE<-function(inputObject){
                            SB=SB,
                            VB=VB,
                            RB=RB,
-                           catchNage = catchNage, #Bill added
                            catchN=catchN,
                            catchB=catchB,
                            discN=discN,
@@ -404,9 +351,8 @@ evalMSE<-function(inputObject){
       }
     }
 
-
-    #Optional exports for diagnostic mode. I think we can impose k==1, right?
-    if(doDiagnostic & k==iter[1]) {
+    #Optional exports for diagnostic mode.
+    if(doDiagnostic & k==1) {
       Nexport = N
       catchNageExport = catchNage
     }
@@ -498,6 +444,9 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
   #Selectivity parameters
   Sdev<-selDev(TimeAreaObj, HistFisheryObj, ProFisheryObj_list, StochasticObj)
 
+  #Historical effort devs
+  histEffortDev<-histEffortDev(TimeAreaObj, StochasticObj)$Emult
+
 
   #---------------------------------------
   #Initial checks that do not stop program
@@ -554,6 +503,15 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
         print(paste("Area", i, "uncertainty in projection fishery selectivity parameters:", "none"))
       }
       if(NROW(selListPro) > 0 & is.null(ProFisheryObj_list)) print("Uncertainty in projection fishery selectivity cannot be specified without also specifying ProFisheryObj")
+    }
+  }
+
+  #Check to see if uncertain historical effort created
+  if(!is.null(StochasticObj)){
+    if(length(StochasticObj@histEffortSD) > 1) {
+      print(paste("Uncertainty in historical effort:", StochasticObj@histEffortSD[1], "to", StochasticObj@histEffortSD[2], "created."))
+    } else {
+      print(paste("Uncertainty in historical effort:", "none"))
     }
   }
 
@@ -682,6 +640,12 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
     print("Effort implementation error cannot be created. Check inputs.")
   }
 
+  #Historical effort devs failed
+  if(proceedMSE && is.null(histEffortDev)) {
+    proceedMSE<-FALSE
+    print("Inter-annual historical effort variation cannot be created. Check inputs.")
+  }
+
   #Number of areas not in agreement with dimensions of the move matrix.
   if(proceedMSE && isTRUE(TimeAreaObj@areas != dim(TimeAreaObj@move)[1] | TimeAreaObj@areas != dim(TimeAreaObj@move)[2])) {
     proceedMSE<-FALSE
@@ -756,6 +720,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                Edev = Edev,
                                LHdev = LHdev,
                                Sdev = Sdev,
+                               histEffortDev = histEffortDev,
                                LifeHistoryObj = LifeHistoryObj,
                                TimeAreaObj = TimeAreaObj,
                                HistFisheryObj = HistFisheryObj,
@@ -825,6 +790,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                     Edev = Edev,
                                     LHdev = LHdev,
                                     Sdev = Sdev,
+                                    histEffortDev = histEffortDev,
                                     LifeHistoryObj = LifeHistoryObj,
                                     TimeAreaObj = TimeAreaObj,
                                     HistFisheryObj = HistFisheryObj,
@@ -867,7 +833,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
     #---------------
     dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref=ref, N=N, catchNage=catchNage)
     HCR<-list(decisionLocal=decisionLocal, decisionAnnual=decisionAnnual, decisionData=decisionData)
-    dt<-list(titleStrategy = titleStrategy, dynamics=dynamics, HCR=HCR, iterations=iterations, LifeHistoryObj=LifeHistoryObj, LHdev=LHdev, Sdev = Sdev, Ddev=Ddev, TimeAreaObj=TimeAreaObj, HistFisheryObj=HistFisheryObj, ProFisheryObj_list=ProFisheryObj_list,  StrategyObj= StrategyObj, StochasticObj=StochasticObj, IndexObj= IndexObj, CatchObsObj= CatchObsObj, LengthCompObj = LengthCompObj)
+    dt<-list(titleStrategy = titleStrategy, dynamics=dynamics, HCR=HCR, iterations=iterations, LifeHistoryObj=LifeHistoryObj, LHdev=LHdev, Sdev = Sdev, histEffortDev = histEffortDev, Ddev=Ddev, TimeAreaObj=TimeAreaObj, HistFisheryObj=HistFisheryObj, ProFisheryObj_list=ProFisheryObj_list,  StrategyObj= StrategyObj, StochasticObj=StochasticObj, IndexObj= IndexObj, CatchObsObj= CatchObsObj, LengthCompObj = LengthCompObj)
     saveRDS(dt, file=paste(wd, "/", fileName, ".rds", sep=""))
 
     #--------------------------------------------------------------------------------
