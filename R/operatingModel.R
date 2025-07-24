@@ -647,6 +647,7 @@ recruit<-function(LifeHistoryObj, B0=0, stock=0, forceR=FALSE, Rforced=0){
 #' @param LifeHistoryObj  A life history object.
 #' @param TimeAreaObj A TimeArea object
 #' @param StrategyObj A Strategy object
+#' @param StochasticObj A Stochastic object
 #' @importFrom methods slot slotNames
 #' @importFrom stats rnorm
 #' @export
@@ -710,6 +711,50 @@ recDev<-function(LifeHistoryObj, TimeAreaObj, StochasticObj, StrategyObj = NULL)
   }
 }
 
+#-----------------------------------------
+#Historical effort deviations
+#-----------------------------------------
+
+#Roxygen header
+#'Historical effort deviations
+#'
+#' @param TimeAreaObj A TimeArea object
+#' @param StochasticObj A Stochastic object
+#' @importFrom methods slot slotNames
+#' @importFrom stats rnorm
+#' @export
+
+histEffortDev<-function(TimeAreaObj, StochasticObj){
+  if(length(TimeAreaObj@historicalYears) == 0 ||
+     length(TimeAreaObj@iterations) == 0 ||
+     TimeAreaObj@iterations < 1
+  ) {
+    return(NULL)
+  } else {
+
+    #--------
+    #effortSD
+    #--------
+    iterations <- floor(TimeAreaObj@iterations)
+    effortSD <- rep(0, iterations)
+    if(is(StochasticObj, "Stochastic") &&
+       length(StochasticObj@histEffortCV) > 1 &&
+       StochasticObj@histEffortCV[1] >= 0 &&
+       StochasticObj@histEffortCV[2] >= 0 &&
+       StochasticObj@histEffortCV[2] >= StochasticObj@histEffortCV[1]
+    ) {
+      effortSD<-runif(iterations, min = StochasticObj@histEffortCV[1], max = StochasticObj@histEffortCV[2])
+    }
+
+    years <- 1 + TimeAreaObj@historicalYears
+    Emult<-array(1:1, dim=c(years, iterations))
+    for (k in 1:iterations){
+      eps<-rnorm(years,0,effortSD[k])
+      Emult[,k]<-exp(eps-effortSD[k]*effortSD[k]/2)
+    }
+    return(list(Emult=Emult))
+  }
+}
 
 #-----------------------------------------
 #Initial relative biomass deviations
