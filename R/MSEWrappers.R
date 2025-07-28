@@ -42,10 +42,7 @@ evalMSE<-function(inputObject){
   #Optional exports for diagnostic mode
   Nexport<-NULL
   catchNageExport<-NULL
-
-  #Bill: does this need to be defined here? Delete?
-  catchNage<-NULL
-
+  Zexport<-NULL
 
   #-----------------------------------------------
   #Setup recording of management strategy details
@@ -176,11 +173,12 @@ evalMSE<-function(inputObject){
       }
     }
 
-    # Replaced by:
-    #Initialize catch-at-age arrays
+    #Initialize catch-at-age arrays and Z array
     catchNage<-list()
+    Z<-list()
     for(l in 1:lh$gtg){
       catchNage[[l]]<-array(dim=c(ageClasses, years, areas))
+      Z[[l]]<-array(dim=c(ageClasses, years, areas))
     }
 
     #Arrays
@@ -195,8 +193,8 @@ evalMSE<-function(inputObject){
 
       #Calculate catch matrices by gtg and age
       for(l in 1:lh$gtg){
-        catchNage_tmp <- Ftotal[1,k,m]*selHist[[m]]$keep[[l]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[l]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[l]]-lh$LifeHistory@M))*N[[l]][,1,m]
-        catchNage[[l]][,1,m] <- catchNage_tmp
+        Z[[l]][,1,m] <- Ftotal[1,k,m]*selHist[[m]]$removal[[l]] + lh$LifeHistory@M
+        catchNage[[l]][,1,m] <- Ftotal[1,k,m]*selHist[[m]]$keep[[l]]/(Z[[l]][,1,m])*(1-exp(-Z[[l]][,1,m]))*N[[l]][,1,m]
       }
       catchN[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(catchNage[[x]][,1,m])))
       catchB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*catchNage[[x]][,1,m])))
@@ -221,6 +219,7 @@ evalMSE<-function(inputObject){
                          areas = areas,
                          ageClasses = ageClasses,
                          N=N,
+                         Z=Z,
                          catchNage=catchNage,
                          selGroup = selGroup,
                          selHist = selHist,
@@ -252,6 +251,7 @@ evalMSE<-function(inputObject){
                          areas = areas,
                          ageClasses = ageClasses,
                          N=N,
+                         Z=Z,
                          catchNage=catchNage,
                          selGroup = selGroup,
                          selHist = selHist,
@@ -292,8 +292,8 @@ evalMSE<-function(inputObject){
         Ftotal[j,k,m] <- decisionLocal$Flocal[xRow]
 
         for(l in 1:lh$gtg){
-          catchNage_tmp <- Ftotal[j,k,m]*selGroup[[m]]$keep[[l]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[l]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[l]]-lh$LifeHistory@M))*N[[l]][,j,m]
-          catchNage[[l]][,j,m] <- catchNage_tmp
+          Z[[l]][,j,m] <- Ftotal[j,k,m]*selGroup[[m]]$removal[[l]] + lh$LifeHistory@M
+          catchNage[[l]][,j,m] <- Ftotal[j,k,m]*selGroup[[m]]$keep[[l]]/(Z[[l]][,j,m])*(1-exp(-Z[[l]][,j,m]))*N[[l]][,j,m]
         }
 
         catchN[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(catchNage[[x]][,j,m])))
@@ -326,6 +326,7 @@ evalMSE<-function(inputObject){
                            areas = areas,
                            ageClasses = ageClasses,
                            N=N,
+                           Z=Z,
                            catchNage=catchNage,
                            selGroup = selGroup,
                            selHist = selHist,
@@ -369,7 +370,7 @@ evalMSE<-function(inputObject){
   #save
   dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref = ref)
   HCR<-list(decisionLocal=decisionLocal, decisionAnnual=decisionAnnual, decisionData=decisionData)
-  return(list(dynamics=dynamics, HCR=HCR, iter=iter, N=Nexport, catchNage=catchNageExport))
+  return(list(dynamics=dynamics, HCR=HCR, iter=iter, N=Nexport, Z=Zexport, catchNage=catchNageExport))
 }
 
 
