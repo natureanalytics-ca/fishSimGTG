@@ -356,6 +356,7 @@ evalMSE<-function(inputObject){
     if(doDiagnostic & k==1) {
       Nexport = N
       catchNageExport = catchNage
+      Zexport = Z
     }
 
 
