@@ -2411,7 +2411,7 @@ calculate_single_LengthComp  <- function(dataObject) {
               survey_timing <- design$survey_timing
               timing_correction <- exp(-Z[[gtg]][age, j, area] * survey_timing)
               # apply timing correction
-              selected_data <- selected_data * survey_timing_correction
+              selected_data <- selected_data * timing_correction
 
             }
 
