@@ -2330,7 +2330,7 @@ calculate_single_LengthComp  <- function(dataObject) {
     #adding validations
     required_elements <- c("indextype", "areas", "years", "sample_sizes")
     if(design$indextype == "FI") {
-      required_elements <- c(required_elements, "selectivity_hist_idx", "selectivity_proj_idx")
+      required_elements <- c(required_elements, "selectivity_hist_idx", "selectivity_proj_idx","survey_timing")
     }
 
     if(!all(required_elements %in% names(design))) {
@@ -2407,12 +2407,9 @@ calculate_single_LengthComp  <- function(dataObject) {
               # apply FI (surveys) selectivity
               selected_data <- numbers_at_age * selectivity$vul[[gtg]][age]
 
-              # need to ask bill if can we add Z to data bject
-              #survey timing correction (exp(-total_mortality * LengthCompObj@survey_timing))
-              survey_timing_correction <- 1 #survey timing correction (placeholder - set to 1 for now)
-              #when integrating into fishSimGTG - will be something like this:
-              #survey_timing_correction <- exp(-simulation_result$dynamics$zt[[gtg]][age, year, iteration, area] * survey_timing)
-
+               #survey timing correction (exp(-total_mortality * LengthCompObj@survey_timing))
+              survey_timing <- design$survey_timing
+              timing_correction <- exp(-Z[[gtg]][age, j, area] * survey_timing)
               # apply timing correction
               selected_data <- selected_data * survey_timing_correction
 
@@ -2543,9 +2540,11 @@ calculate_single_LengthComp  <- function(dataObject) {
       if(design$indextype == "FI") {
         lengthcomp_return[[paste0(program_name, "_selectivity_hist_idx")]] <- design$selectivity_hist_idx
         lengthcomp_return[[paste0(program_name, "_selectivity_proj_idx")]] <- design$selectivity_proj_idx
+        lengthcomp_return[[paste0(program_name, "_survey_timing")]] <- design$survey_timing
       } else {
         lengthcomp_return[[paste0(program_name, "_selectivity_hist_idx")]] <- NA
         lengthcomp_return[[paste0(program_name, "_selectivity_proj_idx")]] <- NA
+        lengthcomp_return[[paste0(program_name, "_survey_timing")]] <- NA
       }
 
       # Add length composition proportions for each bin
@@ -2565,9 +2564,11 @@ calculate_single_LengthComp  <- function(dataObject) {
       if(design$indextype == "FI") {
         lengthcomp_return[[paste0(program_name, "_selectivity_hist_idx")]] <- design$selectivity_hist_idx
         lengthcomp_return[[paste0(program_name, "_selectivity_proj_idx")]] <- design$selectivity_proj_idx
+        lengthcomp_return[[paste0(program_name, "_survey_timing")]] <- design$survey_timing
       } else {
         lengthcomp_return[[paste0(program_name, "_selectivity_hist_idx")]] <- NA
         lengthcomp_return[[paste0(program_name, "_selectivity_proj_idx")]] <- NA
+        lengthcomp_return[[paste0(program_name, "_survey_timing")]] <- NA
       }
 
       # Add NA for all length bins
