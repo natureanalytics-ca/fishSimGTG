@@ -1953,6 +1953,15 @@ calculate_single_Index  <- function(dataObject){
               # sum across GTGs for this single area (retained numbers)
               for(gtg in 1:lh$gtg) {
                 N_gtg_area <- N[[gtg]][, j, area]
+
+              # introducing survey timing correction here
+                if(design$indextype == "FI") {
+                  survey_timing <- design$survey_timing
+                  timing_correction <- exp(-Z[[gtg]][, j, area] * survey_timing)
+                  N_gtg_area <- N_gtg_area * timing_correction
+                }
+
+
                 if(IndexObj@useWeight) {
                   survey_calc <- sum(N_gtg_area * selectivity[[gtg]] * lh$W[[gtg]])
                 } else {
@@ -1994,6 +2003,14 @@ calculate_single_Index  <- function(dataObject){
                 area_contribution <- 0
                 for(gtg in 1:lh$gtg) {
                   N_gtg_area <- N[[gtg]][, j, area]
+
+                  # applying survey correction
+                  if(design$indextype == "FI") {
+                    survey_timing <- design$survey_timing
+                    timing_correction <- exp(-Z[[gtg]][, j, area] * survey_timing)
+                    N_gtg_area <- N_gtg_area * timing_correction
+                  }
+
                   if(IndexObj@useWeight) {
                     survey_calc <- sum(N_gtg_area * selectivity[[gtg]] * lh$W[[gtg]])
                   } else {
