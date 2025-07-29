@@ -939,7 +939,7 @@ SurveyB5@survey_design <- list(
     indextype = "FI",
     areas = c(1, 2),                    # covers all areas
     indexYears = 1:total_years,               # annual data collection
-    survey_timing = 1,
+    survey_timing = 0.1,                # near the beginning of the year
     selectivity_hist_idx = 1,           # uses survey_sel1_hist
     selectivity_proj_idx = 1,           # uses survey_sel1_proj
     q_hist_bounds = c(0.0001, 0.00015),       # historical: 0.0001-0.00015
@@ -955,7 +955,7 @@ SurveyB5@survey_design <- list(
     indextype = "FI",
     areas = c(1, 2),                    # also covers all areas
     indexYears = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),  # data collected every other year
-    survey_timing = 1,
+    survey_timing = 0.5,                #half year
     selectivity_hist_idx = 2,           # uses survey_sel2_hist
     selectivity_proj_idx = 2,           # uses survey_sel2_proj
     q_hist_bounds = c(0.0001, 0.00015),       # historical: 0.0001- 0.00015
@@ -1093,7 +1093,7 @@ mixed_biomass@survey_design <- list(
     indextype = "FI",
     areas = c(1, 2),                    # covers both areas
     indexYears = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),
-    survey_timing = 1,
+    survey_timing = 0.5,                # half year
     selectivity_hist_idx = 1,           # uses survey_sel1_hist
     selectivity_proj_idx = 1,           # uses survey_sel1_proj
     q_hist_bounds = c(0.00008, 0.00012),      # historical period
@@ -1262,7 +1262,7 @@ mixed_biomass@survey_design <- list(
     indextype = "FI",
     areas = c(1, 2),                    # covers both areas
     indexYears = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),
-    survey_timing = 1,
+    survey_timing = 0.5,                #half year
     selectivity_hist_idx = 1,           # uses survey_sel1_hist
     selectivity_proj_idx = 1,           # uses survey_sel1_proj
     q_hist_bounds = c(0.00008, 0.00012),      # historical period
@@ -1323,7 +1323,6 @@ catch_obs7 <- new("CatchObs",
 length_comp7 <- new("LCompObs")
 length_comp7@indexID <- "Mixed_LC_FD_FI"
 length_comp7@title <- "Mixed FD and FI Length Composition"
-length_comp7@survey_timing <- 1.0      # end of year
 length_comp7@length_cv <- 0.10         # 10% CV for individual length variability
 length_comp7@length_bin_width <- 1     # 1cm bins
 
@@ -1345,7 +1344,8 @@ length_comp7@survey_design <- list(
     years = c(6, 8, 10, 12, 14, 16, 18, 20),            # every 2 years
     sample_sizes = c(200, 250, 300, 350, 300, 350, 300, 350),  # large sample sizes
     selectivity_hist_idx = 1,            # REUSES survey_sel1_hist (same as  Index)
-    selectivity_proj_idx = 1             # REUSES survey_sel1_proj (same as  Index)
+    selectivity_proj_idx = 1,             # REUSES survey_sel1_proj (same as  Index)
+    survey_timing = 0.5      # half of year
   )
 )
 
