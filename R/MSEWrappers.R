@@ -17,7 +17,7 @@ evalMSE<-function(inputObject){
   #------------------
   #Unpack dataObject
   #------------------
-  TimeAreaObj <- StrategyObj <- LifeHistoryObj <- HistFisheryObj <- ProFisheryObj_list <- iterations <- iter <- Ddev <- Edev <- LHdev <- Sdev <- Cdev <- Edev <- RdevMatrix <- NULL
+  TimeAreaObj <- StrategyObj <- LifeHistoryObj <- HistFisheryObj <- ProFisheryObj_list <- iterations <- iter <- Ddev <- Edev <- LHdev <- Sdev <- Cdev <- Edev <- histEffortDev <- RdevMatrix <- doDiagnostic <- NULL
   for(r in 1:NROW(inputObject)) assign(names(inputObject)[r], inputObject[[r]])
 
   controlRuleYear<-c(FALSE, rep(FALSE,(TimeAreaObj@historicalYears)), rep(TRUE, ifelse(is(StrategyObj, "Strategy")  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)))
@@ -38,6 +38,11 @@ evalMSE<-function(inputObject){
   SPR<-array(dim=c(years, iterations))
   relSB<-array(dim=c(years, iterations))
   recN<-array(dim=c(years, iterations))
+
+  #Optional exports for diagnostic mode
+  Nexport<-NULL
+  catchNageExport<-NULL
+  Zexport<-NULL
 
   #-----------------------------------------------
   #Setup recording of management strategy details
@@ -156,7 +161,7 @@ evalMSE<-function(inputObject){
       }
     }
 
-    #Specify iniitial conditions to start sims
+    #Specify iniitial conditions to start sims in iteration k
     N<-list()
     for(l in 1:lh$gtg){
       N[[l]]<-array(dim=c(ageClasses, years, areas))
@@ -168,6 +173,14 @@ evalMSE<-function(inputObject){
       }
     }
 
+    #Initialize catch-at-age arrays and Z array
+    catchNage<-list()
+    Z<-list()
+    for(l in 1:lh$gtg){
+      catchNage[[l]]<-array(dim=c(ageClasses, years, areas))
+      Z[[l]]<-array(dim=c(ageClasses, years, areas))
+    }
+
     #Arrays
     for(m in 1:areas) SB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum((N[[x]][,1,m]*lh$mat[[x]]*lh$W[[x]])[2:ageClasses])))
     SPR[1,k]<-(sum(SB[1,k,])/is$Req)/(is$B0/lh$LifeHistory@R0)
@@ -177,8 +190,14 @@ evalMSE<-function(inputObject){
       VB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist[[m]]$vul[[x]]*lh$W[[x]])))
       RB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,1,m]*selHist[[m]]$keep[[x]]*lh$W[[x]])))
       Ftotal[1,k,m] <- is$Feq
-      catchN[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[1,k,m]*selHist[[m]]$keep[[x]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
-      catchB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[1,k,m]*selHist[[m]]$keep[[x]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
+
+      #Calculate catch matrices by gtg and age
+      for(l in 1:lh$gtg){
+        Z[[l]][,1,m] <- Ftotal[1,k,m]*selHist[[m]]$removal[[l]] + lh$LifeHistory@M
+        catchNage[[l]][,1,m] <- Ftotal[1,k,m]*selHist[[m]]$keep[[l]]/(Z[[l]][,1,m])*(1-exp(-Z[[l]][,1,m]))*N[[l]][,1,m]
+      }
+      catchN[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(catchNage[[x]][,1,m])))
+      catchB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*catchNage[[x]][,1,m])))
       discN[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[1,k,m]*selHist[[m]]$discard[[x]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
       discB[1,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[1,k,m]*selHist[[m]]$discard[[x]]/(Ftotal[1,k,m]*selHist[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[1,k,m]*selHist[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,1,m])))
     }
@@ -200,6 +219,8 @@ evalMSE<-function(inputObject){
                          areas = areas,
                          ageClasses = ageClasses,
                          N=N,
+                         Z=Z,
+                         catchNage=catchNage,
                          selGroup = selGroup,
                          selHist = selHist,
                          selPro = selPro,
@@ -230,6 +251,8 @@ evalMSE<-function(inputObject){
                          areas = areas,
                          ageClasses = ageClasses,
                          N=N,
+                         Z=Z,
+                         catchNage=catchNage,
                          selGroup = selGroup,
                          selHist = selHist,
                          selPro = selPro,
@@ -267,8 +290,14 @@ evalMSE<-function(inputObject){
         RB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(N[[x]][,j,m]*selGroup[[m]]$keep[[x]]*lh$W[[x]])))
         xRow<-which(decisionLocal$year==j & decisionLocal$iteration==k & decisionLocal$area==m)
         Ftotal[j,k,m] <- decisionLocal$Flocal[xRow]
-        catchN[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[j,k,m]*selGroup[[m]]$keep[[x]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
-        catchB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[j,k,m]*selGroup[[m]]$keep[[x]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
+
+        for(l in 1:lh$gtg){
+          Z[[l]][,j,m] <- Ftotal[j,k,m]*selGroup[[m]]$removal[[l]] + lh$LifeHistory@M
+          catchNage[[l]][,j,m] <- Ftotal[j,k,m]*selGroup[[m]]$keep[[l]]/(Z[[l]][,j,m])*(1-exp(-Z[[l]][,j,m]))*N[[l]][,j,m]
+        }
+
+        catchN[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(catchNage[[x]][,j,m])))
+        catchB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*catchNage[[x]][,j,m])))
         discN[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(Ftotal[j,k,m]*selGroup[[m]]$discard[[x]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
         discB[j,k,m] <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Ftotal[j,k,m]*selGroup[[m]]$discard[[x]]/(Ftotal[j,k,m]*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Ftotal[j,k,m]*selGroup[[m]]$removal[[x]]-lh$LifeHistory@M))*N[[x]][,j,m])))
       }
@@ -297,6 +326,8 @@ evalMSE<-function(inputObject){
                            areas = areas,
                            ageClasses = ageClasses,
                            N=N,
+                           Z=Z,
+                           catchNage=catchNage,
                            selGroup = selGroup,
                            selHist = selHist,
                            selPro = selPro,
@@ -320,6 +351,15 @@ evalMSE<-function(inputObject){
         decisionData<-rbind(decisionData, do.call(get(StrategyObj@projectionName), list(phase=1, dataObject)))
       }
     }
+
+    #Optional exports for diagnostic mode.
+    if(doDiagnostic & k==1) {
+      Nexport = N
+      catchNageExport = catchNage
+      Zexport = Z
+    }
+
+
     if(!is.null(hostName) & !is.null(waitName)){
       hostName$set(k/floor(TimeAreaObj@iterations)*100)
     }
@@ -331,7 +371,7 @@ evalMSE<-function(inputObject){
   #save
   dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref = ref)
   HCR<-list(decisionLocal=decisionLocal, decisionAnnual=decisionAnnual, decisionData=decisionData)
-  return(list(dynamics=dynamics, HCR=HCR, iter=iter))
+  return(list(dynamics=dynamics, HCR=HCR, iter=iter, N=Nexport, Z=Zexport, catchNage=catchNageExport))
 }
 
 
@@ -369,8 +409,8 @@ evalMSE<-function(inputObject){
 #' @export
 
 
-runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryObj_list = NULL, StrategyObj = NULL, StochasticObj = NULL,
-                        wd, fileName, seed = 1, doPlot = FALSE, customToCluster = NULL, titleStrategy = "No name", waitName=NULL, hostName=NULL){
+runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryObj_list = NULL, StrategyObj = NULL, StochasticObj = NULL, IndexObj=NULL, CatchObsObj=NULL, LengthCompObj=NULL,
+                        wd, fileName, seed = 1, doPlot = FALSE, doDiagnostic=F, customToCluster = NULL, titleStrategy = "No name", waitName=NULL, hostName=NULL){
 
   #-----------------------
   #Build inputObject
@@ -405,6 +445,9 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
 
   #Selectivity parameters
   Sdev<-selDev(TimeAreaObj, HistFisheryObj, ProFisheryObj_list, StochasticObj)
+
+  #Historical effort devs
+  histEffortDev<-histEffortDev(TimeAreaObj, StochasticObj)$Emult
 
 
   #---------------------------------------
@@ -462,6 +505,15 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
         print(paste("Area", i, "uncertainty in projection fishery selectivity parameters:", "none"))
       }
       if(NROW(selListPro) > 0 & is.null(ProFisheryObj_list)) print("Uncertainty in projection fishery selectivity cannot be specified without also specifying ProFisheryObj")
+    }
+  }
+
+  #Check to see if uncertain historical effort created
+  if(!is.null(StochasticObj)){
+    if(length(StochasticObj@histEffortSD) > 1) {
+      print(paste("Uncertainty in historical effort:", StochasticObj@histEffortSD[1], "to", StochasticObj@histEffortSD[2], "created."))
+    } else {
+      print(paste("Uncertainty in historical effort:", "none"))
     }
   }
 
@@ -590,6 +642,12 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
     print("Effort implementation error cannot be created. Check inputs.")
   }
 
+  #Historical effort devs failed
+  if(proceedMSE && is.null(histEffortDev)) {
+    proceedMSE<-FALSE
+    print("Inter-annual historical effort variation cannot be created. Check inputs.")
+  }
+
   #Number of areas not in agreement with dimensions of the move matrix.
   if(proceedMSE && isTRUE(TimeAreaObj@areas != dim(TimeAreaObj@move)[1] | TimeAreaObj@areas != dim(TimeAreaObj@move)[2])) {
     proceedMSE<-FALSE
@@ -664,15 +722,20 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                Edev = Edev,
                                LHdev = LHdev,
                                Sdev = Sdev,
+                               histEffortDev = histEffortDev,
                                LifeHistoryObj = LifeHistoryObj,
                                TimeAreaObj = TimeAreaObj,
                                HistFisheryObj = HistFisheryObj,
                                ProFisheryObj_list = ProFisheryObj_list,
                                StrategyObj = StrategyObj,
                                StochasticObj = StochasticObj,
+                               IndexObj= IndexObj,
+                               CatchObsObj= CatchObsObj,
+                               LengthCompObj= LengthCompObj,
                                iterations=iterations,
                                waitName=waitName,
-                               hostName=hostName)
+                               hostName=hostName,
+                               doDiagnostic=doDiagnostic)
       }
       mseParallel<-sfLapply(inputObject, evalMSE)
       sfRemoveAll()
@@ -696,6 +759,10 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       decisionAnnual<-mseParallel[[1]]$HCR$decisionAnnual
       decisionLocal<-mseParallel[[1]]$HCR$decisionLocal
       decisionData<-mseParallel[[1]]$HCR$decisionData
+
+      #Optional diagnostic outputs
+      N<-mseParallel[[1]]$N
+      catchNage<-mseParallel[[1]]$catchNage
 
       for (i in 2:cores){
         for(m in 1:TimeAreaObj@areas){
@@ -725,15 +792,20 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
                                     Edev = Edev,
                                     LHdev = LHdev,
                                     Sdev = Sdev,
+                                    histEffortDev = histEffortDev,
                                     LifeHistoryObj = LifeHistoryObj,
                                     TimeAreaObj = TimeAreaObj,
                                     HistFisheryObj = HistFisheryObj,
                                     ProFisheryObj_list = ProFisheryObj_list,
                                     StrategyObj = StrategyObj,
                                     StochasticObj = StochasticObj,
+                                    IndexObj = IndexObj,
+                                    CatchObsObj= CatchObsObj,
+                                    LengthCompObj= LengthCompObj,
                                     iterations=iterations,
                                     waitName=waitName,
-                                    hostName=hostName
+                                    hostName=hostName,
+                                    doDiagnostic=doDiagnostic
                                     )
                    )
 
@@ -752,15 +824,18 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       decisionAnnual<-mse$HCR$decisionAnnual
       decisionLocal<-mse$HCR$decisionLocal
       decisionData<-mse$HCR$decisionData
+
+      #Optional diagnostic outputs
+      N<-mse$N
+      catchNage<-mse$catchNage
     }
 
     #---------------
     #Save results
     #---------------
-
-    dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref = ref)
+    dynamics<-list(SB=SB, VB=VB, RB=RB, catchB=catchB, catchN=catchN, Ftotal=Ftotal, discB=discB, discN=discN, SPR=SPR, relSB=relSB, recN=recN, ref=ref, N=N, catchNage=catchNage)
     HCR<-list(decisionLocal=decisionLocal, decisionAnnual=decisionAnnual, decisionData=decisionData)
-    dt<-list(titleStrategy = titleStrategy, dynamics=dynamics, HCR=HCR, iterations=iterations, LifeHistoryObj=LifeHistoryObj, LHdev=LHdev, Sdev = Sdev, Ddev=Ddev, TimeAreaObj=TimeAreaObj, HistFisheryObj=HistFisheryObj, ProFisheryObj_list=ProFisheryObj_list,  StrategyObj= StrategyObj, StochasticObj=StochasticObj)
+    dt<-list(titleStrategy = titleStrategy, dynamics=dynamics, HCR=HCR, iterations=iterations, LifeHistoryObj=LifeHistoryObj, LHdev=LHdev, Sdev = Sdev, histEffortDev = histEffortDev, Ddev=Ddev, TimeAreaObj=TimeAreaObj, HistFisheryObj=HistFisheryObj, ProFisheryObj_list=ProFisheryObj_list,  StrategyObj= StrategyObj, StochasticObj=StochasticObj, IndexObj= IndexObj, CatchObsObj= CatchObsObj, LengthCompObj = LengthCompObj)
     saveRDS(dt, file=paste(wd, "/", fileName, ".rds", sep=""))
 
     #--------------------------------------------------------------------------------

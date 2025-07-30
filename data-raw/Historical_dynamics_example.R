@@ -31,7 +31,7 @@ LifeHistoryObj@Steep<-0.6
 LifeHistoryObj@isHermaph<-TRUE
 LifeHistoryObj@H50<-46.2
 LifeHistoryObj@H95delta<-11.8
-LifeHistoryObj@recSD<-0.6
+LifeHistoryObj@recSD<-0
 LifeHistoryObj@recRho<-0
 LifeHistoryObj@R0<-10000
 
@@ -41,6 +41,7 @@ LifeHistoryObj@R0<-10000
 TimeAreaObj<-new("TimeArea")
 TimeAreaObj@title = "Example"
 TimeAreaObj@gtg = 13
+TimeAreaObj@gtgCV = 0.3
 TimeAreaObj@areas = 2
 TimeAreaObj@recArea = c(0.99, 0.01)
 TimeAreaObj@iterations = 3
@@ -61,9 +62,6 @@ HistFisheryObj@Dmort <- 0
 
 #---Visualize life history. Does everything make sense?
 #---Optional, create a plot of life history that is useful for reports.
-
-#To simply display to the console
-lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj, doPlot = TRUE)
 
 #To save to file (for reports?)
 lhOut<-LHwrapper(LifeHistoryObj, TimeAreaObj, wd = here(), imageName = "LifeHistory", dpi = 300, doPlot = TRUE)
@@ -117,7 +115,8 @@ runProjection(LifeHistoryObj = LifeHistoryObj,
 #---Current, we have the following parameters specificed TimeAreaObj@historicalBio & TimeAreaObj@historicalBioType, which specify a constant SSB/SSB0 for all iterations
 #---But when we use a Stochastic object, it overrides this constant value
 StochasticObj<-new("Stochastic")
-StochasticObj@historicalBio = c(0.3, 0.6)
+#StochasticObj@historicalBio = c(0.3, 0.6)
+StochasticObj@histEffortSD = c(0.1, 0.3)
 
 runProjection(LifeHistoryObj = LifeHistoryObj,
               TimeAreaObj = TimeAreaObj,

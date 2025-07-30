@@ -15,7 +15,7 @@
 fixedStrategy<-function(phase, dataObject){
 
   #Unpack dataObject
-  j <- areas <- k <- TimeAreaObj <- is <- NULL
+  j <- areas <- k <- TimeAreaObj <- is <- histEffortDev <- NULL
   for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
 
   #Booking keeping for year for items in TimeAreaObj
@@ -24,7 +24,7 @@ fixedStrategy<-function(phase, dataObject){
   if(phase==3){
     #Create a temp data frame of fishing mortalities by area
     Flocal<-data.frame()
-    for (m in 1:areas) Flocal<-rbind(Flocal, c(j, k, m, TimeAreaObj@historicalEffort[yr,m]*is$Feq))
+    for (m in 1:areas) Flocal<-rbind(Flocal, c(j, k, m, TimeAreaObj@historicalEffort[yr,m]*is$Feq*histEffortDev[j,k,m]))
     return(list(year=Flocal[,1], iteration=Flocal[,2], area=Flocal[,3],  Flocal=Flocal[,4]))
   }
 }
@@ -126,3 +126,92 @@ projectionStrategy<-function(phase, dataObject){
     return(list(year=Flocal[,1], iteration=Flocal[,2], area=Flocal[,3],  Flocal=Flocal[,4]))
   }
 }
+
+#--------------------------------------------------------------------------
+#Constant catch - TAC based on average catch of final x years of historical
+#--------------------------------------------------------------------------
+
+#Roxygen header
+#' MP for setting a TAC based on average catch of final x years of historical.
+#'
+#' The Strategy object should be specified as follows. (1) Set Strategy@projectionYears to the number of forward projection years you wish to simulate. (2) Strategy@projectionName = "constantCatchStrategy".
+#' (3)  Strategy@projectionParams should be a named list with one item called aveYrs, where aveYrs is the number of years to average catch across, including and proceeding the final historical year.
+#' @param phase Management procedures are coded in three phases: 1 - data collection, 2 - a decision making process, 3 - conversion of that process into annual F
+#' @param dataObject The needed inputs to the management procedure
+#' @export
+
+constantCatchStrategy<-function(phase, dataObject){
+
+  #Unpack dataObject
+  j <- TimeAreaObj <- areas <- StrategyObj <- is <- k <- StochasticObj <- lh <- N <- selHist <- Cdev <- Edev <- selGroup <- Ftotal <- NULL
+  for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
+
+  ########
+  if(phase==1){
+    #User defines computations needed.
+    combined_data <- list()
+
+    # get catch obs data and add to combined_data list
+    if(!is.null(CatchObsObj)) {
+      catch_result <- calculate_single_CatchObs(dataObject)
+      # add all catch columns
+      for(col_name in names(catch_result)) {
+        combined_data[[col_name]] <- catch_result[[col_name]]
+      }
+    }
+    return(combined_data)
+  }
+
+  ########
+  #Phase 2 - OPTIONAL. Analysis, decision-rule and/or HCR
+  if(phase==2){
+
+    #Book keeping year for terminal year of historical period, if available
+    yrHist <- TimeAreaObj@historicalYears + 1
+    frYear <- TimeAreaObj@historicalYears + 2 - StrategyObj@projectionParams[['aveYrs']]
+
+    TACvec<-vector()
+    for(m in 1:areas){
+      TACvec[m]<-mean(decisionData[[paste0("observed_catch_area_", m)]][which(decisionData$k == k & decisionData$j >= frYear & decisionData$j <= yrHist)])
+    }
+
+    #User defines variable names for returned list, as this info will be used in Phase 3
+    return(list(year=rep(j, areas), iteration=rep(k,areas), area=1:areas, TAC=TACvec, frYear = rep(frYear, areas), yrHist = rep(yrHist, areas)))
+  }
+
+  ########
+  #Phase 3
+  if(phase==3){
+    return(solveFfromTAC(dataObject))
+  }
+}
+
+
+#----------------------------------------
+#Calculate F from TAC - utility function
+#----------------------------------------
+#Roxygen header
+#' Calculate F from TAC - utility function.
+#' @param dataObject The needed inputs to the management procedure
+#' @export
+#' @examples
+#'
+#'
+solveFfromTAC <- function(dataObject){
+  #Unpack dataObject
+  for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
+
+  Flocal<-vector()
+  for(m in 1:areas){
+    TACtmp<-decisionAnnual$TAC[decisionAnnual$year==j & decisionAnnual$iteration==k & decisionAnnual$area==m]
+    data<-list(N=N, selGroup=selGroup, lh = lh, TACtmp=TACtmp)
+    min.RSS<-function(logFmort, data){
+      Fmort<-exp(logFmort)
+      catchBtmp <- sum(sapply(1:lh$gtg, FUN=function(x) sum(lh$W[[x]]*Fmort*selGroup[[m]]$keep[[x]]/(Fmort*selGroup[[m]]$removal[[x]] + lh$LifeHistory@M)*(1-exp(-Fmort*selGroup[[m]]$removal[[x]] - lh$LifeHistory@M))*N[[x]][,j,m])))
+      (catchBtmp-data$TACtmp)^2
+    }
+    Flocal[m]<-ifelse(data$TACtmp==0, 0.0, exp(optimize(min.RSS, lower = -14, upper = 1.1, maximum=FALSE, data=data)$minimum))
+  }
+  return(list(year=rep(j,areas), iteration=rep(k,areas), area=1:areas, Flocal=Flocal))
+}
+

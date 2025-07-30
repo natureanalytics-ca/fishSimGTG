@@ -48,11 +48,13 @@ LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1, doPlot = FALS
     NULL
   } else {
 
+
     #----------------
     #How many gtg?
     #----------------
     gtg <- TimeAreaObj@gtg
     CVLinf<-0.1
+    if(length(TimeAreaObj@gtgCV) > 0 && TimeAreaObj@gtgCV > 0) CVLinf<-TimeAreaObj@gtgCV
     maxsd<-2 #number of standard deviations from mean Linf
     SDLinf<-LifeHistoryObj@Linf*CVLinf
     if(gtg == 1){
@@ -647,6 +649,7 @@ recruit<-function(LifeHistoryObj, B0=0, stock=0, forceR=FALSE, Rforced=0){
 #' @param LifeHistoryObj  A life history object.
 #' @param TimeAreaObj A TimeArea object
 #' @param StrategyObj A Strategy object
+#' @param StochasticObj A Stochastic object
 #' @importFrom methods slot slotNames
 #' @importFrom stats rnorm
 #' @export
@@ -710,6 +713,51 @@ recDev<-function(LifeHistoryObj, TimeAreaObj, StochasticObj, StrategyObj = NULL)
   }
 }
 
+#-----------------------------------------
+#Historical effort deviations
+#-----------------------------------------
+
+#Roxygen header
+#'Historical effort deviations
+#'
+#' @param TimeAreaObj A TimeArea object
+#' @param StochasticObj A Stochastic object
+#' @importFrom methods slot slotNames
+#' @importFrom stats rnorm
+#' @export
+
+histEffortDev<-function(TimeAreaObj, StochasticObj){
+  if(length(TimeAreaObj@historicalYears) == 0 ||
+     length(TimeAreaObj@iterations) == 0 ||
+     TimeAreaObj@iterations < 1
+  ) {
+    return(NULL)
+  } else {
+
+    #--------
+    #effortSD
+    #--------
+    iterations <- floor(TimeAreaObj@iterations)
+    effortSD <- rep(0, iterations)
+    if(is(StochasticObj, "Stochastic") &&
+       length(StochasticObj@histEffortSD) > 1 &&
+       StochasticObj@histEffortSD[1] >= 0 &&
+       StochasticObj@histEffortSD[2] >= 0 &&
+       StochasticObj@histEffortSD[2] >= StochasticObj@histEffortSD[1]
+    ) {
+      effortSD<-runif(iterations, min = StochasticObj@histEffortSD[1], max = StochasticObj@histEffortSD[2])
+    }
+
+    years <- 1 + TimeAreaObj@historicalYears
+    areas <- TimeAreaObj@areas
+    Emult<-array(1:1, dim=c(years, iterations, areas))
+    for (k in 1:iterations){
+      eps<-rnorm(years*areas,0,effortSD[k])
+      Emult[,k,]<-exp(eps-effortSD[k]*effortSD[k]/2)
+    }
+    return(list(Emult=Emult))
+  }
+}
 
 #-----------------------------------------
 #Initial relative biomass deviations
@@ -1187,4 +1235,1315 @@ MoveMat<-function(Surv_in, Move_in, area_in){
     Mout<-cbind(Mout,tmp)
   }
   return(Mout)
+}
+
+
+
+#-----------------------------------------
+# Obs model indices
+#-----------------------------------------
+
+#Roxygen header
+#'Observation models function for testing
+#'
+#' @param simulation_result Output from runProjection
+#' @param IndexObj A Index object
+#' @export
+
+calculateIndex  <- function(simulation_result, IndexObj){
+
+  # define the dimensions (to get the structure of the simulation)
+  years <- dim(simulation_result$dynamics$VB)[1]       #total years hist+future
+  iterations <- dim(simulation_result$dynamics$VB)[2]  #total iterations
+  total_areas <- dim(simulation_result$dynamics$VB)[3] #total areas
+  historicalYears <- simulation_result$TimeAreaObj@historicalYears #toal historical years- before management
+  historical_end <- 1 + historicalYears
+
+  # counts number of individual survey/CPUE programs defined in the design list.
+  n_indices <- length(IndexObj@survey_design)
+
+  if(n_indices == 0) {
+    stop("survey_design list must contain at least one survey or CPUE design")
+  }
+
+  #  add validation for each survey/CPUE design
+  #  lopp through each individual survey/CPUE design for validation.
+  for(index_idx in 1:n_indices) {
+    design <- IndexObj@survey_design[[index_idx]] #extracts current survey design from the list (for each index)
+
+    # common required elements for surveys/CPUEs
+    required_elements <- c("indextype", "areas", "indexYears",
+                           "q_hist_bounds", "q_proj_bounds",
+                           "hyperstability_hist_bounds", "hyperstability_proj_bounds",
+                           "obsError_CV_hist_bounds", "obsError_CV_proj_bounds")
+
+    # for FI surveys only, selectivity indices and survey_timing are needed
+    if("indextype" %in% names(design) && design$indextype == "FI") {
+      required_elements <- c(required_elements, "selectivity_hist_idx",
+                             "selectivity_proj_idx", "survey_timing")
+    }
+
+    # check the required elements are available
+    if(!all(required_elements %in% names(design))) { # check if required element exist
+      missing <- required_elements[!required_elements %in% names(design)]   # identify what element is misssing
+      stop(paste("Survey design", index_idx, "missing elements:", paste(missing, collapse = ", ")))
+    }
+
+    # validate indextype
+    if(!design$indextype %in% c("FD", "FI")) {
+      stop(paste("Survey design", index_idx, ": indextype must be 'FD' or 'FI'"))
+    }
+
+
+    # validation of n areas
+    if(any(design$areas > total_areas)) {
+      stop(paste("Survey design", index_idx, ": areas exceed total areas in simulation"))
+    }
+
+    # validation of parameter bounds (each should be vector of length 2)
+    param_bounds <- c("q_hist_bounds", "q_proj_bounds",
+                      "hyperstability_hist_bounds", "hyperstability_proj_bounds",
+                      "obsError_CV_hist_bounds", "obsError_CV_proj_bounds")
+
+    for(param in param_bounds) {
+      if(length(design[[param]]) != 2 || design[[param]][2] < design[[param]][1]) {
+        stop(paste("Survey design", index_idx, ":", param, "must be vector [min, max] with max >= min"))
+      }
+    }
+
+    # validate survey_timing for FI surveys
+    if(design$indextype == "FI") {
+      if(!is.numeric(design$survey_timing) || length(design$survey_timing) != 1 ||
+         design$survey_timing < 0 || design$survey_timing > 1) {
+        stop(paste("Survey design", index_idx, ": survey_timing must be a single value between 0 and 1"))
+      }
+    }
+
+    # for FI surveys: validation of selectivity
+    # validates that selectivity indices do not exceed available selectivity objects
+    if(design$indextype == "FI") {
+      if(design$selectivity_hist_idx > length(IndexObj@selectivity_hist_list)) {
+        stop(paste("Survey design", index_idx, ": selectivity_hist_idx exceeds available selectivity objects"))
+      }
+      if(design$selectivity_proj_idx > length(IndexObj@selectivity_proj_list)) {
+        stop(paste("Survey design", index_idx, ": selectivity_proj_idx exceeds available selectivity objects"))
+      }
+    }
+  } # close loop for specific surveys/CPUE validations
+
+
+  #checking requirements based on index type and data required
+  #check if any survey is FI or any survey uses numbers (needs N arrays)
+
+  # index = FI or If use weight is F , stop I need N
+  # for each element d in the survey_design list (any= at least one element)
+  # cehck if the survey index type is FI
+  # or if weigth is set to F
+  # Set needs_N to TRUE if:
+  # Any survey is of type "FI" (fishery-independent), or useWeight is FALSE
+  needs_N <- any(sapply(IndexObj@survey_design, function(d) d$indextype == "FI")) || !IndexObj@useWeight
+  if(needs_N) {
+    if(is.null(simulation_result$dynamics$N)) {
+      stop("Survey indices (FI) and numbers indices require N arrays. Run simulation with doDiagnostic=TRUE")
+    } else {
+      cat("Note: Using N data from iteration 1 for all iterations (testing mode)\n")
+    }
+  }
+
+  # get the life history for calcs (need it for selectivity wrapper)
+  lh <- LHwrapper(simulation_result$LifeHistoryObj, simulation_result$TimeAreaObj)
+
+  # Results list (initialize empty list) to store multiple indices
+  results_list <- list()
+
+
+  # add the main loop through survey / CPUE individually
+
+  for(index_idx in 1:n_indices) {
+    design <- IndexObj@survey_design[[index_idx]]  #extract current index design
+
+    #just to indicate what index is processing
+    cat(paste("Processing", ifelse(design$indextype == "FI", "Survey", "CPUE"), index_idx,
+              "- Areas:", paste(design$areas, collapse = ","), "\n"))
+
+
+    # create selectivity based on the data type "FD" or "FI"
+    # this section determines which  selectivity to use for calculating indices
+    # in different time periods
+
+    # historical period
+    # creates historical period selectivity using fishSimGTG's historical fishery object
+    if(design$indextype == "FD") {
+      # for CPUE: use fishery selectivity
+      # why? because that is fishsimGTG configuration
+      index_selectivity_hist <- selWrapper(lh, simulation_result$TimeAreaObj,
+                                           FisheryObj = simulation_result$HistFisheryObj,
+                                           doPlot = FALSE)
+
+      # For projection period: create area-specific fishery selectivities
+      # initializes list for area-specific projection selectivities
+      index_selectivity_proj_list <- list()
+
+      # checks if projection fisheries exist
+      if(!is.null(simulation_result$ProFisheryObj_list) &&
+         length(simulation_result$ProFisheryObj_list) > 0) {
+        # create selectivity for each area that this index might cover (following fishSimGTG structure)
+        for(area in 1:total_areas) {
+          if(area <= length(simulation_result$ProFisheryObj_list)) {
+            index_selectivity_proj_list[[area]] <- selWrapper(lh, simulation_result$TimeAreaObj,
+                                                              FisheryObj = simulation_result$ProFisheryObj_list[[area]],
+                                                              doPlot = FALSE)
+          } else {
+            # uses historical if projection (ProFisheryObj_list) not available for this specific area
+            index_selectivity_proj_list[[area]] <- index_selectivity_hist
+          }
+        }
+      } else {
+        # No projection fisheries exists anywhere, use historical sel for all areas
+        # for example if ProFisheryObj_list is NULL or empty
+        for(area in 1:total_areas) {
+          index_selectivity_proj_list[[area]] <- index_selectivity_hist
+        }
+      }
+
+    } else {
+
+      # FI: use survey selectivity
+      # extracts selectivity objects from provided lists and creates selectivity using sel wrappers
+      hist_selectivity_obj <- IndexObj@selectivity_hist_list[[design$selectivity_hist_idx]]
+      proj_selectivity_obj <- IndexObj@selectivity_proj_list[[design$selectivity_proj_idx]]
+
+      index_selectivity_hist <- selWrapper(lh, simulation_result$TimeAreaObj,
+                                           FisheryObj = hist_selectivity_obj,
+                                           doPlot = FALSE)
+
+      index_selectivity_proj <- selWrapper(lh, simulation_result$TimeAreaObj,
+                                           FisheryObj = proj_selectivity_obj,
+                                           doPlot = FALSE)
+    }
+
+
+    # initialize results for the survey/cpue
+    # creates empty matrix [years × iterations] to store index values
+
+
+    # similar idea to what I did with LC obs
+    area_matrix <- array(NA, dim = c(years, iterations))
+    rownames(area_matrix) <- paste0("Year_", 1:years)
+    colnames(area_matrix) <- paste0("Iter_", 1:iterations)
+
+
+    # name based on areas covered  y survey/CPUE
+    if(length(design$areas) == 1) {
+      matrix_name <- paste0("Area_", design$areas[1])
+    } else {
+      matrix_name <- paste0("Areas_", paste(design$areas, collapse = "_"))
+    }
+    # stores matrix in named list
+    indices_by_area <- list()
+    indices_by_area[[matrix_name]] <- area_matrix
+
+
+    #loop through each iterations/ years combination
+    for(iter in 1:iterations) {
+      for(year in 1:years) {
+
+        #check if CPUE data exists in this year
+        #only calculates CPUE/Surveys for years where data is collected
+        if(year %in% design$indexYears) {
+
+          # Create a branch to account for index covering (sampling) only one area
+          # or covering multiple areas
+
+          # same patern as LC
+          # checks if this survey/CPUE covers one area or multiple areas
+
+          if(length(design$areas) == 1) {
+            area <- design$areas[1] # if single area (e.g., c(1)): extract value for that area
+
+            # get the precalc data for this single area
+            if(IndexObj@useWeight && design$indextype == "FD") {
+              # For CPUE biomass: get VB from this area
+              area_value <- simulation_result$dynamics$VB[year, iter, area] #directly extracts vulnerable biomass from simulation results
+            } else {
+
+              # FI
+              # For FI or CPUE numbers: calculate from N arrays for this area
+              # manually calculates by applying selectivity to N arrays
+              # and summing across GTGs.
+              area_value <- 0           # starts with zero and accumulate
+              # get selectivity
+              # chose selectivity based on:
+              # time period: historical vs projection
+              # data type: FD (fishery) vs FI (survey)
+              # area: For FD in proj, each area might have different fishing sel
+
+              if(year <= historical_end) {
+                selectivity <- index_selectivity_hist
+              } else {
+                if(design$indextype == "FD") {
+                  # use area-specific fishery selectivity for projection period
+                  selectivity <- index_selectivity_proj_list[[area]]  #to follow the actual configuration of the package
+                } else {
+                  # For FI, same selectivity for all areas this survey covers
+                  selectivity <- index_selectivity_proj
+                }
+              }
+
+              # sum across GTGs for this single area
+              for(gtg in 1:lh$gtg) {
+                N_gtg_area <- simulation_result$dynamics$N[[gtg]][, year, area]
+                if(IndexObj@useWeight) {
+                  survey_calc <- sum(N_gtg_area * selectivity$vul[[gtg]] * lh$W[[gtg]])
+                } else {
+                  survey_calc <- sum(N_gtg_area * selectivity$vul[[gtg]])
+                }
+                area_value <- area_value + survey_calc
+              }
+            }
+
+          } else {
+            # Here multiarea starts
+            # For multi-area data collection: Sum data across multiple areas
+            # Same approach used in length composition obs models: rowSums(true_length_array[, year, design$areas])
+
+            if(IndexObj@useWeight && design$indextype == "FD") {
+              # Sum VB across all specified areas - like rowSums() in length composition
+              area_value <- sum(simulation_result$dynamics$VB[year, iter, design$areas])
+
+            } else {
+              # sum calculated values across all specified areas
+              area_value <- 0
+
+              # loop through each area and sum their contributions
+              for(area in design$areas) {
+                # get area-specific selectivity for this time period
+                if(year <= historical_end) {
+                  selectivity <- index_selectivity_hist
+                } else {
+                  if(design$indextype == "FD") {
+                    # use area-specific fishery selectivity for projection period
+                    selectivity <- index_selectivity_proj_list[[area]]
+                  } else {
+                    # for FI, same selectivity for all areas this survey covers
+                    selectivity <- index_selectivity_proj
+                  }
+                }
+
+                # calculate contribution from this area
+                area_contribution <- 0
+                for(gtg in 1:lh$gtg) {
+                  N_gtg_area <- simulation_result$dynamics$N[[gtg]][, year, area]
+                  if(IndexObj@useWeight) {
+                    survey_calc <- sum(N_gtg_area * selectivity$vul[[gtg]] * lh$W[[gtg]])
+                  } else {
+                    survey_calc <- sum(N_gtg_area * selectivity$vul[[gtg]])
+                  }
+                  area_contribution <- area_contribution + survey_calc
+                }
+                # add this area contribution to the total (like i did in lc)
+                area_value <- area_value + area_contribution
+              }
+            }
+          }
+
+          # get index specific parameters with bounds
+          # Whether the index covers 1 area or multiple areas, it has ONE set of parameters
+
+          # Sample parameters based on historical vs projection period
+          if(year <= historical_end) {
+
+
+            q_area_year <- runif(1,
+                                 min = design$q_hist_bounds[1],
+                                 max = design$q_hist_bounds[2])
+
+
+            hyperstability_area <- runif(1,
+                                         min = design$hyperstability_hist_bounds[1],
+                                         max = design$hyperstability_hist_bounds[2])
+
+            obs_CV <- runif(1,
+                            min = design$obsError_CV_hist_bounds[1],
+                            max = design$obsError_CV_hist_bounds[2])
+
+
+
+          } else {
+            # Projection
+            q_area_year <- runif(1,
+                                 min = design$q_proj_bounds[1],
+                                 max = design$q_proj_bounds[2])
+
+            hyperstability_area <- runif(1,
+                                         min = design$hyperstability_proj_bounds[1],
+                                         max = design$hyperstability_proj_bounds[2])
+
+            obs_CV <- runif(1,
+                            min = design$obsError_CV_proj_bounds[1],
+                            max = design$obsError_CV_proj_bounds[2])
+          }
+
+          #apply the observation model to the area_value (which is either single area value or sum of multiple areas)
+
+          if(hyperstability_area != 1) {
+            index_value <- q_area_year * (area_value^hyperstability_area)
+          } else {
+            index_value <- q_area_year * area_value
+          }
+
+          #add observation error with bias correction
+          if(obs_CV > 0) {
+            obs_error <- exp(rnorm(1, mean = 0, sd = obs_CV) - 0.5 * obs_CV^2)
+            index_value <- index_value * obs_error
+          }
+
+          #store the final index value in the matrix
+          indices_by_area[[matrix_name]][year, iter] <- index_value
+        }
+      }
+    }
+    # store results for this survey/CPUE
+    results_list[[index_idx]] <- list(
+      areas = design$areas,
+      indextype = design$indextype,
+      indexYears = design$indexYears,
+      survey_timing = if(design$indextype == "FI") design$survey_timing else NA,
+      selectivity_hist_idx = if(design$indextype == "FI") design$selectivity_hist_idx else NA,
+      selectivity_proj_idx = if(design$indextype == "FI") design$selectivity_proj_idx else NA,
+      indices = indices_by_area
+    )
+  }
+
+  # name results (name index)
+  names(results_list) <- paste0(ifelse(sapply(IndexObj@survey_design, function(d) d$indextype) == "FI", "Survey_", "CPUE_"), 1:n_indices)
+
+  # Determine the actual index type (FD, FI, or Mixed)
+  actual_types <- unique(sapply(IndexObj@survey_design, function(d) d$indextype))
+
+  if(length(actual_types) == 1) {
+    # all indices are the same type
+    final_indextype <- actual_types[1]  # "FD" or "FI"
+  } else {
+    # mixed types
+    final_indextype <- "Mixed"
+  }
+
+  # return results
+  return(list(
+    indexID = IndexObj@indexID,
+    title = IndexObj@title,
+    indextype = final_indextype, # "Mixed",  # indicate this can contain both FD and FI
+    useWeight = IndexObj@useWeight,
+    indices = results_list,
+    years_total = years,
+    iterations_total = iterations,
+    areas_total = total_areas,
+    historical_end = historical_end,
+    n_indices = n_indices
+  ))
+}
+
+
+
+
+#---------------------------------------------------------------#
+#---Step 4: simple plotting function to explore the sim index---#
+#---------------------------------------------------------------#
+
+#Roxygen header
+#'Plot function for observation models for testing
+#'
+#' @param index_result Output from index Object
+#' @param save_plot saving plot
+#' @param filename file name
+#' @export
+
+plotIndex_simple <- function(index_result, save_plot = FALSE,
+                             filename = "index_simple.jpeg") {
+
+  years <- 1:index_result$years_total
+  historical_end <- index_result$historical_end
+  title <- index_result$title
+
+  all_data <- data.frame()
+
+  for(index_name in names(index_result$indices)) {
+    index_data <- index_result$indices[[index_name]]
+    indexYears <- index_data$indexYears
+
+    for(area_name in names(index_data$indices)) {
+      area_matrix <- index_data$indices[[area_name]]
+
+      if(!is.null(area_matrix)) {
+        # Median
+        area_median <- apply(area_matrix, 1, median, na.rm = TRUE)
+        area_median[!(years %in% indexYears)] <- NA
+
+        median_df <- data.frame(
+          year = years,
+          value = area_median,
+          panel = paste(index_name, area_name),
+          type = "Median",
+          iteration = "Median",
+          stringsAsFactors = FALSE
+        )
+        all_data <- rbind(all_data, median_df)
+
+        # add all iterations
+        for(iter in 1:ncol(area_matrix)) {
+          iter_values <- area_matrix[, iter]
+          iter_values[!(years %in% indexYears)] <- NA
+
+          iter_df <- data.frame(
+            year = years,
+            value = iter_values,
+            panel = paste(index_name, area_name),
+            type = "Iterations",
+            iteration = paste0("Iter_", iter),
+            stringsAsFactors = FALSE
+          )
+          all_data <- rbind(all_data, iter_df)
+        }
+      }
+    }
+  }
+
+  p <- ggplot(all_data, aes(x = year, y = value)) +
+    geom_line(data = subset(all_data, type == "Iterations"),
+              aes(group = iteration), color = "steelblue", alpha = 0.6, size = 0.5) +
+
+    geom_point(data = subset(all_data, type == "Iterations" & !is.na(value)),
+               color = "steelblue", alpha = 0.7, size = 1) +
+
+    geom_line(data = subset(all_data, type == "Median"),
+              color = "black", size = 1.2) +
+    geom_point(data = subset(all_data, type == "Median"),
+               color = "black", size = 1.5) +
+    facet_wrap(~ panel, scales = "free_y") +
+    geom_vline(xintercept = historical_end, linetype = "dashed", color = "red") +
+    labs(title = title, x = "Year", y = "Index Value") +
+    theme_minimal()
+
+  if(save_plot) {
+    ggsave(filename, plot = p, width = 12, height = 8, dpi = 300)
+  }
+
+  return(p)
+}
+
+
+
+# modifications
+#Roxygen header
+#'Function for integrating observation models
+#'
+#' @param IndexObj A Index object
+#' @export
+
+calculate_single_Index  <- function(dataObject){
+  for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
+  # define the dimensions (to get the structure of the simulation)
+  years <- dim(VB)[1]       #total years hist+future
+  iterations <- dim(VB)[2]  #total iterations
+  total_areas <- dim(VB)[3] #total areas
+  historicalYears <- TimeAreaObj@historicalYears #total historical years- before management
+  historical_end <- 1 + historicalYears
+
+  # counts number of individual survey/CPUE programs defined in the design list.
+  n_indices <- length(IndexObj@survey_design)
+
+  if(n_indices == 0) {
+    stop("survey_design list must contain at least one survey or CPUE design")
+  }
+
+  #  add validation for each survey/CPUE design
+  #  lopp through each individual survey/CPUE design for validation.
+  for(index_idx in 1:n_indices) {
+    design <- IndexObj@survey_design[[index_idx]] #extracts current survey design from the list (for each index)
+
+    # common required elements for surveys/CPUEs
+    required_elements <- c("indextype", "areas", "indexYears",
+                           "q_hist_bounds", "q_proj_bounds",
+                           "hyperstability_hist_bounds", "hyperstability_proj_bounds",
+                           "obsError_CV_hist_bounds", "obsError_CV_proj_bounds")
+
+    # for FI surveys only, selectivity indices and survey_timing are needed
+    if("indextype" %in% names(design) && design$indextype == "FI") {
+      required_elements <- c(required_elements, "selectivity_hist_idx",
+                             "selectivity_proj_idx", "survey_timing")
+    }
+
+    # check the required elements are available
+    if(!all(required_elements %in% names(design))) { # check if required element exist
+      missing <- required_elements[!required_elements %in% names(design)]   # identify what element is misssing
+      stop(paste("Survey design", index_idx, "missing elements:", paste(missing, collapse = ", ")))
+    }
+
+    # validate indextype
+    if(!design$indextype %in% c("FD", "FI")) {
+      stop(paste("Survey design", index_idx, ": indextype must be 'FD' or 'FI'"))
+    }
+
+
+    # validation of n areas
+    if(any(design$areas > total_areas)) {
+      stop(paste("Survey design", index_idx, ": areas exceed total areas in simulation"))
+    }
+
+    # validation of parameter bounds (each should be vector of length 2)
+    param_bounds <- c("q_hist_bounds", "q_proj_bounds",
+                      "hyperstability_hist_bounds", "hyperstability_proj_bounds",
+                      "obsError_CV_hist_bounds", "obsError_CV_proj_bounds")
+
+    for(param in param_bounds) {
+      if(length(design[[param]]) != 2 || design[[param]][2] < design[[param]][1]) {
+        stop(paste("Survey design", index_idx, ":", param, "must be vector [min, max] with max >= min"))
+      }
+    }
+
+    # validate survey_timing for FI surveys
+    if(design$indextype == "FI") {
+      if(!is.numeric(design$survey_timing) || length(design$survey_timing) != 1 ||
+         design$survey_timing < 0 || design$survey_timing > 1) {
+        stop(paste("Survey design", index_idx, ": survey_timing must be a single value between 0 and 1"))
+      }
+    }
+
+    # for FI surveys: validation of selectivity
+    # validates that selectivity indices do not exceed available selectivity objects
+    if(design$indextype == "FI") {
+      if(design$selectivity_hist_idx > length(IndexObj@selectivity_hist_list)) {
+        stop(paste("Survey design", index_idx, ": selectivity_hist_idx exceeds available selectivity objects"))
+      }
+      if(design$selectivity_proj_idx > length(IndexObj@selectivity_proj_list)) {
+        stop(paste("Survey design", index_idx, ": selectivity_proj_idx exceeds available selectivity objects"))
+      }
+    }
+  } # close loop for specific surveys/CPUE validations
+
+
+  # NEW
+  # Results list (initialize empty list) to store multiple indices
+
+  #? results_list <- list()
+
+  # Now removing the empty list and add the tibble that will be
+  # filled every time step and moving up the actual_types
+  # before creating the tibble:
+
+  # Determine the actual index type (FD, FI, or Mixed)
+  # then adding the calculated column  final_indextype to the tibble
+  # I moved this calculation from below
+  actual_types <- unique(sapply(IndexObj@survey_design, function(d) d$indextype))
+
+  if(length(actual_types) == 1) {
+    # all indices are the same type
+    final_indextype <- actual_types[1]  # "FD" or "FI"
+  } else {
+    # mixed types
+    final_indextype <- "Mixed"
+  }
+
+  # Creating the tibble
+  # save the tibble in observation_return
+  # each element are the columns of the tibble - creating one row at a time
+  observation_return <- tibble::tibble(
+    k = k,                              # current iter
+    j = j,                              # current year
+    indexID = IndexObj@indexID,         # index identifier
+    title = IndexObj@title,             # index title
+    final_indextype = final_indextype,  # "FD", "FI", or "Mixed"
+    useWeight = IndexObj@useWeight,     # TRUE=biomass, FALSE=numbers
+    n_indices = n_indices,              # number of indices in this index object
+    years_total = years,                # total years in simulation
+    iterations_total = iterations,      # total iterations in simulation
+    areas_total = total_areas,          # total areas in simulation
+    historical_end = historical_end     # end of historical period
+  )
+
+
+
+
+  # add the main loop through survey / CPUE individually
+
+  for(index_idx in 1:n_indices) {
+    design <- IndexObj@survey_design[[index_idx]]  #extract current index design
+
+    #just to indicate what index is processing
+    cat(paste("Processing", ifelse(design$indextype == "FI", "Survey", "CPUE"), index_idx,
+              "- Areas:", paste(design$areas, collapse = ","), "\n"))
+
+
+    # create selectivity based on the data type "FD" or "FI"
+    # this section determines which  selectivity to use for calculating indices
+    # in different time periods
+
+    # historical period
+    # creates historical period selectivity using fishSimGTG's historical fishery object
+    if(design$indextype == "FD") {
+      # for CPUE: use fishery selectivity
+      # why? because that is fishsimGTG configuration
+      index_selectivity_hist <- selHist[[1]]$keep # sel hist for area 1 - it is repeated for each area
+
+      # For projection period: create area-specific fishery selectivities
+      # initializes list for area-specific projection selectivities
+      index_selectivity_proj_list <- selPro
+
+    } else {
+
+      # FI: use survey selectivity
+      # extracts selectivity objects from provided lists and creates selectivity using sel wrappers
+      hist_selectivity_obj <- IndexObj@selectivity_hist_list[[design$selectivity_hist_idx]]
+      proj_selectivity_obj <- IndexObj@selectivity_proj_list[[design$selectivity_proj_idx]]
+
+      index_selectivity_hist <- selWrapper(lh, TimeAreaObj,
+                                           FisheryObj = hist_selectivity_obj,
+                                           doPlot = FALSE)$vul
+
+      index_selectivity_proj <- selWrapper(lh, TimeAreaObj,
+                                           FisheryObj = proj_selectivity_obj,
+                                           doPlot = FALSE)
+    }
+
+
+
+        #check if CPUE data exists in this year
+        #only calculates CPUE/Surveys for years where data is collected
+        if((j-1) %in% design$indexYears) {
+
+          # Create a branch to account for index covering (sampling) only one area
+          # or covering multiple areas
+
+          # same patern as LC
+          # checks if this survey/CPUE covers one area or multiple areas
+
+          if(length(design$areas) == 1) {
+            area <- design$areas[1] # if single area (e.g., c(1)): extract value for that area
+
+            # get the precalc data for this single area
+            if(IndexObj@useWeight && design$indextype == "FD") {
+              # For CPUE biomass: get VB from this area
+              area_value <- RB[j, k, area] #directly extracts vulnerable biomass from simulation results
+            } else {
+
+              # FI
+              # For FI or CPUE numbers: calculate from N arrays for this area
+              # manually calculates by applying selectivity to N arrays
+              # and summing across GTGs.
+              area_value <- 0           # starts with zero and accumulate
+              # get selectivity
+              # chose selectivity based on:
+              # time period: historical vs projection
+              # data type: FD (fishery) vs FI (survey)
+              # area: For FD in proj, each area might have different fishing sel
+
+              if(j <= historical_end) {
+                selectivity <- index_selectivity_hist
+              } else {
+                if(design$indextype == "FD") {
+                  # use area-specific fishery selectivity for projection period
+                  selectivity <- index_selectivity_proj_list[[area]]$keep  #to follow the actual configuration of the package
+                } else {
+                  # For FI, same selectivity for all areas this survey covers
+                  selectivity <- index_selectivity_proj$vul
+                }
+              }
+
+              # sum across GTGs for this single area (retained numbers)
+              for(gtg in 1:lh$gtg) {
+                N_gtg_area <- N[[gtg]][, j, area]
+
+              # introducing survey timing correction here
+                if(design$indextype == "FI") {
+                  survey_timing <- design$survey_timing
+                  timing_correction <- exp(-Z[[gtg]][, j, area] * survey_timing)
+                  N_gtg_area <- N_gtg_area * timing_correction
+                }
+
+
+                if(IndexObj@useWeight) {
+                  survey_calc <- sum(N_gtg_area * selectivity[[gtg]] * lh$W[[gtg]])
+                } else {
+                  survey_calc <- sum(N_gtg_area * selectivity[[gtg]])
+                }
+                area_value <- area_value + survey_calc
+              }
+            }
+
+          } else {
+            # Here multiarea starts
+            # For multi-area data collection: Sum data across multiple areas
+            # Same approach used in length composition obs models: rowSums(true_length_array[, year, design$areas])
+
+            if(IndexObj@useWeight && design$indextype == "FD") {
+              # Sum VB across all specified areas - like rowSums() in length composition
+              area_value <- sum(RB[j, k, design$areas])
+
+            } else {
+              # sum calculated values across all specified areas
+              area_value <- 0
+
+              # loop through each area and sum their contributions
+              for(area in design$areas) {
+                # get area-specific selectivity for this time period
+                if(j <= historical_end) {
+                  selectivity <- index_selectivity_hist
+                } else {
+                  if(design$indextype == "FD") {
+                    # use area-specific fishery selectivity for projection period
+                    selectivity <- index_selectivity_proj_list[[area]]$keep
+                  } else {
+                    # for FI, same selectivity for all areas this survey covers
+                    selectivity <- index_selectivity_proj$vul
+                  }
+                }
+
+                # calculate contribution from this area
+                area_contribution <- 0
+                for(gtg in 1:lh$gtg) {
+                  N_gtg_area <- N[[gtg]][, j, area]
+
+                  # applying survey correction
+                  if(design$indextype == "FI") {
+                    survey_timing <- design$survey_timing
+                    timing_correction <- exp(-Z[[gtg]][, j, area] * survey_timing)
+                    N_gtg_area <- N_gtg_area * timing_correction
+                  }
+
+                  if(IndexObj@useWeight) {
+                    survey_calc <- sum(N_gtg_area * selectivity[[gtg]] * lh$W[[gtg]])
+                  } else {
+                    survey_calc <- sum(N_gtg_area * selectivity[[gtg]])
+                  }
+                  area_contribution <- area_contribution + survey_calc
+                }
+                # add this area contribution to the total (like i did in lc)
+                area_value <- area_value + area_contribution
+              }
+            }
+          }
+
+          # get index specific parameters with bounds
+          # Whether the index covers 1 area or multiple areas, it has ONE set of parameters
+
+          # Sample parameters based on historical vs projection period
+          if(j <= historical_end) {
+
+
+            q_area_year <- runif(1,
+                                 min = design$q_hist_bounds[1],
+                                 max = design$q_hist_bounds[2])
+
+
+            hyperstability_area <- runif(1,
+                                         min = design$hyperstability_hist_bounds[1],
+                                         max = design$hyperstability_hist_bounds[2])
+
+            obs_CV <- runif(1,
+                            min = design$obsError_CV_hist_bounds[1],
+                            max = design$obsError_CV_hist_bounds[2])
+
+
+
+          } else {
+            # Projection
+            q_area_year <- runif(1,
+                                 min = design$q_proj_bounds[1],
+                                 max = design$q_proj_bounds[2])
+
+            hyperstability_area <- runif(1,
+                                         min = design$hyperstability_proj_bounds[1],
+                                         max = design$hyperstability_proj_bounds[2])
+
+            obs_CV <- runif(1,
+                            min = design$obsError_CV_proj_bounds[1],
+                            max = design$obsError_CV_proj_bounds[2])
+          }
+
+          #apply the observation model to the area_value (which is either single area value or sum of multiple areas)
+
+          if(hyperstability_area != 1) {
+            index_value <- q_area_year * (area_value^hyperstability_area)
+          } else {
+            index_value <- q_area_year*area_value
+          }
+
+          #add observation error with bias correction
+          if(obs_CV > 0) {
+            obs_error <- exp(rnorm(1, mean = 0, sd = obs_CV) - 0.5 * obs_CV^2)
+            index_value <- index_value * obs_error
+          }
+
+
+          # Adding more columns to the tibble
+          # add to the tibble with appropriate column name (create column name like "CPUE_1" or "Survey_2")
+          index_name <- paste0(ifelse(design$indextype == "FI", "Survey_", "CPUE_"), index_idx)
+          observation_return[[index_name]] <- index_value  # add the new column to the tibble
+
+          # Add individual index columns (from the original results_list)
+          observation_return[[paste0(index_name, "_indextype")]] <- design$indextype
+          observation_return[[paste0(index_name, "_areas")]] <- paste(design$areas, collapse = "_")
+          observation_return[[paste0(index_name, "_indexYears")]] <- paste(design$indexYears, collapse = "_")
+          observation_return[[paste0(index_name, "_survey_timing")]] <- if(design$indextype == "FI") design$survey_timing else NA
+          observation_return[[paste0(index_name, "_selectivity_hist_idx")]] <- if(design$indextype == "FI") design$selectivity_hist_idx else NA
+          observation_return[[paste0(index_name, "_selectivity_proj_idx")]] <- if(design$indextype == "FI") design$selectivity_proj_idx else NA
+        } else {
+
+          # For the years with no obervation (set to NA but still include) (see if(j %in% design$indexYears))
+          index_name <- paste0(ifelse(design$indextype == "FI", "Survey_", "CPUE_"), index_idx)
+          observation_return[[index_name]] <- NA
+          observation_return[[paste0(index_name, "_indextype")]] <- design$indextype
+          observation_return[[paste0(index_name, "_areas")]] <- paste(design$areas, collapse = "_")
+          observation_return[[paste0(index_name, "_indexYears")]] <- paste(design$indexYears, collapse = "_")
+          observation_return[[paste0(index_name, "_survey_timing")]] <- if(design$indextype == "FI") design$survey_timing else NA
+          observation_return[[paste0(index_name, "_selectivity_hist_idx")]] <- if(design$indextype == "FI") design$selectivity_hist_idx else NA
+          observation_return[[paste0(index_name, "_selectivity_proj_idx")]] <- if(design$indextype == "FI") design$selectivity_proj_idx else NA
+        }
+    }
+  return(observation_return)
+} # close the fucntion
+
+# Note need to add survey time correction - Ask Bill (  age GTG Z????)
+# better to calculate total mortality arrays and report in data Object
+# Need to calculate total mortality Z arrays (F* sel)+ M
+# Z_age_gtg <- (Ftotal[j, k, area] * selectivity[[gtg]][age])+lh$LifeHistory@M
+
+
+# I used this approach in my OM
+# ## index  survey for each block
+# if( j >= idsyr_blk1 & j < idsyr_blk2 )
+#   itSurv_blk1[j] = qsurv1 * sum(Nat[j,]*sel_s[j,]*waa_s[j,] * exp(-zt[j,]*fyrsurv1) )* exp( (tau_devs_surv1[j] )*obs_error-(tausurv1^2)/2)
+# if( j >= idsyr_blk2)
+#   itSurv_blk2[j] = qsurv2 * sum(Nat[j,]*sel_s[j,]*waa_s[j,] * exp(-zt[j,]*fyrsurv1) )* exp( (tau_devs_surv2[j] )*obs_error-(tausurv2^2)/2)
+# itSurv<-c(itSurv_blk1[1:idnyr_blk1],itSurv_blk2[idsyr_blk2:idnyr_blk2])
+
+# and for length comp:
+# TrueSurvCat[j,] =  Nat[j,] * sel_s[j,] *exp(-zt[j,]*fyrsurv1)                    ## True survey catch-at-age: question here, should I correct bt the time the survey occur
+# pSurvCat[j,] = (TrueSurvCat[j,] + tiny ) / sum(TrueSurvCat[j,] + tiny)           ## Calc. true prop-at-age (survey)
+# cat_sur_mvlog[j,] = mvlogistAgeComps(pSurvCat[j,],taupaasurv,id_seed=s+1000)
+
+
+#Roxygen header
+#'Function for integrating observation models
+#'
+#' @param CatchObsObj A Catch observation model object
+#' @export
+
+calculate_single_CatchObs <- function(dataObject) {
+  # Unpack dataObject (a list containing all needed data)
+  for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
+
+  #dimensions
+  years <- dim(catchB)[1]
+  iterations <- dim(catchB)[2]
+  historicalYears <- TimeAreaObj@historicalYears
+  historical_end <- 1 + historicalYears
+  end_proj <- years
+
+  # initialize the outputs in a tibble
+  obs_catch_return <- tibble::tibble(
+    k = k,
+    j = j,
+    catchID = CatchObsObj@catchID,
+    total_years = years,
+    total_iterations = iterations,
+    historical_years = historicalYears,
+    end_hist = historical_end,
+    end_proj = end_proj,
+    period = ifelse(j <= historical_end, "Historical", "Projection")
+  )
+
+  # calculate if this year has catch observations
+  if((j-1) %in% CatchObsObj@catchYears) {
+
+    # adding year position (useful when data are not available every years)
+    catch_year_position <- which(CatchObsObj@catchYears == (j-1))
+
+    # reporting rate for each year (to simulate over reporitng or under reporting)
+    R_t <- CatchObsObj@reporting_rates[catch_year_position]
+
+    # CV obs bounds for this year and sample a CV value for each iteration
+    if(nrow(CatchObsObj@obs_CVs) >= catch_year_position && ncol(CatchObsObj@obs_CVs) == 2) {
+      cv_min <- CatchObsObj@obs_CVs[catch_year_position, 1]
+      cv_max <- CatchObsObj@obs_CVs[catch_year_position, 2]
+      obs_CV <- runif(1, min = cv_min, max = cv_max)
+    } else {
+      stop(paste("obs_CVs matrix must have 2 columns (min, max) and at least", length(CatchObsObj@catchYears), "rows"))
+    }
+
+
+    # apply  lognormal error with bias correction
+    obs_error <- exp(rnorm(1, 0, obs_CV) - 0.5 * obs_CV^2)
+
+    # calculate catch by individual area
+    areas_list <- CatchObsObj@areas
+    n_areas <- length(areas_list)
+
+    # store individual area catches
+    true_catch_by_area <- numeric(n_areas)
+    catch_with_reporting_by_area <- numeric(n_areas)
+    observed_catch_by_area <- numeric(n_areas)
+
+    # apply the obs model to catch by area
+
+    for(i in 1:n_areas) {
+      area_id <- areas_list[i]
+
+      # take true catch for the area
+      true_catch_by_area[i] <- catchB[j, k, area_id]
+
+      # apply reporting rate to the area
+      catch_with_reporting_by_area[i] <- true_catch_by_area[i] * R_t
+
+      # apply observation error to the area
+      observed_catch_by_area[i] <- catch_with_reporting_by_area[i] * obs_error
+    }
+
+    # Calculate totals (sum across areas)
+    true_catch_total <- sum(true_catch_by_area)
+    catch_with_reporting_total <- sum(catch_with_reporting_by_area)
+    observed_catch_total <- sum(observed_catch_by_area)
+
+
+    # store results
+    obs_catch_return$true_catch <- true_catch_total
+    obs_catch_return$R_t <- R_t
+    obs_catch_return$catch_with_reporting <- catch_with_reporting_total
+    obs_catch_return$cv_min <- cv_min
+    obs_catch_return$cv_max <- cv_max
+    obs_catch_return$obs_CV <- obs_CV
+    obs_catch_return$observed_catch <- observed_catch_total
+    # add individual area catches to output
+    obs_catch_return$n_areas <- n_areas
+    obs_catch_return$areas_included <- paste(areas_list, collapse = "_")
+
+    # store complete observation model results by area
+    for(i in 1:n_areas) {
+      area_id <- areas_list[i]
+
+      # true catch by area
+      obs_catch_return[[paste0("true_catch_area_", area_id)]] <- true_catch_by_area[i]
+
+      # catch with reporting by area
+      obs_catch_return[[paste0("catch_with_reporting_area_", area_id)]] <- catch_with_reporting_by_area[i]
+
+      # observed catch by area
+      obs_catch_return[[paste0("observed_catch_area_", area_id)]] <- observed_catch_by_area[i]
+    }
+
+  } else {
+    # No observation this year - set to NA
+    obs_catch_return$true_catch <- NA
+    obs_catch_return$R_t <- NA
+    obs_catch_return$catch_with_reporting <- NA
+    obs_catch_return$cv_min <- NA
+    obs_catch_return$cv_max <- NA
+    obs_catch_return$obs_CV <- NA
+    obs_catch_return$observed_catch <- NA
+    obs_catch_return$n_areas <- NA
+    obs_catch_return$areas_included <- NA
+    # set individual area catches to NA
+    for(area_id in CatchObsObj@areas) {
+      obs_catch_return[[paste0("true_catch_area_", area_id)]] <- NA
+      obs_catch_return[[paste0("catch_with_reporting_area_", area_id)]] <- NA
+      obs_catch_return[[paste0("observed_catch_area_", area_id)]] <- NA
+    }
+  }
+
+  return(obs_catch_return)
+}
+
+#Roxygen header
+#'Function for integrating length composition observation models
+#'
+#' @param LengthCompObj A Length Comp observation model object
+#' @export
+
+calculate_single_LengthComp  <- function(dataObject) {
+
+  # unpack dataObject
+  for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
+
+
+
+  # get dimensions from simulation
+  years <- dim(VB)[1]
+  total_areas <- dim(VB)[3]
+  iterations <- dim(VB)[2]
+  historical_years <- TimeAreaObj@historicalYears
+  historical_end <- 1 + historical_years
+
+  # length bins setup
+  # find the range of lengths across all GTGs and ages - useful to define bins
+  # length_bin_width from the LCompObs object
+  length_bin_width <- LengthCompObj@length_bin_width
+  all_lengths <- unlist(lh$L)   # unlist() converts the list of length vectors into one big vector
+  min_length <- min(all_lengths)# find the smallest length across all GTGs and ages
+  max_length <- max(all_lengths)# find the largest length across all GTGs and ages
+
+
+  # define the bins
+  length_bins <- seq(0, max_length + length_bin_width, by = length_bin_width) #create the sequence of bin edges
+  n_length_bins <- length(length_bins) - 1  #number of edges - 1  [0-1), [1-2), [2-3)..... etc
+
+  # count indices
+  n_indices <- length(LengthCompObj@survey_design)
+
+  # determine the indextype
+  all_types <- unique(sapply(LengthCompObj@survey_design, function(d) d$indextype))
+  if(length(all_types) == 1) {
+    final_indextype <- all_types[1]
+  } else {
+    final_indextype <- "Mixed"
+  }
+
+  #initialize the tibble reurt (iteration/year combination)
+  lengthcomp_return <- tibble::tibble(
+    k = k,                              # current iteration
+    j = j,                              # current year
+    indexID = LengthCompObj@indexID,    # length comp ID
+    title = LengthCompObj@title,        # length comp title
+    indextype = final_indextype,        # indextype
+    years_total = years,                # total years in simulation
+    total_areas = total_areas,          # total areas in simulation
+    iterations_total = iterations,        # total iterartions
+    historical_end = historical_end,    # end of historical period
+    n_length_bins = n_length_bins,     # number of length bins
+    length_bin_width = length_bin_width, # width of each bin
+    n_indices = n_indices,              # number of length comp indices
+    period = ifelse(j <= historical_end, "Historical", "Projection")
+  )
+
+  # process each LC program
+
+  for(index_idx in 1:n_indices) {
+    design <- LengthCompObj@survey_design[[index_idx]]
+
+    # define program name
+    program_name <- paste0(ifelse(design$indextype == "FI", "Survey_", "Fishery_"), index_idx)
+
+    #adding validations
+    required_elements <- c("indextype", "areas", "years", "sample_sizes")
+    if(design$indextype == "FI") {
+      required_elements <- c(required_elements, "selectivity_hist_idx", "selectivity_proj_idx","survey_timing")
+    }
+
+    if(!all(required_elements %in% names(design))) {
+      missing <- required_elements[!required_elements %in% names(design)]
+      stop(paste("Survey design", index_idx, "missing elements:", paste(missing, collapse = ", ")))
+    }
+
+    if(!design$indextype %in% c("FD", "FI")) {
+      stop(paste("Survey design", index_idx, ": indextype must be 'FD' or 'FI'"))
+    }
+
+    if(length(design$years) != length(design$sample_sizes)) {
+      stop(paste("Survey design", index_idx, ": years and sample_sizes must have same length"))
+    }
+
+    if(any(design$areas > total_areas)) {
+      stop(paste("Survey design", index_idx, ": areas exceed total areas in simulation"))
+    }
+
+    # check if this data collection program samples in current year
+    # program samples are collected in this year (this year has sampling)
+    if((j-1) %in% design$years) {
+
+
+      # selectivity for FI programas
+      if(design$indextype == "FI") {
+        if(design$selectivity_hist_idx > length(LengthCompObj@selectivity_hist_list)) {
+          stop(paste("Survey design", index_idx, ": selectivity_hist_idx exceeds available objects"))
+        }
+        if(design$selectivity_proj_idx > length(LengthCompObj@selectivity_proj_list)) {
+          stop(paste("Survey design", index_idx, ": selectivity_proj_idx exceeds available objects"))
+        }
+
+        hist_selectivity_obj <- LengthCompObj@selectivity_hist_list[[design$selectivity_hist_idx]]
+        proj_selectivity_obj <- LengthCompObj@selectivity_proj_list[[design$selectivity_proj_idx]]
+
+        index_selectivity_hist <- selWrapper(lh, TimeAreaObj,
+                                             FisheryObj = hist_selectivity_obj,
+                                             doPlot = FALSE)
+        index_selectivity_proj <- selWrapper(lh, TimeAreaObj,
+                                             FisheryObj = proj_selectivity_obj,
+                                             doPlot = FALSE)
+      }
+
+
+      # create the empty the length-based array: [length_bins, areas]
+      # this will store the final result: numbers in each length bin, area
+      length_array <- array(0, dim = c(n_length_bins, total_areas))
+
+      # TO DO list - improve this section, remove loops and replace with vectorization
+
+      # the next loops go through every combination year, area, GTG, and age
+
+      # loop through each area
+      for(area in 1:total_areas) {
+        # loop through each GTG
+        for(gtg in 1:lh$gtg) {
+          # loop through each age within the corresponding GTG
+          for(age in 1:lh$ageClasses) {
+
+            # choose data source based on type (FI or FD)
+            if(design$indextype == "FD") {
+              #catch data (selectivity already applied)
+              selected_data <- catchNage[[gtg]][age, j, area]
+            } else {  # FI
+              # get the N of fish for this [[GTG]][age, year, area]
+              numbers_at_age <- N[[gtg]][age, j, area]
+
+              # get selectivity for FI
+              if(j <= historical_end) {
+                selectivity <- index_selectivity_hist
+              } else {
+                selectivity <- index_selectivity_proj
+              }
+
+              # apply FI (surveys) selectivity
+              selected_data <- numbers_at_age * selectivity$vul[[gtg]][age]
+
+               #survey timing correction (exp(-total_mortality * LengthCompObj@survey_timing))
+              survey_timing <- design$survey_timing
+              timing_correction <- exp(-Z[[gtg]][age, j, area] * survey_timing)
+              # apply timing correction
+              selected_data <- selected_data * timing_correction
+
+            }
+
+
+            if(selected_data > 0) {  # only if there are fish
+
+              # get the mean length for this GTG at this age: extract the specific length for this GTG and age
+              length_at_age <- lh$L[[gtg]][age]
+
+                #we look up which length bin this GTG-age combination belongs to
+                length_bin_index <- findInterval(length_at_age, length_bins)
+
+
+
+              # Then we store the match/ or mapping
+              # store the bin number in the matching table, but only if it's valid
+              # (if(length_bin_index > 0 && length_bin_index <= n_length_bins))
+
+              ## for example:  GTG 1, Age 4, Year 1, Area 1
+              #simulation_result$dynamics$N[[1]][4, 1, 1] =107.968 # N fish
+              ## find out which "length bin" GTG 1, Age 4 belongs to (in this case bin 11)
+              #age_to_length_bin[1, 4] = bin 11
+              ## assuming there are some fish already in this bin (from previous GTG/age combination
+              ## assuming there are already 75 fish in bin 11
+              # N_length[11, 1, 1] <- 75  # starting with 75 fish already there
+              ## we found more fish from  specific example: GTG 1, Age 4
+              #selected_data <- simulation_result$dynamics$N[[1]][4, 1, 1]  # = 107.968
+
+              #current_count <- N_length[11, 1, 1] =75
+              #add the new fish
+              #total_count <- current_count + 107.968
+
+              if(length_bin_index > 0 && length_bin_index <= n_length_bins) {
+                length_array[length_bin_index, area] <- length_array[length_bin_index, area] + selected_data
+              }
+            }
+          }
+        }
+      }
+
+
+      #----------------------------------------------------------#
+      #--------------------------Part 3--------------------------#
+      #--sample from the TRUE length composition using rmult-----#
+      #----------------------------------------------------------#
+
+
+      # get true comp for this index design
+      if(length(design$areas) == 1) {
+        # single area sampling: extract composition for that area
+        true_comp <- length_array[, design$areas[1]]                   #true_length_array_for_survey: rows=bins, cols= years
+      } else {
+        # multi-area sampling: sum composition across specified areas
+        # this simulates a survey that operates across multiple areas in same sampling event
+        # drop=FALSE, keep the shape of the data, so rowsums works
+        true_comp <- rowSums(length_array[, design$areas, drop = FALSE]) # true_length_array_for_survey: rows=bins, cols= years
+      }
+
+      # get sample size for this year
+      year_idx <- which(design$years == (j-1))
+      sample_size <- design$sample_sizes[year_idx]
+
+      # multinomial sampling
+      # calculate total available fish for sampling
+      total_catch <- sum(true_comp)
+
+
+      # apply multinomial sampling if fish are available to sample
+      if(total_catch > 0 && sample_size > 0) {
+
+        # convert true composition to proportions (probabilities for multinomial)
+        true_props <- true_comp / total_catch
+
+        # perform multinomial sampling: randomly select sample_size fish
+        # according to the true length proportions
+        observed_counts <- as.vector(rmultinom(1, size = sample_size, prob = true_props))
+
+        #observed_proportions <- observed_counts / sum(observed_counts)
+        observed_numbers <- observed_counts
+
+      } else {
+        # No fish available but sampled occurr
+        observed_numbers <- rep(0, n_length_bins)
+      }
+
+
+      # Add columns to tibble
+      lengthcomp_return[[paste0(program_name, "_indextype")]] <- design$indextype
+      lengthcomp_return[[paste0(program_name, "_areas")]] <- paste(design$areas, collapse = "_")
+      lengthcomp_return[[paste0(program_name, "_years")]] <- paste(design$years, collapse = "_")
+      lengthcomp_return[[paste0(program_name, "_sample_size")]] <- sample_size
+      lengthcomp_return[[paste0(program_name, "_total_catch")]] <- total_catch
+
+      # Add selectivity info for FI programs
+      if(design$indextype == "FI") {
+        lengthcomp_return[[paste0(program_name, "_selectivity_hist_idx")]] <- design$selectivity_hist_idx
+        lengthcomp_return[[paste0(program_name, "_selectivity_proj_idx")]] <- design$selectivity_proj_idx
+        lengthcomp_return[[paste0(program_name, "_survey_timing")]] <- design$survey_timing
+      } else {
+        lengthcomp_return[[paste0(program_name, "_selectivity_hist_idx")]] <- NA
+        lengthcomp_return[[paste0(program_name, "_selectivity_proj_idx")]] <- NA
+        lengthcomp_return[[paste0(program_name, "_survey_timing")]] <- NA
+      }
+
+      # Add length composition numbers for each bin
+      for(bin in 1:n_length_bins) {
+        lengthcomp_return[[paste0(program_name, "_count_bin_", bin)]] <- observed_numbers[bin]
+      }
+
+    } else {
+      # This program does not sample this year - set to NA
+      lengthcomp_return[[paste0(program_name, "_indextype")]] <- design$indextype
+      lengthcomp_return[[paste0(program_name, "_areas")]] <- paste(design$areas, collapse = "_")
+      lengthcomp_return[[paste0(program_name, "_years")]] <- paste(design$years, collapse = "_")
+      lengthcomp_return[[paste0(program_name, "_sample_size")]] <- NA
+      lengthcomp_return[[paste0(program_name, "_total_catch")]] <- NA
+
+      # Selectivity info
+      if(design$indextype == "FI") {
+        lengthcomp_return[[paste0(program_name, "_selectivity_hist_idx")]] <- design$selectivity_hist_idx
+        lengthcomp_return[[paste0(program_name, "_selectivity_proj_idx")]] <- design$selectivity_proj_idx
+        lengthcomp_return[[paste0(program_name, "_survey_timing")]] <- design$survey_timing
+      } else {
+        lengthcomp_return[[paste0(program_name, "_selectivity_hist_idx")]] <- NA
+        lengthcomp_return[[paste0(program_name, "_selectivity_proj_idx")]] <- NA
+        lengthcomp_return[[paste0(program_name, "_survey_timing")]] <- NA
+      }
+
+      # Add NA for all length bins
+      for(bin in 1:n_length_bins) {
+        lengthcomp_return[[paste0(program_name, "_count_bin_", bin)]] <- NA
+      }
+    }
+  }
+
+  return(lengthcomp_return)
 }
