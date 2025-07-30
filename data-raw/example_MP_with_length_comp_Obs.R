@@ -1323,7 +1323,7 @@ catch_obs7 <- new("CatchObs",
 length_comp7 <- new("LCompObs")
 length_comp7@indexID <- "Mixed_LC_FD_FI"
 length_comp7@title <- "Mixed FD and FI Length Composition"
-length_comp7@length_cv <- 0.10         # 10% CV for individual length variability
+#length_comp7@length_cv <- 0.10         # 10% CV for individual length variability
 length_comp7@length_bin_width <- 1     # 1cm bins
 
 # define survey design for length composition
@@ -1375,10 +1375,10 @@ out7<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/
 out7$HCR$decisionData$CPUE_1
 out7$HCR$decisionData$Survey_2
 out7$HCR$decisionData$observed_catch
-out7$HCR$decisionData$Fishery_1_prop_bin_1
-out7$HCR$decisionData$Fishery_1_prop_bin_9
-out7$HCR$decisionData$Survey_2_prop_bin_12
-out7$HCR$decisionData$Survey_2_prop_bin_18
+out7$HCR$decisionData$Fishery_1_count_bin_10
+out7$HCR$decisionData$Fishery_1_count_bin_13
+out7$HCR$decisionData$Survey_2_count_bin_12
+out7$HCR$decisionData$Survey_2_count_bin_18
 
 
 p1 <- plotIndex_tibble(out7$HCR$decisionData,
@@ -1433,29 +1433,29 @@ plotLengthComp_distributions <- function(tibble_data, program_name,
 
     if(nrow(year_data) == 0) next
 
-    #extract proportions for each iteration
+    #extract number for each iteration
     for(iter in unique(year_data$k)) {
       iter_data <- year_data[year_data$k == iter, ]
 
       if(nrow(iter_data) == 0) next
 
-      #get length composition proportions
-      proportions <- numeric(n_bins)
+      #get length composition numbers
+      numbers <- numeric(n_bins)
       for(bin in 1:n_bins) {
-        col_name <- paste0(program_name, "_prop_bin_", bin)
+        col_name <- paste0(program_name, "_count_bin_", bin)
         if(col_name %in% names(iter_data) && !is.na(iter_data[[col_name]][1])) {
-          proportions[bin] <- iter_data[[col_name]][1]
+          numbers[bin] <- iter_data[[col_name]][1]
         }
       }
 
       # include if there is actual data (not all zeros)
-      if(sum(proportions) > 0) {
+      if(sum(numbers) > 0) {
         #create length bins (center of each bin)
         length_bins <- seq(length_bin_width/2, n_bins * length_bin_width - length_bin_width/2, by = length_bin_width)
 
         iteration_df <- data.frame(
           length_bin = length_bins,
-          proportion = proportions,
+          numbers = numbers,
           user_year = sim_year - 1,  #convert to user year
           iteration = iter,
           year_label = paste("Year", sim_year - 1)
@@ -1470,7 +1470,7 @@ plotLengthComp_distributions <- function(tibble_data, program_name,
   median_data <- plot_data %>%
     group_by(user_year, length_bin, year_label) %>%
     summarise(
-      median_proportion = median(proportion, na.rm = TRUE),
+      median_numbers = median(numbers, na.rm = TRUE),
       .groups = "drop"
     )
 
@@ -1488,23 +1488,23 @@ plotLengthComp_distributions <- function(tibble_data, program_name,
   if(show_iterations) {
     #ndividual iterations as thin lines
     p <- p + geom_line(data = plot_data,
-                       aes(x = length_bin, y = proportion, group = interaction(user_year, iteration)),
+                       aes(x = length_bin, y = numbers, group = interaction(user_year, iteration)),
                        color = "lightblue", alpha = 0.3, size = 0.3)
   }
 
   #median line
   p <- p + geom_line(data = median_data,
-                     aes(x = length_bin, y = median_proportion),
+                     aes(x = length_bin, y = median_numbers),
                      color = "darkblue", size = 1.2) +
     geom_point(data = median_data,
-               aes(x = length_bin, y = median_proportion),
+               aes(x = length_bin, y = median_numbers),
                color = "darkblue", size = 0.8) +
     facet_wrap(~ year_label, scales = "free_y") +
     labs(
       title = paste("Length Composition Distributions -", program_name),
       subtitle = paste("Data from:", title),
       x = "Length (cm)",
-      y = "Proportion"
+      y = "Numbers"
     ) +
     theme_minimal() +
     theme(
