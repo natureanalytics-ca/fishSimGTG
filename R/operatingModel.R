@@ -2282,10 +2282,6 @@ calculate_single_LengthComp  <- function(dataObject) {
   min_length <- min(all_lengths)# find the smallest length across all GTGs and ages
   max_length <- max(all_lengths)# find the largest length across all GTGs and ages
 
-  # expand max length to account for CV (for stochastic lengths)
-  if(LengthCompObj@length_cv > 0) {
-    max_length <- max_length * (1 + 3 * LengthCompObj@length_cv)  # adding 3 CV units as buffer
-  }
 
   # define the bins
   length_bins <- seq(0, max_length + length_bin_width, by = length_bin_width) #create the sequence of bin edges
