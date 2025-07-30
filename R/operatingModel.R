@@ -2380,6 +2380,8 @@ calculate_single_LengthComp  <- function(dataObject) {
       # this will store the final result: numbers in each length bin, area
       length_array <- array(0, dim = c(n_length_bins, total_areas))
 
+      # TO DO list - improve this section, remove loops and replace with vectorization
+
       # the next loops go through every combination year, area, GTG, and age
 
       # loop through each area
@@ -2415,47 +2417,14 @@ calculate_single_LengthComp  <- function(dataObject) {
 
             }
 
-            #------------------------------------------------------------------------------------------
-            #- adding some modifications here to add an stochastic process to match GTG age/length bins
-            #-------------------------------------------------------------------------------------------
 
-            # convert to length bins and adding the individual fish length variability
             if(selected_data > 0) {  # only if there are fish
 
               # get the mean length for this GTG at this age: extract the specific length for this GTG and age
               length_at_age <- lh$L[[gtg]][age]
 
-              # stochastic approach for individual fish length variability
-              if(LengthCompObj@length_cv > 0) {
-
-                # stochastic length with individual variation
-                # how that works:
-                # draws 1 value from a normal distribution
-                # uses the expected (mean) length for this age
-                # cal the SD  mean*CV
-                # the CV introduces individual variability around the mean length at age
-                # fish of same age can end up in different length bins
-                stochastic_length <- rnorm(1, mean = length_at_age, sd = length_at_age * LengthCompObj@length_cv)
-                stochastic_length <- max(stochastic_length, 0.1)  # ensure the randomly drawn length is not negative or zero (sets a minimum length of 0.1 cm)
-
-                # finds the bin index in which the stochastic_length falls
-                # findInterval returns the index of the interval that contains the value
-                # findInterval() determines which bin the length falls into
-                # e.g., if length_at_age = 5.8 and length_bins = [0,1,2,3,4,5,6,7,...]
-                # then findInterval(5.8, length_bins) = 6 (falls in bin 6, which is 5-6 cm)
-
-                length_bin_index <- findInterval(stochastic_length, length_bins)
-
-                # find which length bin this gtg-age belongs
-
-              } else {
-
-                # use the older approach (deterministic)  CV =0
-                # menaing: all fish of same age/GTG go to same length bin (deterministic)
-                # In both approaches we look up which length bin this GTG-age combination belongs to
-
+                #we look up which length bin this GTG-age combination belongs to
                 length_bin_index <- findInterval(length_at_age, length_bins)
-              }
 
 
 
@@ -2522,10 +2491,12 @@ calculate_single_LengthComp  <- function(dataObject) {
         # according to the true length proportions
         observed_counts <- as.vector(rmultinom(1, size = sample_size, prob = true_props))
 
-        observed_proportions <- observed_counts / sum(observed_counts)
+        #observed_proportions <- observed_counts / sum(observed_counts)
+        observed_numbers <- observed_counts
+
       } else {
         # No fish available but sampled occurr
-        observed_proportions <- rep(0, n_length_bins)
+        observed_numbers <- rep(0, n_length_bins)
       }
 
 
@@ -2547,9 +2518,9 @@ calculate_single_LengthComp  <- function(dataObject) {
         lengthcomp_return[[paste0(program_name, "_survey_timing")]] <- NA
       }
 
-      # Add length composition proportions for each bin
+      # Add length composition numbers for each bin
       for(bin in 1:n_length_bins) {
-        lengthcomp_return[[paste0(program_name, "_prop_bin_", bin)]] <- observed_proportions[bin]
+        lengthcomp_return[[paste0(program_name, "_count_bin_", bin)]] <- observed_numbers[bin]
       }
 
     } else {
@@ -2573,7 +2544,7 @@ calculate_single_LengthComp  <- function(dataObject) {
 
       # Add NA for all length bins
       for(bin in 1:n_length_bins) {
-        lengthcomp_return[[paste0(program_name, "_prop_bin_", bin)]] <- NA
+        lengthcomp_return[[paste0(program_name, "_count_bin_", bin)]] <- NA
       }
     }
   }
