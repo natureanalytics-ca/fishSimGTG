@@ -356,7 +356,6 @@ setClass("LCompObs",
            selectivity_hist_list = "list",
            selectivity_proj_list = "list",
            survey_timing = "numeric",              # FI Survey timing (0-1, fraction of year)- as a placeholder for now
-           length_cv = "numeric",                 # CV for individual length variability
            length_bin_width= "numeric"
          )
 )
