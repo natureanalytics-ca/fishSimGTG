@@ -1,6 +1,9 @@
 rm(list=ls())
-devtools::load_all()
+devtools::install()
+#devtools::load_all()
 library(ggplot2)
+library(fishSimGTG)
+#library(dplyr)
 
 # Create simple examples of each class to understand their structure
 lh <- new("LifeHistory")

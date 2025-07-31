@@ -11,6 +11,8 @@ recDev(LifeHistoryObj, TimeAreaObj, StochasticObj, StrategyObj = NULL)
 
 \item{TimeAreaObj}{A TimeArea object}
 
+\item{StochasticObj}{A Stochastic object}
+
 \item{StrategyObj}{A Strategy object}
 }
 \description{
