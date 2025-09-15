@@ -707,7 +707,7 @@ runProjection<-function(LifeHistoryObj, TimeAreaObj, HistFisheryObj, ProFisheryO
       print("Running on multiple cores")
       cores<-min(iterations, (detectCores()-2))
       sfInit(parallel=T, cpus=cores)
-      #sfLibrary(fishSimGTG)
+      sfLibrary(fishSimGTG)
       if(!is.null(customToCluster)) sfExport(list = returnValue(customToCluster))
       input<-list()
       inputObject<-list()

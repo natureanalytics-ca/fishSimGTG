@@ -3,7 +3,7 @@
 #---------------
 #Example
 #---------------
-#devtools::load_all()
+devtools::load_all()
 library(fishSimGTG)
 #library(here)
 
@@ -92,7 +92,7 @@ selWrapper(lh = lhOut, TimeAreaObj, FisheryObj = HistFisheryObj, doPlot = TRUE, 
 runProjection(LifeHistoryObj = LifeHistoryObj,
               TimeAreaObj = TimeAreaObj,
               HistFisheryObj = HistFisheryObj,
-              wd = here(),
+              wd = here::here(),
               fileName = "HistoricalDy",
               doPlot = TRUE,
               titleStrategy = "HistoricalDy"
