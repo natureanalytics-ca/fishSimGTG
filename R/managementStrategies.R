@@ -194,7 +194,6 @@ constantCatchStrategy<-function(phase, dataObject){
 #' Calculate F from TAC - utility function.
 #' @param dataObject The needed inputs to the management procedure
 #' @export
-#' @examples
 #'
 #'
 solveFfromTAC <- function(dataObject){

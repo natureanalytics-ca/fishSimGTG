@@ -9,6 +9,8 @@
 
 \item{gtg}{Number of growth-type groups}
 
+\item{gtgCV}{Optional. CV on Linf across gtg. Leave empty to use default of 0.1.}
+
 \item{areas}{Number of areas in the model, must be greater than 1.}
 
 \item{recArea}{A vector of length areas. Fraction of recruitment to each area with values summing to 1.}

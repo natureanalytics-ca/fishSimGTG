@@ -13,6 +13,7 @@ runProjection(
   StochasticObj = NULL,
   IndexObj = NULL,
   CatchObsObj = NULL,
+  LengthCompObj = NULL,
   wd,
   fileName,
   seed = 1,
