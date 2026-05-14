@@ -245,6 +245,7 @@ setClass("Stochastic",
            Steep = "numeric",
            recSD = "numeric",
            recRho = "numeric",
+           recManual = "matrix",
            H50 = "numeric",
            H95delta = "numeric",
            histFisheryVul = "matrix",
@@ -257,7 +258,7 @@ setClass("Stochastic",
            proFisheryDmort_list = "list",
            sameFisheryDmort = "logical",
            histEffortSD = "numeric"
-         )
+       )
 )
 
 
@@ -322,10 +323,28 @@ setClass("Index",
 # obs model catch
 #-----------------------
 #Roxygen header
-#'Catch observation object
+#'Catch observation object (Extended for Multifleet Support)
 #'
-#'An S4 object that holds catch observation model parameters
+#'An S4 object that holds catch observation model parameters for both single fleet
+#'and multifleet scenarios. Maintains backward compatibility with original single fleet usage.
+#'
+#'For single fleet usage, use the original slots: areas, catchYears, reporting_rates, obs_CVs
+#'For multifleet usage, populate the fleet_configs slot with a list of fleet-specific configurations
+#'
+#' @param catchID Character identifier for the catch observation model
+#' @param title Descriptive title for the catch observation model
+#' @param areas Numeric vector of area IDs where catch is observed (single fleet only)
+#' @param catchYears Numeric vector of years with catch records (single fleet only)
+#' @param reporting_rates Numeric vector of reporting rates for each year (single fleet only)
+#' @param obs_CVs Matrix of observation error CV bounds [years x 2] (single fleet only)
+#' @param fleet_configs List of fleet-specific configurations (multifleet only). Each element should contain:
+#'   - fleet_id: Numeric fleet identifier (1, 2, 3, etc.)
+#'   - areas: Numeric vector of area IDs for this fleet
+#'   - catchYears: Numeric vector of years with catch records for this fleet
+#'   - reporting_rates: Numeric vector of reporting rates for each year for this fleet
+#'   - obs_CVs: Matrix of observation error CV bounds [years x 2] for this fleet
 #' @importFrom methods new
+
 
 setClass("CatchObs",
          representation(
@@ -334,7 +353,8 @@ setClass("CatchObs",
            areas = "numeric",                    # Areas where catch is observed
            catchYears = "numeric",               # Years with catch records
            reporting_rates = "numeric",          # Rt for each year (length = total years)
-           obs_CVs = "matrix"                   # CV obs error for each year - changed to a matrix  with rows = years, and cols (min, max)
+           obs_CVs = "matrix",                   # CV obs error for each year - changed to a matrix  with rows = years, and cols (min, max)
+           fleet_configs = "list"                # For multifleet configurations
          )
 )
 
@@ -357,5 +377,36 @@ setClass("LCompObs",
            selectivity_proj_list = "list",
            survey_timing = "numeric",              # FI Survey timing (0-1, fraction of year)- as a placeholder for now
            length_bin_width= "numeric"
+         )
+)
+
+#----------------------
+#Multifleet object
+#----------------------
+
+#Roxygen header
+#'Multifleet object
+#'
+#'An S4 object that holds multifleet configuration for historical and projection periods
+#'
+#' @param title A title for the object
+#' @param nfleets Number of fleets
+#' @param fleet_proportions Numeric vector of fleet proportions (must sum to 1)
+#' @param allocation_type Either "effort" or "catch" for equilibrium allocation
+#' @param fleet_selectivity_hist_list List of Fishery objects (length = nfleets)
+#' @param fleet_selectivity_proj_list List of Fishery objects (length = nfleets)
+#' @param fleet_historicalEffort Array of dim(historical years, areas, fleets)
+#' @importFrom methods new
+
+setClass("Multifleet",
+         representation(
+           title = "character",
+           nfleets = "numeric",
+           fleet_proportions = "numeric",
+           allocation_type = "character",
+           fleet_block_hist_list = "list",
+           fleet_selectivity_hist_list = "list",
+           fleet_selectivity_proj_list = "list",
+           fleet_historicalEffort = "array"
          )
 )

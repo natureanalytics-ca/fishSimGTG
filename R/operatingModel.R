@@ -198,7 +198,7 @@ LHwrapper<-function(LifeHistoryObj, TimeAreaObj, stepsPerYear = 1, doPlot = FALS
 #'
 #'Selectivity types: "logistic" with params vector c(length at 50% sel, length increment to 95% sel); "explog" exponential logistic (domed) with vector c(p1, peak, p3); "gillnetMasterNormal" master curve for mesh sel with vector(R0 relative peak L/m, var, mesh (in cm)); "gillnetMasterLognormal" master curve for mesh sel with vector (R0 relative peak L/m, var, mesh (in cm))
 #'
-#'Retention types: "full" with no params, assumes Keep = Ret; "logistic" with params vector c(length at 50% ret, length increment to 95% ret); "slotLimit" with params vector c(min length, max length) where catches occur betweem min and max
+#'Retention types: "full" with no params, assumes Keep = Ret; "logistic" with params vector c(length at 50% ret, length increment to 95% ret); "slotLimit" with params vector c(min length, max length) where catches occur between min and max; "protectSlotLimit" with params vector c(min length, max length) where catches occur excluding range between min and max; 'blockRet' series of blocks params c(# of blocks (3), upper block 1, upper block 2,....ret1, ret2, ret3)
 #'
 #'Total dead is: Vul x (Ret + (1-Ret)D)
 #' @param lh  An object produced by LHWrapper.
@@ -252,6 +252,27 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
     } else {
       tryCatch({
         exp(param[3]*param[1]*(param[2]-L))/(1-param[3]*(1-exp(param[1]*(param[2]-L))))
+      },
+      error = function(c) NULL,
+      warning = function(c) NULL
+      )
+    }
+  }
+
+  #Exponential logistic Flex
+  explogProbFlex<-function(L, param, maxProb){
+    if(
+      length(param) != 4 ||
+      length(maxProb) == 0 ||
+      maxProb < 0 ||
+      maxProb > 1
+    ) {
+      NULL
+    } else {
+      tryCatch({
+        tmp<-exp(param[3]*param[1]*(param[2]-L))/(1-param[3]*(1-exp(param[1]*(param[2]-L))))
+        tmp[which(L < param[4])] <- 0
+        tmp
       },
       error = function(c) NULL,
       warning = function(c) NULL
@@ -346,11 +367,57 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
     }
   }
 
+  #Protected Slot limit
+  protectSlotProb<-function(L, param, maxProb){
+    if(
+      length(param) != 2 ||
+      param[1] < 0 ||
+      param[1] >= param[2] ||
+      length(maxProb) == 0 ||
+      maxProb < 0 ||
+      maxProb > 1
+    ) {
+      NULL
+    } else {
+      tryCatch({
+        ifelse(L < param[1] | L > param[2], 1.0, 0)*maxProb
+      },
+      error = function(c) NULL,
+      warning = function(c) NULL
+      )
+    }
+  }
+
+  #Length block harvest slot
+  # param = c(3, 30, 40, 0.2, 1, 0.2)
+  blockProb<-function(L, param, maxProb){
+    if(
+      param[1] < 0 ||
+      length(param) != (param[1]*2) ||
+      is.unsorted(param[2:param[1]]) ||
+      any(param[2:param[1]] < 0) ||
+      length(maxProb) == 0 ||
+      maxProb < 0 ||
+      maxProb > 1
+    ) {
+      NULL
+    } else {
+      tryCatch({
+        vec<-c(0,param[2:param[1]])
+        ind<-param[1] + findInterval(L, vec, rightmost.closed = FALSE, left.open = FALSE)
+        param[ind]*maxProb
+      },
+      error = function(c) NULL,
+      warning = function(c) NULL
+      )
+    }
+  }
+
   sel<-list()
   if(is.null(lh) ||
      !is(FisheryObj, "Fishery") ||
-     !(FisheryObj@vulType %in%  c("logistic", "explog", "gillnetMasterNormal", "gillnetMasterLognormal")) ||
-     !(FisheryObj@retType %in%  c("full", "logistic", "slotLimit")) ||
+     !(FisheryObj@vulType %in%  c("logistic", "explog", "explogFlex", "gillnetMasterNormal", "gillnetMasterLognormal")) ||
+     !(FisheryObj@retType %in%  c("full", "logistic", "slotLimit", "protectSlotLimit", "blockRet")) ||
      length(FisheryObj@retMax) == 0 ||
      FisheryObj@retMax < 0 ||
      FisheryObj@retMax > 1 ||
@@ -366,6 +433,9 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
     }
     if(FisheryObj@vulType == "explog") {
       sel$vul<-lapply(1:lh$gtg, FUN=function(x) explogProb(L = lh$L[[x]], param = FisheryObj@vulParams, maxProb = 1.0))
+    }
+    if(FisheryObj@vulType == "explogFlex") {
+      sel$vul<-lapply(1:lh$gtg, FUN=function(x) explogProbFlex(L = lh$L[[x]], param = FisheryObj@vulParams, maxProb = 1.0))
     }
     if(FisheryObj@vulType == "gillnetMasterNormal") {
       sel$vul<-lapply(1:lh$gtg, FUN=function(x) gillnetNormalProb(L = lh$L[[x]], param = FisheryObj@vulParams))
@@ -386,6 +456,14 @@ selWrapper<-function(lh, TimeAreaObj, FisheryObj, doPlot = FALSE,  wd = NULL, im
 
     if(FisheryObj@retType == "slotLimit") {
       sel$ret<-lapply(1:lh$gtg, FUN=function(x) slotProb(L = lh$L[[x]], param = FisheryObj@retParams, maxProb = FisheryObj@retMax))
+    }
+
+    if(FisheryObj@retType == "protectSlotLimit") {
+      sel$ret<-lapply(1:lh$gtg, FUN=function(x) protectSlotProb(L = lh$L[[x]], param = FisheryObj@retParams, maxProb = FisheryObj@retMax))
+    }
+
+    if(FisheryObj@retType == "blockRet") {
+      sel$ret<-lapply(1:lh$gtg, FUN=function(x) blockProb(L = lh$L[[x]], param = FisheryObj@retParams, maxProb = FisheryObj@retMax))
     }
 
     #Do Keep, Dead discards, total removals
@@ -481,21 +559,22 @@ solveD<-function(lh, sel, doFit = FALSE, F_in = NULL, D_type = NULL, D_in = NULL
     #---------------
     #Steps per year
     #---------------
-    stepsPerYear <- lh$stepsPerYear
-    totalSteps <- NROW(lh$L[[1]])
+    stepsPerYear <- lh$stepsPerYear # 1
+    totalSteps <- NROW(lh$L[[1]])   # 59
 
     #----------------------------------------
     #Fitting functions
     #----------------------------------------
     min.Depletion<-function(logFmort){
       Fmort<-exp(logFmort)
+      # survivorship eq equations
       N<-lapply(1:lh$gtg, FUN=function(x) {
         tmp<-dplyr::lag(cumprod(exp(-lh$LifeHistory@M/stepsPerYear - Fmort/stepsPerYear*sel$removal[[x]])), n=1, default = 1)*lh$recProb[x]
         tmp[totalSteps]<- tmp[totalSteps]/(1-exp(-lh$LifeHistory@M/stepsPerYear - Fmort/stepsPerYear*sel$removal[[x]][totalSteps]))
         tmp
       })
       SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum((N[[x]]*lh$mat[[x]]*lh$W[[x]])[2:totalSteps])))
-      SPR<- SB / Wbar
+      SPR<- SB / Wbar # Equilibrium spawning biomass per recuit (fished)/ Equilibrium spawning biomass per recuit (unfished)
       D<-(4*lh$LifeHistory@Steep*SPR+lh$LifeHistory@Steep-1)/(5*lh$LifeHistory@Steep-1)
       if(D_type == "relB") return((D-D_in)^2)
       if(D_type == "SPR") return((SPR-D_in)^2)
@@ -504,11 +583,13 @@ solveD<-function(lh, sel, doFit = FALSE, F_in = NULL, D_type = NULL, D_in = NULL
     #---------------
     #Wbar
     #---------------
+    # Suvivorship - Unifished conditions
     N<-lapply(1:lh$gtg, FUN=function(x) {
       tmp<-dplyr::lag(cumprod(rep(exp(-lh$LifeHistory@M/stepsPerYear), totalSteps)), n=1, default = 1)*lh$recProb[x]
       tmp[totalSteps]<- tmp[totalSteps]/(1-exp(-lh$LifeHistory@M/stepsPerYear))
       tmp
     })
+    # Equilibrium spawning biomass per recuit (unfished) (phi unfished)
     Wbar<-sum(sapply(1:lh$gtg, FUN=function(x) sum((N[[x]]*lh$mat[[x]]*lh$W[[x]])[2:totalSteps])))
 
     #-------------
@@ -616,6 +697,1000 @@ solveD<-function(lh, sel, doFit = FALSE, F_in = NULL, D_type = NULL, D_in = NULL
   }
 }
 
+#---------------------------------------------------------------
+#Equilibrium calculations for sub-cohorts (multifleet apppraoch)
+#---------------------------------------------------------------
+
+#Roxygen header
+#'Multifleet equilibrium conditions for sub-cohorts
+#'
+#'Creates the necessary age-based vectors equilibrium abundance, biomass and catch for sub-cohorts
+#'This function extends the single-fleet solveD() to handle multiple fleets with different selectivities.
+#' @param lh  An object produced by LHWrapper.
+#' @param sel_list A list of selectivity objects produced by selWrapper, one per fleet. Each element should contain vul, keep, discard, and removal components.
+#' @param doFit Logical. When TRUE, estimates equilibrium fishing mortality based on input D_in. Ignores F_in. Default is FALSE
+#' @param F_in Equilibrium fishing mortality rate (total across all fleets). Used to calculate equilibrium conditions of the stock. Ignored when doFit = TRUE
+#' @param D_type When doFit = TRUE, specifies type of equilibrium state metric that is specified in D_in (e.g., SSB depletion or SPR).
+#' @param D_in When doFit = TRUE, specifies value of equilibrium state. Must be SSB depletion or SPR both with value between 0 and 1
+#' @param doPlot Equilibrium length composition
+#' @param fleet_proportions Numeric vector specifying the proportion of total F allocated to each fleet. Must sum to 1. If NULL, equal proportions are used.
+#' @return A list containing a list containing equilibrium metrics for total population and individual fleets. See solveD() for standard outputs, plus fleet-specific results (F_by_fleet, catchB_by_fleet, etc.)
+#' @importFrom methods slot slotNames
+#' @import ggplot2  dplyr
+#' @importFrom stats optimize
+#' @importFrom gridExtra grid.arrange
+#' @export
+
+
+# Original: find the F that gives the target initial depletion
+# In a multifleet context, the goal is
+# finding MULTIPLE F values [F1, F2, F3] that give target depletion
+# the queation: How do we distribute them among fleets?
+
+
+# - If we have some idea about how was historical fishing effort/ or catches distributed among fleets, that could be used as a reference
+# - For ejemplo fleet 1: 60% of total F and fleet 2: 40% (also diff selectivities)
+# - the depletion value = 0.4 (sum of all fleet impacts) and each fleet contributes proportionally
+# - all fleets share the same total mortality (Z)
+# -step by step approach to modify this fucntion
+# - strat with 2 fleets for now
+# - add fleet proportions (50/50 for now to test)
+# - make the fucntion accepts selectivity lists as I did with the obs models
+# - continue using optimize() with combined mortality
+
+# manual testing
+# lh
+# sel_list=list(sel1, sel1)
+# doFit = TRUE
+# D_type = "relB"
+# D_in = 0.4
+# fleet_proportions = c(0.5, 0.5)
+# F_in=0.2
+
+
+
+solveD_multifleet<-function(lh, sel_list, doFit = FALSE, F_in = NULL, D_type = NULL, D_in = NULL, doPlot = FALSE,fleet_proportions = NULL){
+
+  l <- NULL
+
+
+  # input validation is the same
+  if(is.null(lh) ||
+     is.null(sel_list) ||
+     !is.list(sel_list) ||
+     length(sel_list) == 0 ||
+     length(lh$LifeHistory@Steep) == 0 ||
+     lh$LifeHistory@Steep < 0.21 ||
+     lh$LifeHistory@Steep > 1 ||
+     isTRUE(doFit & !(D_type %in%  c("relB", "SPR"))) ||
+     isTRUE(doFit & is.null(D_in)) ||
+     isTRUE(doFit & D_in < 0) ||
+     isTRUE(doFit & D_in > 1)
+  ) {
+    return(NULL)
+  } else {
+
+    #---------------
+    #Steps per year
+    #---------------
+    nfleets <- length(sel_list)     # count n fleets from selectivity list
+    stepsPerYear <- lh$stepsPerYear # time step 1
+    totalSteps <- NROW(lh$L[[1]])   # nages
+
+    # adding a default fleet proportions if not specified (if not assume 50/50 for example for 2 fleets)
+    # if we dont provide proportions, it will create that. Also it make the fucntion work with 1 fleet or more fleet
+    if(is.null(fleet_proportions)) {
+      fleet_proportions <- rep(1/nfleets, nfleets)  # equal distribution among fleets
+    }
+
+    # validate fleet_proportions
+    if(length(fleet_proportions) != nfleets) {
+      stop("fleet_proportions length must match number of fleets")
+    }
+
+    if(any(fleet_proportions < 0)) {
+      stop("fleet_proportions must be non-negative")
+    }
+
+    if(abs(sum(fleet_proportions) - 1) > 1e-6) {
+      fleet_proportions <- fleet_proportions / sum(fleet_proportions)  # normalize
+      warning("fleet_proportions were normalized to sum to 1")
+    }
+
+
+    # validate each fleet has complete selectivity objects
+    # maybe remove it
+    for(f in 1:nfleets) {
+      if(is.null(sel_list[[f]]) ||
+         is.null(sel_list[[f]]$removal) ||
+         is.null(sel_list[[f]]$keep) ||
+         is.null(sel_list[[f]]$discard) ||
+         is.null(sel_list[[f]]$vul)) {
+        stop(paste("Fleet", f, "selectivity object is incomplete"))
+      }
+    }
+
+
+
+
+    #------------------------------------------------------------
+    #Optimization - Fitting functions (adding modifications here)
+    #------------------------------------------------------------
+
+    # This function finds the total F that produces the target depletion level
+    # It's called by optimize() when doFit = TRUE
+    min.Depletion<-function(logFmort){
+      Ftotal <-exp(logFmort)
+      F_by_fleet <- Ftotal * fleet_proportions  # Distribute total F among fleets
+
+      # calc of equilibrium N - loops through each GTG (combined mortality for all fleets)
+      # outer lapply through gtgs
+      # survivorship eq equations
+      N<-lapply(1:lh$gtg, FUN=function(x) {
+
+        # This is key for the multifleet approach
+        # fleets interact through shared mortality (total removal represents the COMBINED
+        # fishing pressure that all fleets together exert on the fish population)
+        # Total_mortality (Z) = M + (F1*sel1 + F2*sel2 + F3*sel3)
+        # Survival (S)= exp(-(M + total_removal_from_all_fleets))= exp(-(M + F1*sel1 + F2*sel2 + F3*sel3))
+        # inner sapply: age loop for each gtg
+        # what total removal sel does: for each age in each gtt, this sums up the removal selectivity from all fleets
+        total_removal_sel <- sapply(1:totalSteps, function(age) {
+          #sapply fleet loop for each age
+          sum(sapply(1:nfleets, function(f) {
+            F_by_fleet[f] * sel_list[[f]]$removal[[x]][age] # Fleet f's contribution to total removal
+          }))
+        })
+
+        #for example: # Age 5 example:
+        # Fleet1_contribution = F_by_fleet[1] * sel_list[[1]]$removal[[gtg]][5]  # = 0.1 * 0.8 = 0.08
+        # Fleet2_contribution = F_by_fleet[2] * sel_list[[2]]$removal[[gtg]][5]  # = 0.15 * 0.6 = 0.09
+        # Fleet3_contribution = F_by_fleet[3] * sel_list[[3]]$removal[[gtg]][5]  # = 0.05 * 0.2 = 0.01
+        # total_removal_sel[5] = 0.08 + 0.09 + 0.01 = 0.18  # COMBINED effect on age-5 fish
+
+
+        # Calc survival per time step (exp(-lh$LifeHistory@M/stepsPerYear - Fmort/stepsPerYear*sel$removal[[x]]))
+        # for each GTG, the cumprod() calculates survival across ages within that GTG
+        # what dplyr::lag does? : shift n positions to the right, the first position is filled by the default value
+        # whit the lag age 0 start with abundance 1???
+        # recProb: 1 prob for each GTG
+        tmp<-dplyr::lag(cumprod(exp(-lh$LifeHistory@M/stepsPerYear - total_removal_sel/stepsPerYear)), n=1, default = 1)*lh$recProb[x]
+        # calc for the plus group
+        tmp[totalSteps]<- tmp[totalSteps]/(1-exp(-lh$LifeHistory@M/stepsPerYear - total_removal_sel[totalSteps]/stepsPerYear))
+        tmp
+      })
+      # cals spawning biomas, spr, and depletion
+      SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum((N[[x]]*lh$mat[[x]]*lh$W[[x]])[2:totalSteps])))
+      SPR<- SB / Wbar #Equilibrium spawning biomass per recuit (fished)/ Equilibrium spawning biomass per recuit (unfished)
+      #convert SPR to stock depletion using BH S-R
+      D<-(4*lh$LifeHistory@Steep*SPR+lh$LifeHistory@Steep-1)/(5*lh$LifeHistory@Steep-1)
+      #squared error for optimization
+      if(D_type == "relB") return((D-D_in)^2) # Target relative biomass
+      if(D_type == "SPR") return((SPR-D_in)^2) # Target SPR
+    }
+
+    #---------------
+    #Wbar: Equilibrium spawning biomass per recuit (unfished)
+    #---------------
+    # Calculate abundance-at-age under no fishing (F = 0, only natural mortality)
+    # Suvivorship - Unifished conditions
+    N<-lapply(1:lh$gtg, FUN=function(x) {
+      tmp<-dplyr::lag(cumprod(rep(exp(-lh$LifeHistory@M/stepsPerYear), totalSteps)), n=1, default = 1)*lh$recProb[x]
+      tmp[totalSteps]<- tmp[totalSteps]/(1-exp(-lh$LifeHistory@M/stepsPerYear))
+      tmp
+    })
+    #Equilibrium spawning biomass per recuit (unfished) (phi unfished)
+    Wbar<-sum(sapply(1:lh$gtg, FUN=function(x) sum((N[[x]]*lh$mat[[x]]*lh$W[[x]])[2:totalSteps])))
+
+    #-------------
+    #Find equil F Feq: Find the F that produce the init depeltion
+    #-------------
+    # F in log scale
+    # min.Depletion: the objective fucntion
+    if(doFit) {
+      # ise numerical optimization to find F that gives target depletion
+      # optimize() searches between exp(-14) and exp(1.1) for the F that minimizes objective function
+      Feq_total <- exp(optimize(min.Depletion, lower = -14, upper = 1.1, maximum = FALSE, tol = 0.00000001)$minimum)
+    } else {
+      if(is.null(F_in)) {
+        stop("F_in must be provided when doFit = FALSE")
+      }
+      Feq_total <- F_in  # F_in should be total F across all fleets
+    }
+
+    # Distribute F among fleets
+    F_by_fleet <- Feq_total * fleet_proportions
+
+    #-------------------------------------------------------------------------------------------
+    #Get current SSB depletion
+    #Re-cacl regardless of having D_in because in some cases fit cannot deplete stock to target
+    #Recalculate with final F values
+    #Calc. final equilibrium conditions with distributed F
+    #-------------------------------------------------------------------------------------------
+
+    #FINAL EQUILIBRIUM CONDITIONS CALCULATION (after optimization)
+    # The logic is the same as above, but here F_by_fleet is after optimization
+
+    # Calculate total removal selectivity for each GTG (this is used multiple times)
+    # total removal return 1 vector (length nages) for each gtg
+    total_removal_sel_by_gtg <- lapply(1:lh$gtg, FUN = function(x) {
+      sapply(1:totalSteps, function(age) {
+        sum(sapply(1:nfleets, function(f) {
+          F_by_fleet[f] * sel_list[[f]]$removal[[x]][age]  # Fflet*Selfleet
+        }))
+      })
+    })
+
+    # Recalculate equilibrium abundance with final F values
+    N<-lapply(1:lh$gtg, FUN=function(x) {
+
+      tmp<-dplyr::lag(cumprod(exp(-lh$LifeHistory@M/stepsPerYear - total_removal_sel_by_gtg[[x]]/stepsPerYear)), n=1, default = 1)*lh$recProb[x]
+      tmp[totalSteps]<- tmp[totalSteps]/(1-exp(-lh$LifeHistory@M/stepsPerYear - total_removal_sel_by_gtg[[x]][totalSteps]/stepsPerYear))
+      tmp
+    })
+
+    # fleet specific calculations
+    YPR_by_fleet <- vector("numeric", nfleets)
+    catchN_by_fleet <- vector("numeric", nfleets)
+    catchB_by_fleet <- vector("numeric", nfleets)
+    discN_by_fleet <- vector("numeric", nfleets)
+    discB_by_fleet <- vector("numeric", nfleets)
+    #VB_by_fleet <- vector("numeric", nfleets)
+
+# calculate results for each fleet separately
+    for(f in 1:nfleets) {
+      # YPR for this fleet
+      # YPR calculation uses Baranov catch equation:
+      #C = F*sel/(F*sel + M) * (1 - exp(-(F*sel + M))) * N
+      # Note: Uses total_removal_sel_by_gtg in denominator because that's the total mortality (when + M) affecting survival
+      YPR_by_fleet[f] <- sum(sapply(1:lh$gtg, FUN = function(x) {
+        sum(lh$W[[x]] * F_by_fleet[f]/stepsPerYear * sel_list[[f]]$keep[[x]] /
+              (total_removal_sel_by_gtg[[x]]/stepsPerYear + lh$LifeHistory@M/stepsPerYear) *
+              (1 - exp(-total_removal_sel_by_gtg[[x]]/stepsPerYear - lh$LifeHistory@M/stepsPerYear)) * N[[x]])
+      }))
+
+      # Catch in numbers
+      # same as YPR but without weight multiplic.
+      catchN_by_fleet[f] <- sum(sapply(1:lh$gtg, FUN = function(x) {
+        sum(F_by_fleet[f]/stepsPerYear * sel_list[[f]]$keep[[x]] /
+              (total_removal_sel_by_gtg[[x]]/stepsPerYear + lh$LifeHistory@M/stepsPerYear) *
+              (1 - exp(-total_removal_sel_by_gtg[[x]]/stepsPerYear - lh$LifeHistory@M/stepsPerYear)) * N[[x]])
+      }))
+
+      # Catch in biomass
+      # same as catch in numbers but multiplied by weight
+      catchB_by_fleet[f] <- sum(sapply(1:lh$gtg, FUN = function(x) {
+        sum(lh$W[[x]] * F_by_fleet[f]/stepsPerYear * sel_list[[f]]$keep[[x]] /
+              (total_removal_sel_by_gtg[[x]]/stepsPerYear + lh$LifeHistory@M/stepsPerYear) *
+              (1 - exp(-total_removal_sel_by_gtg[[x]]/stepsPerYear - lh$LifeHistory@M/stepsPerYear)) * N[[x]])
+      }))
+
+      # Discards in numbers
+      # Discards use discard selectivity instead of keep selectivity
+      discN_by_fleet[f] <- sum(sapply(1:lh$gtg, FUN = function(x) {
+        sum(F_by_fleet[f]/stepsPerYear * sel_list[[f]]$discard[[x]] /
+              (total_removal_sel_by_gtg[[x]]/stepsPerYear + lh$LifeHistory@M/stepsPerYear) *
+              (1 - exp(-total_removal_sel_by_gtg[[x]]/stepsPerYear - lh$LifeHistory@M/stepsPerYear)) * N[[x]])
+      }))
+
+      # Discards in biomass
+      discB_by_fleet[f] <- sum(sapply(1:lh$gtg, FUN = function(x) {
+        sum(lh$W[[x]] * F_by_fleet[f]/stepsPerYear * sel_list[[f]]$discard[[x]] /
+              (total_removal_sel_by_gtg[[x]]/stepsPerYear + lh$LifeHistory@M/stepsPerYear) *
+              (1 - exp(-total_removal_sel_by_gtg[[x]]/stepsPerYear - lh$LifeHistory@M/stepsPerYear)) * N[[x]])
+      }))
+
+      # Vulnerable biomass = total abundance * fleet selectivity * weight
+      #VB_by_fleet[f] <- sum(sapply(1:lh$gtg, FUN = function(x) sum(N[[x]] * sel_list[[f]]$vul[[x]] * lh$W[[x]])))
+    }
+
+    # Calculate population-level calculations
+
+    SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum((N[[x]]*lh$mat[[x]]*lh$W[[x]])[2:totalSteps])))
+    SPR<-SB / Wbar
+    D<-max(0, (4*lh$LifeHistory@Steep*SPR+lh$LifeHistory@Steep-1)/(5*lh$LifeHistory@Steep-1))
+
+    # get totals
+    YPR <- sum(YPR_by_fleet)
+    catchN <- sum(catchN_by_fleet)
+    catchB <- sum(catchB_by_fleet)
+    discN <- sum(discN_by_fleet)
+    discB <- sum(discB_by_fleet)
+    #VB <- sum(VB_by_fleet)
+
+
+    #------------------------------
+    #Scale stock size and catches by Req
+    #------------------------------
+    #calc Req using BH
+    #prior calc were per recurit, now this scale the pop. by Req
+    Req<-recruit(LifeHistoryObj = lh$LifeHistory, B0=Wbar, stock=Wbar*D, forceR=FALSE)
+
+    N<-lapply(1:lh$gtg, FUN=function(x) {
+      tmp<-dplyr::lag(cumprod(exp(-lh$LifeHistory@M/stepsPerYear - total_removal_sel_by_gtg[[x]]/stepsPerYear)), n=1, default = 1)*lh$recProb[x]*Req
+      tmp[totalSteps]<- tmp[totalSteps]/(1-exp(-lh$LifeHistory@M/stepsPerYear - total_removal_sel_by_gtg[[x]][totalSteps]/stepsPerYear))
+      tmp
+    })
+    SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum((N[[x]]*lh$mat[[x]]*lh$W[[x]])[2:totalSteps])))
+    B0<-Wbar*lh$LifeHistory@R0
+
+
+    # Scale fleet-specific outputs by Req
+    #YPR_by_fleet <- YPR_by_fleet * Req
+    catchN_by_fleet <- catchN_by_fleet * Req
+    catchB_by_fleet <- catchB_by_fleet * Req
+    discN_by_fleet <- discN_by_fleet * Req
+    discB_by_fleet <- discB_by_fleet * Req
+    #VB_by_fleet <- VB_by_fleet * Req
+
+    # Recalculate totals with scaled values
+    YPR <- sum(YPR_by_fleet)
+    catchN <- sum(catchN_by_fleet)
+    catchB <- sum(catchB_by_fleet)
+    discN <- sum(discN_by_fleet)
+    discB <- sum(discB_by_fleet)
+    #VB <- sum(VB_by_fleet)
+
+
+    if(doPlot) {
+      tmp1<-data.frame(
+        l = unlist(lapply(1:lh$gtg, FUN=function(x){
+          rep(lh$L[[x]], N[[x]])
+        })))
+
+      # Plot vulnerable length composition (Fleet 1 only for simplicity)
+      tmp2<-data.frame(
+        l = unlist(lapply(1:lh$gtg, FUN=function(x){
+          rep(lh$L[[x]], N[[x]] * sel_list[[1]]$vul[[x]])
+        })))
+
+      p1<-ggplot(tmp1, aes(x=l)) +
+        geom_histogram(binwidth=1, position="identity", fill="#58C7B1", color="white") +
+        labs(
+          y= "Count",
+          x = "Length",
+          title = "Population length composition"
+        ) +
+        theme(
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill='transparent'), #transparent panel bg
+          plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
+          axis.line = element_line(colour = "#808080"),
+          legend.position = "right",
+          strip.text.x = element_text(size=10, color = '#808080', face="bold"),
+          strip.text.y = element_text(size=10, color = '#808080', face="bold"),
+          axis.text.x = element_text( size = 10, color = '#808080', face="bold"),
+          axis.text.y = element_text( size = 10, color = '#808080', face="bold"),
+          axis.title.x = element_text(size=10, color = '#808080', face="bold", margin = margin(t = 10, r = 0, b = 0, l = 0, unit = "pt")),
+          axis.title.y = element_text(size=10, color = '#808080', face="bold", margin = margin(t = 0, r = 10, b = 0, l = 0, unit = "pt")),
+          title = element_text(color = '#808080', face="bold")
+        )
+
+      p2<-ggplot(tmp2, aes(x=l)) +
+        geom_histogram(binwidth=1, position="identity", fill="#58C7B1", color="white") +
+        labs(
+          y= "Count",
+          x = "Length",
+          title = "vulnerable length composition"
+        ) +
+        theme(
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill='transparent'), #transparent panel bg
+          plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
+          axis.line = element_line(colour = "#808080"),
+          legend.position = "right",
+          strip.text.x = element_text(size=10, color = '#808080', face="bold"),
+          strip.text.y = element_text(size=10, color = '#808080', face="bold"),
+          axis.text.x = element_text( size = 10, color = '#808080', face="bold"),
+          axis.text.y = element_text( size = 10, color = '#808080', face="bold"),
+          axis.title.x = element_text(size=10, color = '#808080', face="bold", margin = margin(t = 10, r = 0, b = 0, l = 0, unit = "pt")),
+          axis.title.y = element_text(size=10, color = '#808080', face="bold", margin = margin(t = 0, r = 10, b = 0, l = 0, unit = "pt")),
+          title = element_text(color = '#808080', face="bold")
+        )
+      grid.arrange(p1, p2, nrow = 1)
+    }
+
+    #------------
+    #Return list
+    #------------
+    return(list(Feq = Feq_total, D=D, SPR=SPR, Req=Req, B0=B0, SB=SB, catchN=catchN, catchB=catchB, discN=discN, discB=discB, N=N, YPR = YPR,
+                # Fleet-specific results
+                nfleets = nfleets,
+                F_by_fleet = F_by_fleet,
+                fleet_proportions = fleet_proportions,
+                YPR_by_fleet = YPR_by_fleet,
+                catchN_by_fleet = catchN_by_fleet,
+                catchB_by_fleet = catchB_by_fleet,
+                discN_by_fleet = discN_by_fleet,
+                discB_by_fleet = discB_by_fleet,
+
+                # Additional outputs
+                sel_list = sel_list,
+                total_removal_sel_by_gtg = total_removal_sel_by_gtg
+    ))
+  }
+}
+
+
+#Roxygen header
+#'Multifleet equilibrium conditions (with iterative process to find proportion)
+#'
+#'Creates the necessary age-based vectors equilibrium abundance, biomass and catch for sub-cohorts
+#'This function extends the single-fleet solveD() to handle multiple fleets with different selectivities.
+#' @param lh  An object produced by LHWrapper.
+#' @param sel_list A list of selectivity objects produced by selWrapper, one per fleet. Each element should contain vul, keep, discard, and removal components.
+#' @param doFit Logical. When TRUE, estimates equilibrium fishing mortality based on input D_in. Ignores F_in. Default is FALSE
+#' @param F_in Equilibrium fishing mortality rate (total across all fleets). Used to calculate equilibrium conditions of the stock. Ignored when doFit = TRUE
+#' @param D_type When doFit = TRUE, specifies type of equilibrium state metric that is specified in D_in (e.g., SSB depletion or SPR).
+#' @param D_in When doFit = TRUE, specifies value of equilibrium state. Must be SSB depletion or SPR both with value between 0 and 1
+#' @param doPlot Equilibrium length composition
+#' @param fleet_proportions Numeric vector specifying the proportion of total F allocated to each fleet (How to split effort/catch among fleets). Must sum to 1. If NULL, equal proportions are used.
+#' @param allocation_type effort or catch
+#' @return A list containing a list containing equilibrium metrics for total population and individual fleets. See solveD() for standard outputs, plus fleet-specific results (F_by_fleet, catchB_by_fleet, etc.)
+#' @importFrom methods slot slotNames
+#' @import ggplot2  dplyr
+#' @importFrom stats optimize
+#' @importFrom gridExtra grid.arrange
+#' @export
+
+#find effort proportions that give target catch proportions
+solveD_multifleet2<-function(lh, sel_list, doFit = FALSE, F_in = NULL,
+                             D_type = NULL, D_in = NULL, doPlot = FALSE,
+                             fleet_proportions = NULL, allocation_type = "effort"){
+  l <- NULL
+
+  # input validation is the same
+  if(is.null(lh) ||
+     is.null(sel_list) ||
+     !is.list(sel_list) ||
+     length(sel_list) == 0 ||
+     length(lh$LifeHistory@Steep) == 0 ||
+     lh$LifeHistory@Steep < 0.21 ||
+     lh$LifeHistory@Steep > 1 ||
+     isTRUE(doFit & !(D_type %in%  c("relB", "SPR"))) ||
+     isTRUE(doFit & is.null(D_in)) ||
+     isTRUE(doFit & D_in < 0) ||
+     isTRUE(doFit & D_in > 1)
+  ) {
+    return(NULL)
+  }
+    #---------------
+    #Steps per year
+    #---------------
+    nfleets <- length(sel_list)     # count n fleets from selectivity list
+    stepsPerYear <- lh$stepsPerYear # time step 1
+    totalSteps <- NROW(lh$L[[1]])   # nages
+
+
+    original_fleet_proportions <- fleet_proportions
+    if(is.null(original_fleet_proportions)) {
+      original_fleet_proportions <- rep(1/nfleets, nfleets)
+    }
+
+    # validate and normalize original proportions
+    if(length(original_fleet_proportions) != nfleets) {
+      stop("fleet_proportions length must match number of fleets")
+    }
+    if(any(original_fleet_proportions < 0)) {
+      stop("fleet_proportions must be non-negative")
+    }
+    if(abs(sum(original_fleet_proportions) - 1) > 1e-6) {
+      original_fleet_proportions <- original_fleet_proportions / sum(original_fleet_proportions)
+      warning("fleet_proportions were normalized to sum to 1")
+    }
+
+    # validate each fleet has complete selectivity objects
+    for(f in 1:nfleets) {
+      if(is.null(sel_list[[f]]) ||
+         is.null(sel_list[[f]]$removal) ||
+         is.null(sel_list[[f]]$keep) ||
+         is.null(sel_list[[f]]$discard) ||
+         is.null(sel_list[[f]]$vul)) {
+        stop(paste("Fleet", f, "selectivity object is incomplete"))
+      }
+    }
+
+
+    #initialize variables outside conditional blocks
+    final_effort_proportions <- original_fleet_proportions
+    target_catch_proportions <- NULL
+    final_actual_catch_proportions <- NULL
+
+
+    # allocation logic
+    # This section is designed to be used for catch-based allocation
+    if(allocation_type == "catch") {
+      # reinterpret user fleet_proportions as target catch proportions
+      # for example: I want 70% of catch from fleet 1, 30% from fleet 2
+      # so the fucntion will find what effort proportions achieve this
+
+      target_catch_proportions <- original_fleet_proportions
+      cat("Target catch proportions:", target_catch_proportions, "\n")
+
+      # initial guess to start iterations - start with equal effort proportions
+      effort_proportions <- rep(1/nfleets, nfleets)
+
+      #new addition:
+      # initialize to track variables
+      converged_successfully <- FALSE
+      final_effort_proportions <- NULL
+      final_actual_catch_proportions <- NULL
+
+      #track convergence history to  debug
+      convergence_history <- list()
+
+
+      # we can do some iterative adjustment/tuning (limiting iterations to 50 or less)
+      # test current effort proportions by calculating equilibrium
+      # calls  function with current guess of effort proportions
+      for(iter in 1:50) {
+        test_result <- calculate_multifleet_equilibrium(lh, sel_list, doFit,
+                                                        F_in, D_type, D_in,
+                                                        effort_proportions,
+                                                        stepsPerYear, totalSteps)
+      #if calculation fails, exit the loop
+        if(is.null(test_result))break
+
+    #Check if catch > 1e-10 (if it is 0 or tooo small, cannot calc prop, so exit), if so sum total catch across all fleets
+    total_catch <- sum(test_result$catchB_by_fleet)
+    if(total_catch < 1e-10) break
+
+    # here we calculate what catch proportions the current effort actually produces
+    # for example fleet1 = 40 and fleet 2 = 60 <- props c(0.4, 0.6)
+    # we calculate actual catch proportions achieved with current effort proportions
+    actual_catch_proportions <- test_result$catchB_by_fleet / total_catch
+    #final_actual_catch_proportions <- actual_catch_proportions  # store this iteration result
+
+    # Add new: store in history for debugging
+    convergence_history[[iter]] <- list(
+      effort = effort_proportions,
+      catch = actual_catch_proportions
+    )
+
+
+
+    #check if the calcs is close enough to the target proportions (check convergence)
+    error <- target_catch_proportions - actual_catch_proportions # error: target - actual
+    # for example: we want c(0.7, 0.3), we got c(0.6, 0.4) <- error = c(0.1, -0.1)
+    if(max(abs(error)) < 0.005) { # 0.5% tolerance error
+      cat("Converged after", iter, "iterations\n")
+
+
+    # store the converged values immediately
+    final_effort_proportions <- effort_proportions
+
+    # We need to recalculate actual_catch_proportions  with the converged effort
+    final_test <- calculate_multifleet_equilibrium(lh, sel_list, doFit,
+                                                   F_in, D_type, D_in,
+                                                   effort_proportions,  # use final effort
+                                                   stepsPerYear, totalSteps)
+
+    final_total_catch <- sum(final_test$catchB_by_fleet)
+    final_actual_catch_proportions <- final_test$catchB_by_fleet / final_total_catch
+    converged_successfully <- TRUE
+
+    # Debug output to verify stored values are different
+    cat("STORED VALUES:\n")
+    cat("  final_effort_proportions:     ", round(final_effort_proportions, 4), "\n")
+    cat("  final_actual_catch_proportions:", round(final_actual_catch_proportions, 4), "\n")
+    cat("  These should be DIFFERENT with different selectivities!\n")
+    break
+      }
+
+    #We applied and adjustment logic for the next iteration that adjust effort proportions based on error
+    #increase or decrease effort depending on the error
+    #if a fleet needs more catch (positive error), factor > 1 (increase effort) need more
+    #if fleet needs less catch (negative error), factor < 1 (decrease effort)   need less
+    adjustment_factor <- 1 + 0.5 * error
+    effort_proportions <- effort_proportions * adjustment_factor
+    effort_proportions <- effort_proportions / sum(effort_proportions)
+
+    cat("Iteration", iter, "- Target:", round(target_catch_proportions, 3),
+        "Actual:", round(actual_catch_proportions, 3),
+        "Effort:", round(effort_proportions, 3), "\n")
+      } # end iterations
+
+    #what to do when the loop did not converge
+      if(!converged_successfully || is.null(final_actual_catch_proportions)) {
+        cat("WARNING: Did not converge, using final iteration values\n")
+        final_effort_proportions <- effort_proportions
+
+      # recalculate for final actual catch proportions
+      test_result <- calculate_multifleet_equilibrium(lh, sel_list, doFit, F_in, D_type, D_in,
+                                                      final_effort_proportions, stepsPerYear, totalSteps)
+      if(!is.null(test_result)) {
+        total_catch <- sum(test_result$catchB_by_fleet)
+        if(total_catch > 1e-10) {
+          final_actual_catch_proportions <- test_result$catchB_by_fleet / total_catch
+        } else {
+          final_actual_catch_proportions <- rep(0, nfleets)
+        }
+      } else {
+        final_actual_catch_proportions <- rep(0, nfleets)
+      }
+      }
+
+      #debugging: print convergence history summary
+      if(length(convergence_history) > 0) {
+        cat("\nCONVERGENCE HISTORY SUMMARY:\n")
+        cat("First iteration - Effort:", round(convergence_history[[1]]$effort, 4),
+            "Catch:", round(convergence_history[[1]]$catch, 4), "\n")
+        last_iter <- length(convergence_history)
+        cat("Last iteration  - Effort:", round(convergence_history[[last_iter]]$effort, 4),
+            "Catch:", round(convergence_history[[last_iter]]$catch, 4), "\n")
+      }
+
+
+} else {
+  # effort allocation: use proportions directly as effort proportions
+  final_effort_proportions <- original_fleet_proportions
+  target_catch_proportions <- NULL
+  final_actual_catch_proportions <- NULL
+  converged_successfully <- FALSE
+}
+
+    # calculate final equilibrium using the determined effort proportions
+    # only recalculate if we didnt converge successfully in catch allocation
+    if(allocation_type == "catch" && converged_successfully) {
+      # Use the converged test_result instead of recalculating
+      result <- test_result
+    } else {
+      # either effort allocation or failed convergence - need to calculate
+      result <- calculate_multifleet_equilibrium(lh, sel_list, doFit, F_in, D_type, D_in,
+                                                 final_effort_proportions, stepsPerYear, totalSteps)
+    }
+
+
+    if(is.null(result)) return(NULL)
+
+
+      #assign the stored values, dont overwrite with new calculations
+      result$allocation_type <- allocation_type
+      result$fleet_proportions <- original_fleet_proportions
+
+    # inform whether "effort" or "catch" method was used
+    # saves target vs actual catch proportions and final effort proportions
+    if(allocation_type == "catch") {
+      result$target_catch_proportions <- target_catch_proportions  #target_catch_proportions # what is needed
+      result$final_effort_proportions <- final_effort_proportions    #final_effort_proportions
+      result$actual_catch_proportions <- final_actual_catch_proportions  #result$catchB_by_fleet / sum(result$catchB_by_fleet)
+
+      # final verification
+      cat("=== FINAL RESULT VERIFICATION ===\n")
+      cat("target_catch_proportions: ", round(result$target_catch_proportions, 4), "\n")
+      cat("final_effort_proportions: ", round(result$final_effort_proportions, 4), "\n")
+      cat("actual_catch_proportions: ", round(result$actual_catch_proportions, 4), "\n")
+      cat("Are effort/catch identical?", identical(result$final_effort_proportions, result$actual_catch_proportions), "\n")
+      if(!is.null(result$final_effort_proportions) && !is.null(result$actual_catch_proportions)) {
+        cat("Max difference:", max(abs(result$final_effort_proportions - result$actual_catch_proportions)), "\n")
+      }
+      cat("================================\n")
+
+
+    } else {
+      result$final_effort_proportions <- final_effort_proportions
+      result$target_catch_proportions <- NULL
+      result$actual_catch_proportions <- NULL
+    }
+
+
+    if(doPlot) {
+      tmp1<-data.frame(
+        l = unlist(lapply(1:lh$gtg, FUN=function(x){
+          rep(lh$L[[x]], result$N[[x]])
+        })))
+
+      # Plot vulnerable length composition (Fleet 1 only for simplicity)
+      tmp2<-data.frame(
+        l = unlist(lapply(1:lh$gtg, FUN=function(x){
+          rep(lh$L[[x]], result$N[[x]] * sel_list[[1]]$vul[[x]])
+        })))
+
+      p1 <- ggplot(tmp1, aes(x=l)) +
+        geom_histogram(binwidth=1, position="identity", fill="#58C7B1", color="white") +
+        labs(y= "Count", x = "Length", title = "Population length composition") +
+        theme_minimal()
+
+      p2 <- ggplot(tmp2, aes(x=l)) +
+        geom_histogram(binwidth=1, position="identity", fill="#58C7B1", color="white") +
+        labs(y= "Count", x = "Length", title = "Vulnerable length composition") +
+        theme_minimal()
+
+      gridExtra::grid.arrange(p1, p2, nrow = 1)
+    }
+
+
+    return(result)
+  }
+
+# calculate_multifleet_equilibrium(): same as solveD_ multifleet, but this is used in the iterative search of proportions
+
+
+#' Multifleet equilibrium calculation (internal helper)
+#'
+#'Creates equilibrium abundance, biomass and catch for multiple fleets with different selectivities
+#'This function extends the single-fleet solveD() to handle multiple fleets with different selectivities.
+#' @param lh  An object produced by LHWrapper.
+#' @param sel_list A list of selectivity objects produced by selWrapper, one per fleet. Each element should contain vul, keep, discard, and removal components.
+#' @param doFit Logical. When TRUE, estimates equilibrium fishing mortality based on input D_in. Ignores F_in. Default is FALSE
+#' @param F_in Equilibrium fishing mortality rate (total across all fleets). Used to calculate equilibrium conditions of the stock. Ignored when doFit = TRUE
+#' @param D_type When doFit = TRUE, specifies type of equilibrium state metric that is specified in D_in (e.g., SSB depletion or SPR).
+#' @param D_in When doFit = TRUE, specifies value of equilibrium state. Must be SSB depletion or SPR both with value between 0 and 1
+#' @param fleet_proportions Numeric vector specifying the proportion of total F allocated to each fleet. Must sum to 1. If NULL, equal proportions are used.
+#' @param stepsPerYear Time steps per year from life history object
+#' @param totalSteps Number of age classes from life history object
+#' @return Same as solveD() plus fleet-specific outputs (F_by_fleet, catchB_by_fleet, etc.)
+#' @keywords internal
+
+  calculate_multifleet_equilibrium <-function(lh, sel_list, doFit,
+                                              F_in,
+                                              D_type,
+                                              D_in,
+                                              fleet_proportions,
+                                              stepsPerYear,
+                                              totalSteps){
+
+      nfleets <- length(sel_list)     # count n fleets from selectivity list
+
+      #------------------------------------------------------------
+      #Optimization - Fitting functions (adding modifications here)
+      #------------------------------------------------------------
+
+      # This function finds the total F that produces the target depletion level
+      # It's called by optimize() when doFit = TRUE
+      min.Depletion<-function(logFmort){
+        Ftotal <-exp(logFmort)
+        F_by_fleet <- Ftotal * fleet_proportions  # Distribute total F among fleets
+
+        # calc of equilibrium N - loops through each GTG (combined mortality for all fleets)
+        # outer lapply through gtgs
+        # survivorship eq equations
+        N<-lapply(1:lh$gtg, FUN=function(x) {
+
+          # This is key for the multifleet approach
+          # fleets interact through shared mortality (total removal represents the COMBINED
+          # fishing pressure that all fleets together exert on the fish population)
+          # Total_mortality (Z) = M + (F1*sel1 + F2*sel2 + F3*sel3)
+          # Survival (S)= exp(-(M + total_removal_from_all_fleets))= exp(-(M + F1*sel1 + F2*sel2 + F3*sel3))
+          # inner sapply: age loop for each gtg
+          # what total removal sel does: for each age in each gtt, this sums up the removal selectivity from all fleets
+          total_removal_sel <- sapply(1:totalSteps, function(age) {
+            #sapply fleet loop for each age
+            sum(sapply(1:nfleets, function(f) {
+              F_by_fleet[f] * sel_list[[f]]$removal[[x]][age] # Fleet f's contribution to total removal
+            }))
+          })
+
+          #for example: # Age 5 example:
+          # Fleet1_contribution = F_by_fleet[1] * sel_list[[1]]$removal[[gtg]][5]  # = 0.1 * 0.8 = 0.08
+          # Fleet2_contribution = F_by_fleet[2] * sel_list[[2]]$removal[[gtg]][5]  # = 0.15 * 0.6 = 0.09
+          # Fleet3_contribution = F_by_fleet[3] * sel_list[[3]]$removal[[gtg]][5]  # = 0.05 * 0.2 = 0.01
+          # total_removal_sel[5] = 0.08 + 0.09 + 0.01 = 0.18  # COMBINED effect on age-5 fish
+
+
+          # Calc survival per time step (exp(-lh$LifeHistory@M/stepsPerYear - Fmort/stepsPerYear*sel$removal[[x]]))
+          # for each GTG, the cumprod() calculates survival across ages within that GTG
+          # what dplyr::lag does? : shift n positions to the right, the first position is filled by the default value
+          # whit the lag age 0 start with abundance 1???
+          # recProb: 1 prob for each GTG
+          tmp<-dplyr::lag(cumprod(exp(-lh$LifeHistory@M/stepsPerYear - total_removal_sel/stepsPerYear)), n=1, default = 1)*lh$recProb[x]
+          # calc for the plus group
+          tmp[totalSteps]<- tmp[totalSteps]/(1-exp(-lh$LifeHistory@M/stepsPerYear - total_removal_sel[totalSteps]/stepsPerYear))
+          tmp
+        })
+        # cals spawning biomas, spr, and depletion
+        SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum((N[[x]]*lh$mat[[x]]*lh$W[[x]])[2:totalSteps])))
+        SPR<- SB / Wbar #Equilibrium spawning biomass per recuit (fished)/ Equilibrium spawning biomass per recuit (unfished)
+        #convert SPR to stock depletion using BH S-R
+        D<-(4*lh$LifeHistory@Steep*SPR+lh$LifeHistory@Steep-1)/(5*lh$LifeHistory@Steep-1)
+        #squared error for optimization
+        if(D_type == "relB") return((D-D_in)^2) # Target relative biomass
+        if(D_type == "SPR") return((SPR-D_in)^2) # Target SPR
+      }
+
+      #---------------
+      #Wbar: Equilibrium spawning biomass per recuit (unfished)
+      #---------------
+      # Calculate abundance-at-age under no fishing (F = 0, only natural mortality)
+      # Suvivorship - Unifished conditions
+      N<-lapply(1:lh$gtg, FUN=function(x) {
+        tmp<-dplyr::lag(cumprod(rep(exp(-lh$LifeHistory@M/stepsPerYear), totalSteps)), n=1, default = 1)*lh$recProb[x]
+        tmp[totalSteps]<- tmp[totalSteps]/(1-exp(-lh$LifeHistory@M/stepsPerYear))
+        tmp
+      })
+      #Equilibrium spawning biomass per recuit (unfished) (phi unfished)
+      Wbar<-sum(sapply(1:lh$gtg, FUN=function(x) sum((N[[x]]*lh$mat[[x]]*lh$W[[x]])[2:totalSteps])))
+
+      #-------------
+      #Find equil F Feq: Find the F that produce the init depeltion
+      #-------------
+      # F in log scale
+      # min.Depletion: the objective fucntion
+      if(doFit) {
+        # ise numerical optimization to find F that gives target depletion
+        # optimize() searches between exp(-14) and exp(1.1) for the F that minimizes objective function
+        Feq_total <- exp(optimize(min.Depletion, lower = -14, upper = 1.1, maximum = FALSE, tol = 0.00000001)$minimum)
+      } else {
+        if(is.null(F_in)) {
+          stop("F_in must be provided when doFit = FALSE")
+        }
+        Feq_total <- F_in  # F_in should be total F across all fleets
+      }
+
+      # Distribute F among fleets
+      F_by_fleet <- Feq_total * fleet_proportions
+
+      #-------------------------------------------------------------------------------------------
+      #Get current SSB depletion
+      #Re-cacl regardless of having D_in because in some cases fit cannot deplete stock to target
+      #Recalculate with final F values
+      #Calc. final equilibrium conditions with distributed F
+      #-------------------------------------------------------------------------------------------
+
+      #FINAL EQUILIBRIUM CONDITIONS CALCULATION (after optimization)
+      # The logic is the same as above, but here F_by_fleet is after optimization
+
+      # Calculate total removal selectivity for each GTG (this is used multiple times)
+      # total removal return 1 vector (length nages) for each gtg
+      total_removal_sel_by_gtg <- lapply(1:lh$gtg, FUN = function(x) {
+        sapply(1:totalSteps, function(age) {
+          sum(sapply(1:nfleets, function(f) {
+            F_by_fleet[f] * sel_list[[f]]$removal[[x]][age]  # Fflet*Selfleet
+          }))
+        })
+      })
+
+      # debug: check if selectivities are actually different
+      if(nfleets == 2) {
+        cat("\n=== SELECTIVITY CHECK in calculate_multifleet_equilibrium ===\n")
+        cat("GTG 1, Age 10 selectivities:\n")
+        cat("  Fleet 1 removal:", sel_list[[1]]$removal[[1]][10], "\n")
+        cat("  Fleet 2 removal:", sel_list[[2]]$removal[[1]][10], "\n")
+        cat("  Are they identical?",
+            identical(sel_list[[1]]$removal[[1]][10], sel_list[[2]]$removal[[1]][10]), "\n")
+        cat("===============================================\n")
+      }
+
+      # Recalculate equilibrium abundance with final F values
+      N<-lapply(1:lh$gtg, FUN=function(x) {
+
+        tmp<-dplyr::lag(cumprod(exp(-lh$LifeHistory@M/stepsPerYear - total_removal_sel_by_gtg[[x]]/stepsPerYear)), n=1, default = 1)*lh$recProb[x]
+        tmp[totalSteps]<- tmp[totalSteps]/(1-exp(-lh$LifeHistory@M/stepsPerYear - total_removal_sel_by_gtg[[x]][totalSteps]/stepsPerYear))
+        tmp
+      })
+
+      # fleet specific calculations
+      YPR_by_fleet <- vector("numeric", nfleets)
+      catchN_by_fleet <- vector("numeric", nfleets)
+      catchB_by_fleet <- vector("numeric", nfleets)
+      discN_by_fleet <- vector("numeric", nfleets)
+      discB_by_fleet <- vector("numeric", nfleets)
+      #VB_by_fleet <- vector("numeric", nfleets)
+
+      # calculate results for each fleet separately
+      for(f in 1:nfleets) {
+        # YPR for this fleet
+        # YPR calculation uses Baranov catch equation:
+        #C = F*sel/(F*sel + M) * (1 - exp(-(F*sel + M))) * N
+        # Note: Uses total_removal_sel_by_gtg in denominator because that's the total mortality (when + M) affecting survival
+        YPR_by_fleet[f] <- sum(sapply(1:lh$gtg, FUN = function(x) {
+          sum(lh$W[[x]] * F_by_fleet[f]/stepsPerYear * sel_list[[f]]$keep[[x]] /
+                (total_removal_sel_by_gtg[[x]]/stepsPerYear + lh$LifeHistory@M/stepsPerYear) *
+                (1 - exp(-total_removal_sel_by_gtg[[x]]/stepsPerYear - lh$LifeHistory@M/stepsPerYear)) * N[[x]])
+        }))
+
+        # Catch in numbers
+        # same as YPR but without weight multiplic.
+        catchN_by_fleet[f] <- sum(sapply(1:lh$gtg, FUN = function(x) {
+          sum(F_by_fleet[f]/stepsPerYear * sel_list[[f]]$keep[[x]] /
+                (total_removal_sel_by_gtg[[x]]/stepsPerYear + lh$LifeHistory@M/stepsPerYear) *
+                (1 - exp(-total_removal_sel_by_gtg[[x]]/stepsPerYear - lh$LifeHistory@M/stepsPerYear)) * N[[x]])
+        }))
+
+        # Catch in biomass
+        # same as catch in numbers but multiplied by weight
+        catchB_by_fleet[f] <- sum(sapply(1:lh$gtg, FUN = function(x) {
+          sum(lh$W[[x]] * F_by_fleet[f]/stepsPerYear * sel_list[[f]]$keep[[x]] /
+                (total_removal_sel_by_gtg[[x]]/stepsPerYear + lh$LifeHistory@M/stepsPerYear) *
+                (1 - exp(-total_removal_sel_by_gtg[[x]]/stepsPerYear - lh$LifeHistory@M/stepsPerYear)) * N[[x]])
+        }))
+
+        # Discards in numbers
+        # Discards use discard selectivity instead of keep selectivity
+        discN_by_fleet[f] <- sum(sapply(1:lh$gtg, FUN = function(x) {
+          sum(F_by_fleet[f]/stepsPerYear * sel_list[[f]]$discard[[x]] /
+                (total_removal_sel_by_gtg[[x]]/stepsPerYear + lh$LifeHistory@M/stepsPerYear) *
+                (1 - exp(-total_removal_sel_by_gtg[[x]]/stepsPerYear - lh$LifeHistory@M/stepsPerYear)) * N[[x]])
+        }))
+
+        # Discards in biomass
+        discB_by_fleet[f] <- sum(sapply(1:lh$gtg, FUN = function(x) {
+          sum(lh$W[[x]] * F_by_fleet[f]/stepsPerYear * sel_list[[f]]$discard[[x]] /
+                (total_removal_sel_by_gtg[[x]]/stepsPerYear + lh$LifeHistory@M/stepsPerYear) *
+                (1 - exp(-total_removal_sel_by_gtg[[x]]/stepsPerYear - lh$LifeHistory@M/stepsPerYear)) * N[[x]])
+        }))
+
+        # Vulnerable biomass = total abundance * fleet selectivity * weight
+        #VB_by_fleet[f] <- sum(sapply(1:lh$gtg, FUN = function(x) sum(N[[x]] * sel_list[[f]]$vul[[x]] * lh$W[[x]])))
+      }
+
+      # Calculate population-level calculations
+
+      SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum((N[[x]]*lh$mat[[x]]*lh$W[[x]])[2:totalSteps])))
+      SPR<-SB / Wbar
+      D<-max(0, (4*lh$LifeHistory@Steep*SPR+lh$LifeHistory@Steep-1)/(5*lh$LifeHistory@Steep-1))
+
+      # get totals
+      YPR <- sum(YPR_by_fleet)
+      catchN <- sum(catchN_by_fleet)
+      catchB <- sum(catchB_by_fleet)
+      discN <- sum(discN_by_fleet)
+      discB <- sum(discB_by_fleet)
+      #VB <- sum(VB_by_fleet)
+
+
+      #------------------------------
+      #Scale stock size and catches by Req
+      #------------------------------
+      #calc Req using BH
+      #prior calc were per recurit, now this scale the pop. by Req
+      Req<-recruit(LifeHistoryObj = lh$LifeHistory, B0=Wbar, stock=Wbar*D, forceR=FALSE)
+
+      N<-lapply(1:lh$gtg, FUN=function(x) {
+        tmp<-dplyr::lag(cumprod(exp(-lh$LifeHistory@M/stepsPerYear - total_removal_sel_by_gtg[[x]]/stepsPerYear)), n=1, default = 1)*lh$recProb[x]*Req
+        tmp[totalSteps]<- tmp[totalSteps]/(1-exp(-lh$LifeHistory@M/stepsPerYear - total_removal_sel_by_gtg[[x]][totalSteps]/stepsPerYear))
+        tmp
+      })
+      SB<-sum(sapply(1:lh$gtg, FUN=function(x) sum((N[[x]]*lh$mat[[x]]*lh$W[[x]])[2:totalSteps])))
+      B0<-Wbar*lh$LifeHistory@R0
+
+
+      # Scale fleet-specific outputs by Req
+      #YPR_by_fleet <- YPR_by_fleet * Req
+      catchN_by_fleet <- catchN_by_fleet * Req
+      catchB_by_fleet <- catchB_by_fleet * Req
+      discN_by_fleet <- discN_by_fleet * Req
+      discB_by_fleet <- discB_by_fleet * Req
+      #VB_by_fleet <- VB_by_fleet * Req
+
+      # Recalculate totals with scaled values
+      YPR <- sum(YPR_by_fleet)
+      catchN <- sum(catchN_by_fleet)
+      catchB <- sum(catchB_by_fleet)
+      discN <- sum(discN_by_fleet)
+      discB <- sum(discB_by_fleet)
+      #VB <- sum(VB_by_fleet)
+
+
+
+      #------------
+      #Return list
+      #------------
+      return(list(Feq = Feq_total, D=D, SPR=SPR, Req=Req, B0=B0,
+                  SB=SB, catchN=catchN, catchB=catchB,
+                  discN=discN, discB=discB, N=N, YPR = YPR,
+                  # Fleet-specific results
+                  nfleets = nfleets,
+                  F_by_fleet = F_by_fleet,
+                  fleet_proportions = fleet_proportions,
+                  YPR_by_fleet = YPR_by_fleet,
+                  catchN_by_fleet = catchN_by_fleet,
+                  catchB_by_fleet = catchB_by_fleet,
+                  discN_by_fleet = discN_by_fleet,
+                  discB_by_fleet = discB_by_fleet,
+
+
+                  # Additional outputs
+                  sel_list = sel_list,
+                  total_removal_sel_by_gtg = total_removal_sel_by_gtg
+      ))
+    }
+
+
+
+
 #-----------------------------------------
 #Stock - recruitment calculations
 #-----------------------------------------
@@ -668,11 +1743,26 @@ recDev<-function(LifeHistoryObj, TimeAreaObj, StochasticObj, StrategyObj = NULL)
     return(NULL)
   } else {
 
+    #Book keeping
+    years <- 1 + TimeAreaObj@historicalYears + ifelse(is(StrategyObj, "Strategy")  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)
+    iterations <- floor(TimeAreaObj@iterations)
+    Rmult<-array(1:1, dim=c(years, iterations))
+
+    #------
+    #Manual recManual
+    #------
+    if(is(StochasticObj, "Stochastic") &&
+       dim(StochasticObj@recManual)[1] == years &&
+       dim(StochasticObj@recManual)[2] == iterations
+    ) {
+      Rmult <- StochasticObj@recManual
+      return(list(Rmult=Rmult))
+    }
+
 
     #--------
     #recSD
     #--------
-    iterations <- floor(TimeAreaObj@iterations)
     recSD <- rep(LifeHistoryObj@recSD, iterations)
     if(is(StochasticObj, "Stochastic") &&
        length(StochasticObj@recSD) > 1 &&
@@ -699,9 +1789,6 @@ recDev<-function(LifeHistoryObj, TimeAreaObj, StochasticObj, StrategyObj = NULL)
       recRho<-runif(iterations, min = StochasticObj@recRho[1], max = StochasticObj@recRho[2])
     }
 
-
-    years <- 1 + TimeAreaObj@historicalYears + ifelse(is(StrategyObj, "Strategy")  && length(StrategyObj@projectionYears) > 0, StrategyObj@projectionYears, 0)
-    Rmult<-array(1:1, dim=c(years, iterations))
     for (k in 1:iterations){
       eps<-w<-rnorm(years,0,recSD[k])
       for (i in 2:NROW(eps)){
@@ -722,14 +1809,16 @@ recDev<-function(LifeHistoryObj, TimeAreaObj, StochasticObj, StrategyObj = NULL)
 #'
 #' @param TimeAreaObj A TimeArea object
 #' @param StochasticObj A Stochastic object
+#' @param nfleets Number of fleets (default = 1 for backward compatibility)
 #' @importFrom methods slot slotNames
 #' @importFrom stats rnorm
 #' @export
 
-histEffortDev<-function(TimeAreaObj, StochasticObj){
+histEffortDev<-function(TimeAreaObj, StochasticObj, is_multifleet = FALSE, nfleets = 1){
   if(length(TimeAreaObj@historicalYears) == 0 ||
      length(TimeAreaObj@iterations) == 0 ||
-     TimeAreaObj@iterations < 1
+     TimeAreaObj@iterations < 1 ||
+     nfleets < 1
   ) {
     return(NULL)
   } else {
@@ -750,14 +1839,46 @@ histEffortDev<-function(TimeAreaObj, StochasticObj){
 
     years <- 1 + TimeAreaObj@historicalYears
     areas <- TimeAreaObj@areas
-    Emult<-array(1:1, dim=c(years, iterations, areas))
-    for (k in 1:iterations){
-      eps<-rnorm(years*areas,0,effortSD[k])
-      Emult[,k,]<-exp(eps-effortSD[k]*effortSD[k]/2)
+
+    #Bill edit: let's keep single fleet estimation, then have a second option for nfleet > 2
+    #Single fleet
+    if(!is_multifleet){
+      Emult<-array(1:1, dim=c(years, iterations, areas))
+      for (k in 1:iterations){
+        eps<-rnorm(years*areas,0,effortSD[k])
+        Emult[,k,]<-exp(eps-effortSD[k]*effortSD[k]/2)
+      }
+    }
+
+    #Multi-fleet (adds additional dimension for fleet)
+    if(is_multifleet) {
+      Emult<-array(1:1, dim=c(years, iterations, areas, nfleets)) #Include fleet dimension for multifleet support
+      for (k in 1:iterations){
+        eps<-rnorm(years*areas*nfleets, 0, effortSD[k]) #Include fleet dimension in random number generation
+        Emult[,k,,]<-exp(eps-effortSD[k]*effortSD[k]/2)#now: fill a 4D array including fleet dimension
+      }
     }
     return(list(Emult=Emult))
   }
 }
+
+  # histEffortDev fucntion tested using the objects from the LC example
+  # New dimensions:
+  #11 rows: Historical years (10 years + year 1)
+  #2 columns: Iterations
+  #2 areas: Areas 1 and 2
+  #3 fleets: Fleets 1, 2, and 3
+
+  # , , area, fleet
+  #
+  # # So:
+  # , , 1, 1  # Area 1, Fleet 1
+  # , , 2, 1  # Area 2, Fleet 1
+  # , , 1, 2  # Area 1, Fleet 2
+  # , , 2, 2  # Area 2, Fleet 2
+  # , , 1, 3  # Area 1, Fleet 3
+  # , , 2, 3  # Area 2, Fleet 3
+
 
 #-----------------------------------------
 #Initial relative biomass deviations
@@ -787,7 +1908,7 @@ bioDev<-function(TimeAreaObj, StochasticObj = NULL){
     } else {
       Dtmp <- c(TimeAreaObj@historicalBio, TimeAreaObj@historicalBio)
     }
-    Dtmp<-ifelse(Dtmp < 0.01, 0.01, Dtmp) #Does your fishery even exist below 0.01?
+    Dtmp<-ifelse(Dtmp < 0.01, 0.01, Dtmp) #Does the fishery even exist below 0.01?
     Dtmp<-ifelse(Dtmp > 0.95, 0.95, Dtmp) #Must start in fished state - Need initial F > 0
     iterations <- floor(TimeAreaObj@iterations)
     Ddev <- runif(n=iterations, min=Dtmp[1], max=Dtmp[2])
@@ -1182,7 +2303,6 @@ selDev<-function(TimeAreaObj, HistFisheryObj, ProFisheryObj_list=NULL, Stochasti
 }
 
 
-
 #-----------------------------------------
 #Surival matrix calculations for cohort
 #-----------------------------------------
@@ -1212,9 +2332,6 @@ SurvMat<-function(ageClasses, M_in, F_in, S_in){
   S[ageClasses, ageClasses] <- exp(-M_in-S_in[ageClasses]*F_in)
   return(S)
 }
-
-
-
 
 #-----------------------------------------
 #Move matrix calculations for cohort
@@ -1733,20 +2850,66 @@ plotIndex_simple <- function(index_result, save_plot = FALSE,
 }
 
 
-
-# modifications
-#Roxygen header
-#'Function for integrating observation models
+# adding modifications after Bill's edits
+#' Function for integrating observation models
 #'
+#' @title Function for integrating observation models
 #' @param IndexObj A Index object
 #' @export
 
 calculate_single_Index  <- function(dataObject){
   for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
+
+  # adding multifleet detection
+  is_multifleet <- !is.null(MultifleetObj) && MultifleetObj@nfleets >= 1
+
+  #adding some multifleet checks early in the code
+  #validate required arrays are available in multifleet mode
+  # Without these arrays, fleet-specific calculations cannot be performed
+  if(is_multifleet) {
+    required_arrays <- c("RB_by_fleet", "catchB_by_fleet", "catchN_by_fleet", "Ftotal_by_fleet")
+    missing_arrays <- c()
+
+    #check if each required array exists in the dataObject environment
+    for(array_name in required_arrays) {
+      if(!exists(array_name)) {
+        missing_arrays <- c(missing_arrays, array_name)
+      }
+    }
+
+    if(length(missing_arrays) > 0) {
+      stop("Multifleet mode requires these arrays: ", paste(missing_arrays, collapse = ", "),
+           ". Check that evalMSE() multifleet implementation is complete.")
+    }
+  } else {
+    # Single fleet mode - check for typical arrays            # Vania's edits
+    if(!exists("VB") || !exists("RB")) {
+      stop("Single fleet mode requires VB and RB arrays")
+    }
+
+  }
+
   # define the dimensions (to get the structure of the simulation)
+  # years <- dim(VB)[1]       #total years hist+future
+  # iterations <- dim(VB)[2]  #total iterations
+  # total_areas <- dim(VB)[3] #total areas
+  # historicalYears <- TimeAreaObj@historicalYears #total historical years- before management
+  # historical_end <- 1 + historicalYears
+
+  # Vania's edits: modifying previous section with appropiate arrays depending on mode
+  if(is_multifleet) {
+  years <- dim(RB_by_fleet)[1]      #total years hist+future
+  iterations <- dim(RB_by_fleet)[2]  #total iterations
+  total_areas <- dim(RB_by_fleet)[3] #total areas
+  nfleets <- dim(RB_by_fleet)[4] #nfleets
+
+  } else {
   years <- dim(VB)[1]       #total years hist+future
   iterations <- dim(VB)[2]  #total iterations
   total_areas <- dim(VB)[3] #total areas
+  nfleets <- 1              #nfleets
+  }
+
   historicalYears <- TimeAreaObj@historicalYears #total historical years- before management
   historical_end <- 1 + historicalYears
 
@@ -1757,10 +2920,23 @@ calculate_single_Index  <- function(dataObject){
     stop("survey_design list must contain at least one survey or CPUE design")
   }
 
+  # modified validation loop with fleet-specific checks
   #  add validation for each survey/CPUE design
   #  lopp through each individual survey/CPUE design for validation.
   for(index_idx in 1:n_indices) {
     design <- IndexObj@survey_design[[index_idx]] #extracts current survey design from the list (for each index)
+
+    #DEBUG
+    # cat("\n=== LOOP START DEBUG ===\n")
+    # cat("Processing index_idx:", index_idx, "\n")
+    # cat("design$areas from IndexObj:", paste(IndexObj@survey_design[[index_idx]]$areas, collapse = "_"), "\n")
+    # cat("design$areas from variable:", paste(design$areas, collapse = "_"), "\n")
+    # if(design$indextype == "FI") {
+    #   cat("design$selectivity_hist_idx:", design$selectivity_hist_idx, "\n")
+    #   cat("design$survey_timing:", design$survey_timing, "\n")
+    # }
+    # cat("=========================\n")
+
 
     # common required elements for surveys/CPUEs
     required_elements <- c("indextype", "areas", "indexYears",
@@ -1774,13 +2950,34 @@ calculate_single_Index  <- function(dataObject){
                              "selectivity_proj_idx", "survey_timing")
     }
 
+    #for FD in multifleet, require fleet_id
+    if(design$indextype == "FD" && is_multifleet) {
+      required_elements <- c(required_elements, "fleet_id")
+    }
+
     # check the required elements are available
     if(!all(required_elements %in% names(design))) { # check if required element exist
       missing <- required_elements[!required_elements %in% names(design)]   # identify what element is misssing
       stop(paste("Survey design", index_idx, "missing elements:", paste(missing, collapse = ", ")))
     }
 
-    # validate indextype
+    # validate fleet_id if present
+    if(design$indextype == "FD" && is_multifleet) {
+      fleet_id <- design$fleet_id
+      #nfleets <- MultifleetObj@nfleets  #Vania's edits
+      if(!is.numeric(fleet_id) || length(fleet_id) != 1 || fleet_id < 1 || fleet_id > nfleets) {
+        stop(paste("Survey design", index_idx, ": fleet_id must be between 1 and", nfleets))
+      }
+    }
+
+    # prevent FI indices from having fleet_id
+    # FI indices are independent of fleets by definition
+    if(design$indextype == "FI" && "fleet_id" %in% names(design)) {
+      stop(paste("Survey design", index_idx, ": FI indices cannot have fleet_id"))
+    }
+
+
+    # validate indextype -standard validation continues...
     if(!design$indextype %in% c("FD", "FI")) {
       stop(paste("Survey design", index_idx, ": indextype must be 'FD' or 'FI'"))
     }
@@ -1823,25 +3020,11 @@ calculate_single_Index  <- function(dataObject){
   } # close loop for specific surveys/CPUE validations
 
 
-  # NEW
-  # Results list (initialize empty list) to store multiple indices
-
-  #? results_list <- list()
-
-  # Now removing the empty list and add the tibble that will be
-  # filled every time step and moving up the actual_types
-  # before creating the tibble:
-
-  # Determine the actual index type (FD, FI, or Mixed)
-  # then adding the calculated column  final_indextype to the tibble
-  # I moved this calculation from below
+  # determine final index type (FD, FI, or Mixed) with multifleet awareness
   actual_types <- unique(sapply(IndexObj@survey_design, function(d) d$indextype))
-
   if(length(actual_types) == 1) {
-    # all indices are the same type
-    final_indextype <- actual_types[1]  # "FD" or "FI"
+    final_indextype <- actual_types[1]
   } else {
-    # mixed types
     final_indextype <- "Mixed"
   }
 
@@ -1859,10 +3042,12 @@ calculate_single_Index  <- function(dataObject){
     years_total = years,                # total years in simulation
     iterations_total = iterations,      # total iterations in simulation
     areas_total = total_areas,          # total areas in simulation
-    historical_end = historical_end     # end of historical period
+    historical_end = historical_end,     # end of historical period
+
+    #New addition (adding multifleet metadata):
+    is_multifleet = is_multifleet,              # does simulation uses multifleet?
+    nfleets = nfleets #Vania's edits
   )
-
-
 
 
   # add the main loop through survey / CPUE individually
@@ -1870,9 +3055,20 @@ calculate_single_Index  <- function(dataObject){
   for(index_idx in 1:n_indices) {
     design <- IndexObj@survey_design[[index_idx]]  #extract current index design
 
-    #just to indicate what index is processing
-    cat(paste("Processing", ifelse(design$indextype == "FI", "Survey", "CPUE"), index_idx,
-              "- Areas:", paste(design$areas, collapse = ","), "\n"))
+    #NEW - adding:
+    # extract fleet_id for FD indices in multifleet mode
+    # fleet_id is NA for FI indices or single fleet mode
+    fleet_id <- if("fleet_id" %in% names(design)) design$fleet_id else NA
+
+    # what are we processing - Improvin progress reporting
+    if(design$indextype == "FD" && is_multifleet) {
+      cat(paste("Processing Fleet", fleet_id, "CPUE", index_idx,
+                "- Areas:", paste(design$areas, collapse = ","), "\n"))
+    } else {
+      cat(paste("Processing", ifelse(design$indextype == "FI", "Survey", "CPUE"), index_idx,
+                "- Areas:", paste(design$areas, collapse = ","), "\n"))
+    }
+
 
 
     # create selectivity based on the data type "FD" or "FI"
@@ -1881,18 +3077,10 @@ calculate_single_Index  <- function(dataObject){
 
     # historical period
     # creates historical period selectivity using fishSimGTG's historical fishery object
-    if(design$indextype == "FD") {
-      # for CPUE: use fishery selectivity
-      # why? because that is fishsimGTG configuration
-      index_selectivity_hist <- selHist[[1]]$keep # sel hist for area 1 - it is repeated for each area
 
-      # For projection period: create area-specific fishery selectivities
-      # initializes list for area-specific projection selectivities
-      index_selectivity_proj_list <- selPro
-
-    } else {
-
-      # FI: use survey selectivity
+    #NEW addition (double check)
+    if(design$indextype == "FI") {
+      # FI: use survey selectivity (unchanged)
       # extracts selectivity objects from provided lists and creates selectivity using sel wrappers
       hist_selectivity_obj <- IndexObj@selectivity_hist_list[[design$selectivity_hist_idx]]
       proj_selectivity_obj <- IndexObj@selectivity_proj_list[[design$selectivity_proj_idx]]
@@ -1906,227 +3094,344 @@ calculate_single_Index  <- function(dataObject){
                                            doPlot = FALSE)
     }
 
+    #check if CPUE data exists in this year
+    #only calculates CPUE/Surveys for years where data is collected
+    if((j-1) %in% design$indexYears) {
 
+      # Create a branch to account for index covering (sampling) only one area
+      # or covering multiple areas
 
-        #check if CPUE data exists in this year
-        #only calculates CPUE/Surveys for years where data is collected
-        if((j-1) %in% design$indexYears) {
+      # same patern as LC
+      # checks if this survey/CPUE covers one area or multiple areas
+      # unchanged for single area
+      if(length(design$areas) == 1) {
+        area <- design$areas[1] # if single area (e.g., c(1)): extract value for that area
 
-          # Create a branch to account for index covering (sampling) only one area
-          # or covering multiple areas
+        # get the precalc data for this single area
+        if(IndexObj@useWeight && design$indextype == "FD") {
 
-          # same patern as LC
-          # checks if this survey/CPUE covers one area or multiple areas
-
-          if(length(design$areas) == 1) {
-            area <- design$areas[1] # if single area (e.g., c(1)): extract value for that area
-
-            # get the precalc data for this single area
-            if(IndexObj@useWeight && design$indextype == "FD") {
-              # For CPUE biomass: get VB from this area
-              area_value <- RB[j, k, area] #directly extracts vulnerable biomass from simulation results
-            } else {
-
-              # FI
-              # For FI or CPUE numbers: calculate from N arrays for this area
-              # manually calculates by applying selectivity to N arrays
-              # and summing across GTGs.
-              area_value <- 0           # starts with zero and accumulate
-              # get selectivity
-              # chose selectivity based on:
-              # time period: historical vs projection
-              # data type: FD (fishery) vs FI (survey)
-              # area: For FD in proj, each area might have different fishing sel
-
-              if(j <= historical_end) {
-                selectivity <- index_selectivity_hist
-              } else {
-                if(design$indextype == "FD") {
-                  # use area-specific fishery selectivity for projection period
-                  selectivity <- index_selectivity_proj_list[[area]]$keep  #to follow the actual configuration of the package
-                } else {
-                  # For FI, same selectivity for all areas this survey covers
-                  selectivity <- index_selectivity_proj$vul
-                }
-              }
-
-              # sum across GTGs for this single area (retained numbers)
-              for(gtg in 1:lh$gtg) {
-                N_gtg_area <- N[[gtg]][, j, area]
-
-              # introducing survey timing correction here
-                if(design$indextype == "FI") {
-                  survey_timing <- design$survey_timing
-                  timing_correction <- exp(-Z[[gtg]][, j, area] * survey_timing)
-                  N_gtg_area <- N_gtg_area * timing_correction
-                }
-
-
-                if(IndexObj@useWeight) {
-                  survey_calc <- sum(N_gtg_area * selectivity[[gtg]] * lh$W[[gtg]])
-                } else {
-                  survey_calc <- sum(N_gtg_area * selectivity[[gtg]])
-                }
-                area_value <- area_value + survey_calc
-              }
-            }
-
+          # for CPUE biomass: get retained biomass from this area
+          # MULTIFLEET MODE: extract fleet-specific retained biomass
+          # uses 4D array RB_by_fleet[year, iteration, area, fleet]
+          if(is_multifleet) {
+            area_value <- RB_by_fleet[j, k, area, fleet_id]  # Fleet-specific retained biomass
           } else {
-            # Here multiarea starts
-            # For multi-area data collection: Sum data across multiple areas
-            # Same approach used in length composition obs models: rowSums(true_length_array[, year, design$areas])
 
-            if(IndexObj@useWeight && design$indextype == "FD") {
-              # Sum VB across all specified areas - like rowSums() in length composition
-              area_value <- sum(RB[j, k, design$areas])
-
-            } else {
-              # sum calculated values across all specified areas
-              area_value <- 0
-
-              # loop through each area and sum their contributions
-              for(area in design$areas) {
-                # get area-specific selectivity for this time period
-                if(j <= historical_end) {
-                  selectivity <- index_selectivity_hist
-                } else {
-                  if(design$indextype == "FD") {
-                    # use area-specific fishery selectivity for projection period
-                    selectivity <- index_selectivity_proj_list[[area]]$keep
-                  } else {
-                    # for FI, same selectivity for all areas this survey covers
-                    selectivity <- index_selectivity_proj$vul
-                  }
-                }
-
-                # calculate contribution from this area
-                area_contribution <- 0
-                for(gtg in 1:lh$gtg) {
-                  N_gtg_area <- N[[gtg]][, j, area]
-
-                  # applying survey correction
-                  if(design$indextype == "FI") {
-                    survey_timing <- design$survey_timing
-                    timing_correction <- exp(-Z[[gtg]][, j, area] * survey_timing)
-                    N_gtg_area <- N_gtg_area * timing_correction
-                  }
-
-                  if(IndexObj@useWeight) {
-                    survey_calc <- sum(N_gtg_area * selectivity[[gtg]] * lh$W[[gtg]])
-                  } else {
-                    survey_calc <- sum(N_gtg_area * selectivity[[gtg]])
-                  }
-                  area_contribution <- area_contribution + survey_calc
-                }
-                # add this area contribution to the total (like i did in lc)
-                area_value <- area_value + area_contribution
-              }
-            }
+            #Original: aggregated retained biomass across all fleets
+            #For CPUE biomass: get VB from this area
+            area_value <- RB[j, k, area] #directly extracts vulnerable biomass from simulation results
           }
-
-          # get index specific parameters with bounds
-          # Whether the index covers 1 area or multiple areas, it has ONE set of parameters
-
-          # Sample parameters based on historical vs projection period
-          if(j <= historical_end) {
-
-
-            q_area_year <- runif(1,
-                                 min = design$q_hist_bounds[1],
-                                 max = design$q_hist_bounds[2])
-
-
-            hyperstability_area <- runif(1,
-                                         min = design$hyperstability_hist_bounds[1],
-                                         max = design$hyperstability_hist_bounds[2])
-
-            obs_CV <- runif(1,
-                            min = design$obsError_CV_hist_bounds[1],
-                            max = design$obsError_CV_hist_bounds[2])
-
-
-
-          } else {
-            # Projection
-            q_area_year <- runif(1,
-                                 min = design$q_proj_bounds[1],
-                                 max = design$q_proj_bounds[2])
-
-            hyperstability_area <- runif(1,
-                                         min = design$hyperstability_proj_bounds[1],
-                                         max = design$hyperstability_proj_bounds[2])
-
-            obs_CV <- runif(1,
-                            min = design$obsError_CV_proj_bounds[1],
-                            max = design$obsError_CV_proj_bounds[2])
-          }
-
-          #apply the observation model to the area_value (which is either single area value or sum of multiple areas)
-
-          if(hyperstability_area != 1) {
-            index_value <- q_area_year * (area_value^hyperstability_area)
-          } else {
-            index_value <- q_area_year*area_value
-          }
-
-          #add observation error with bias correction
-          if(obs_CV > 0) {
-            obs_error <- exp(rnorm(1, mean = 0, sd = obs_CV) - 0.5 * obs_CV^2)
-            index_value <- index_value * obs_error
-          }
-
-
-          # Adding more columns to the tibble
-          # add to the tibble with appropriate column name (create column name like "CPUE_1" or "Survey_2")
-          index_name <- paste0(ifelse(design$indextype == "FI", "Survey_", "CPUE_"), index_idx)
-          observation_return[[index_name]] <- index_value  # add the new column to the tibble
-
-          # Add individual index columns (from the original results_list)
-          observation_return[[paste0(index_name, "_indextype")]] <- design$indextype
-          observation_return[[paste0(index_name, "_areas")]] <- paste(design$areas, collapse = "_")
-          observation_return[[paste0(index_name, "_indexYears")]] <- paste(design$indexYears, collapse = "_")
-          observation_return[[paste0(index_name, "_survey_timing")]] <- if(design$indextype == "FI") design$survey_timing else NA
-          observation_return[[paste0(index_name, "_selectivity_hist_idx")]] <- if(design$indextype == "FI") design$selectivity_hist_idx else NA
-          observation_return[[paste0(index_name, "_selectivity_proj_idx")]] <- if(design$indextype == "FI") design$selectivity_proj_idx else NA
         } else {
 
-          # For the years with no obervation (set to NA but still include) (see if(j %in% design$indexYears))
-          index_name <- paste0(ifelse(design$indextype == "FI", "Survey_", "CPUE_"), index_idx)
-          observation_return[[index_name]] <- NA
-          observation_return[[paste0(index_name, "_indextype")]] <- design$indextype
-          observation_return[[paste0(index_name, "_areas")]] <- paste(design$areas, collapse = "_")
-          observation_return[[paste0(index_name, "_indexYears")]] <- paste(design$indexYears, collapse = "_")
-          observation_return[[paste0(index_name, "_survey_timing")]] <- if(design$indextype == "FI") design$survey_timing else NA
-          observation_return[[paste0(index_name, "_selectivity_hist_idx")]] <- if(design$indextype == "FI") design$selectivity_hist_idx else NA
-          observation_return[[paste0(index_name, "_selectivity_proj_idx")]] <- if(design$indextype == "FI") design$selectivity_proj_idx else NA
+          #Number data calcs: Manual calculation from N arrays
+          #manually calculates by applying selectivity to N arrays
+          #and summing across GTGs.
+          area_value <- 0           # starts with zero and accumulate
+          # get selectivity
+          # chose selectivity based on:
+          # time period: historical vs projection
+          # data type: FD (fishery) vs FI (survey)
+          # area: For FD in proj, each area might have different fishing sel
+
+          if(j <= historical_end) {
+            if(design$indextype == "FD") {
+              if(is_multifleet) {
+                # MULTIFLEET MODE: selHist[[area]][[fleet]]$keep
+                selectivity <- selHist[[area]][[fleet_id]]$keep
+              } else {
+                selectivity <- selHist[[area]]$keep  #fixed
+              }
+            }else {
+              # For FI, use pre-created survey selectivity
+              selectivity <- index_selectivity_hist
+            }
+          } else {
+
+            if(design$indextype == "FD") {
+              if(is_multifleet) {
+                # MULTIFLEET MODE: selPro[[area]][[fleet]]$keep
+                selectivity <- selPro[[area]][[fleet_id]]$keep
+              } else {
+                # SINGLE FLEET MODE: selPro[[area]]$keep
+                selectivity <- selPro[[area]]$keep
+              }
+            } else {
+              # FI INDICES: use pre-created survey selectivity
+              selectivity <- index_selectivity_proj$vul
+            }
+          }
+
+          # sum across GTGs for this single area (retained numbers)
+          for(gtg in 1:lh$gtg) {
+            N_gtg_area <- N[[gtg]][, j, area]
+
+            # introducing survey timing correction here
+            if(design$indextype == "FI") {
+              survey_timing <- design$survey_timing
+              timing_correction <- exp(-Z[[gtg]][, j, area] * survey_timing)
+              N_gtg_area <- N_gtg_area * timing_correction
+            }
+
+            # calculating contribution from this GTG
+            if(IndexObj@useWeight) {
+              survey_calc <- sum(N_gtg_area * selectivity[[gtg]] * lh$W[[gtg]])
+            } else {
+              survey_calc <- sum(N_gtg_area * selectivity[[gtg]])
+            }
+            area_value <- area_value + survey_calc
+          }
         }
+
+      } else {
+        # Here multiarea starts
+        # For multi-area data collection: Sum data across multiple areas
+        # Same approach used in length composition obs models: rowSums(true_length_array[, year, design$areas])
+
+        if(IndexObj@useWeight && design$indextype == "FD") {
+          # NEW addition: For CPUE biomass across multiple areas
+          if(is_multifleet) {
+            # MULTIFLEET MODE: Sum fleet-specific RB across specified areas
+            # This maintains fleet specificity while allowing multi-area indices
+            area_value <- sum(RB_by_fleet[j, k, design$areas, fleet_id])  # sum fleet-specific RB across areas
+          } else {
+            # Original- SINGLE FLEET MODE: Sum VB across all specified areas - like rowSums() in length composition
+            # Sum aggregated RB across areas (backward compatibility)
+            area_value <- sum(RB[j, k, design$areas])
+          }
+
+        } else {
+          # sum calculated values across all specified areas
+          area_value <- 0
+
+          # loop through each area and sum their contributions
+          for(area in design$areas) {
+            # get area-specific selectivity for this time period
+            if(j <= historical_end) {
+              if(design$indextype == "FD") {
+                if(is_multifleet) {
+                  #MULTIFLEET MODE: use selHist[[area]][[fleet]]$keep
+                  selectivity <- selHist[[area]][[fleet_id]]$keep
+                } else {
+                  #SINGLE FLEET MODE: selHist[[area]]$keep
+                  selectivity <- selHist[[area]]$keep
+                }
+              } else {
+                # for FI: Use pre-created survey selectivity
+                selectivity <- index_selectivity_hist
+              }
+            } else {
+              if(design$indextype == "FD") {
+                if(is_multifleet) {
+                  # MULTIFLEET MODE: use selPro[[area]][[fleet]]$keep
+                  selectivity <- selPro[[area]][[fleet_id]]$keep
+                } else {
+                  # SINGLE FLEET MODE: use selPro[[area]]$keep
+                  selectivity <- selPro[[area]]$keep
+                }
+              } else {
+                # FI INDICES: same selectivity for all areas this survey covers
+                selectivity <- index_selectivity_proj$vul
+              }
+            }
+
+            # calculate contribution from this area
+            area_contribution <- 0
+            for(gtg in 1:lh$gtg) {
+              N_gtg_area <- N[[gtg]][, j, area]
+
+              # applying survey correction
+              if(design$indextype == "FI") {
+                survey_timing <- design$survey_timing
+                timing_correction <- exp(-Z[[gtg]][, j, area] * survey_timing)
+                N_gtg_area <- N_gtg_area * timing_correction
+              }
+
+              #calculate contribution from this GTG in this area
+
+              if(IndexObj@useWeight) {
+                survey_calc <- sum(N_gtg_area * selectivity[[gtg]] * lh$W[[gtg]])
+              } else {
+                survey_calc <- sum(N_gtg_area * selectivity[[gtg]])
+              }
+              area_contribution <- area_contribution + survey_calc
+            }
+            # add this area contribution to the total (like i did in lc)
+            area_value <- area_value + area_contribution
+          }
+        }
+      }
+
+      # get index specific parameters with bounds
+      # Whether the index covers 1 area or multiple areas, it has ONE set of parameters
+
+      # Sample parameters based on historical vs projection period
+      if(j <= historical_end) {
+
+        q_area_year <- runif(1,
+                             min = design$q_hist_bounds[1],
+                             max = design$q_hist_bounds[2])
+
+
+        hyperstability_area <- runif(1,
+                                     min = design$hyperstability_hist_bounds[1],
+                                     max = design$hyperstability_hist_bounds[2])
+
+        obs_CV <- runif(1,
+                        min = design$obsError_CV_hist_bounds[1],
+                        max = design$obsError_CV_hist_bounds[2])
+
+
+
+      } else {
+        # Projection
+        q_area_year <- runif(1,
+                             min = design$q_proj_bounds[1],
+                             max = design$q_proj_bounds[2])
+
+        hyperstability_area <- runif(1,
+                                     min = design$hyperstability_proj_bounds[1],
+                                     max = design$hyperstability_proj_bounds[2])
+
+        obs_CV <- runif(1,
+                        min = design$obsError_CV_proj_bounds[1],
+                        max = design$obsError_CV_proj_bounds[2])
+      }
+
+      #apply the observation model to the area_value (which is either single area value or sum of multiple areas)
+
+      if(hyperstability_area != 1) {
+        index_value <- q_area_year * (area_value^hyperstability_area)
+      } else {
+        index_value <- q_area_year*area_value
+      }
+
+      #add observation error with bias correction
+      if(obs_CV > 0) {
+        obs_error <- exp(rnorm(1, mean = 0, sd = obs_CV) - 0.5 * obs_CV^2)
+        index_value <- index_value * obs_error
+      }
+
+
+      #New adding: fleet-specific column naming for FD indices in multifleet mode
+      if(design$indextype == "FD" && is_multifleet) {
+        #fleet-specific naming for multifleet FD indices
+        index_name <- paste0("IDX_CPUE_", index_idx, "_Fleet_", fleet_id)
+      } else {
+        # original naming
+        index_name <- paste0("IDX_", ifelse(design$indextype == "FI", "Survey_", "CPUE_"), index_idx)
+      }
+      #debugging code
+      # cat("\n=== DEBUG INFO (HAS OBSERVATION) ===\n")
+      # cat("Index:", index_idx, "Name:", index_name, "\n")
+      # cat("design$areas:", design$areas, "\n")
+      # cat("paste result:", paste(design$areas, collapse = "_"), "\n")
+
+
+      # Adding more columns to the tibble
+      # add to the tibble with appropriate column name (create column name like "CPUE_1" or "Survey_2")
+
+      observation_return[[index_name]] <- index_value  # add the new column to the tibble
+
+      # Add individual index columns (from the original results_list)
+      observation_return[[paste0(index_name, "_indextype")]] <- design$indextype
+
+      #Debug
+      # cat("CRITICAL DEBUG - About to store areas for", index_name, "\n")
+      # cat("design$indextype:", design$indextype, "\n")
+      # cat("design$areas:", design$areas, "\n")
+      # cat("index_idx:", index_idx, "\n")
+
+
+
+      observation_return[[paste0(index_name, "_areas")]] <- paste(design$areas, collapse = "_")
+      cat("Actually stored:", observation_return[[paste0(index_name, "_areas")]], "\n")
+      cat("----\n")
+
+      observation_return[[paste0(index_name, "_indexYears")]] <- paste(design$indexYears, collapse = "_")
+
+      # NEW addition: adding fleet metadata
+      if(design$indextype == "FD" && is_multifleet) {
+        observation_return[[paste0(index_name, "_fleet_id")]] <- fleet_id
+      } else {
+        observation_return[[paste0(index_name, "_fleet_id")]] <- NA
+      }
+
+      observation_return[[paste0(index_name, "_survey_timing")]] <- if(design$indextype == "FI") design$survey_timing else NA
+      observation_return[[paste0(index_name, "_selectivity_hist_idx")]] <- if(design$indextype == "FI") design$selectivity_hist_idx else NA
+      observation_return[[paste0(index_name, "_selectivity_proj_idx")]] <- if(design$indextype == "FI") design$selectivity_proj_idx else NA
+    } else {
+
+      # For the years with no obervation (set to NA but still include) (see if(j %in% design$indexYears))
+
+      # NEW addition: Apply same fleet-aware naming for NA cases
+      if(design$indextype == "FD" && is_multifleet) {
+        index_name <- paste0("IDX_CPUE_", index_idx, "_Fleet_", fleet_id)
+      } else {
+        index_name <- paste0("IDX_", ifelse(design$indextype == "FI", "Survey_", "CPUE_"), index_idx)
+      }
+
+      #debugging code
+      # cat("\n=== DEBUG INFO (NO OBSERVATION) ===\n")
+      # cat("Index:", index_idx, "Name:", index_name, "\n")
+      # cat("design$areas:", design$areas, "\n")
+      # cat("paste result:", paste(design$areas, collapse = "_"), "\n")
+
+      #index_name <- paste0(ifelse(design$indextype == "FI", "Survey_", "CPUE_"), index_idx)
+      observation_return[[index_name]] <- NA
+      observation_return[[paste0(index_name, "_indextype")]] <- design$indextype
+      #debug
+      # cat("CRITICAL DEBUG - About to store areas for", index_name, "(NO OBS)\n")
+      # cat("design$indextype:", design$indextype, "\n")
+      # cat("design$areas:", design$areas, "\n")
+      # cat("index_idx:", index_idx, "\n")
+
+
+
+
+      observation_return[[paste0(index_name, "_areas")]] <- paste(design$areas, collapse = "_")
+      #debugging
+      # cat("Actually stored:", observation_return[[paste0(index_name, "_areas")]], "\n")
+      # cat("----\n")
+      #
+      # cat("FINAL CHECK - Actually stored in tibble:", observation_return[[paste0(index_name, "_areas")]], "\n")
+      observation_return[[paste0(index_name, "_indexYears")]] <- paste(design$indexYears, collapse = "_")
+
+      # NEW addition: Add fleet metadata for NA cases
+      if(design$indextype == "FD" && is_multifleet) {
+        observation_return[[paste0(index_name, "_fleet_id")]] <- fleet_id
+      } else {
+        observation_return[[paste0(index_name, "_fleet_id")]] <- NA
+      }
+
+
+      observation_return[[paste0(index_name, "_survey_timing")]] <- if(design$indextype == "FI") design$survey_timing else NA
+      observation_return[[paste0(index_name, "_selectivity_hist_idx")]] <- if(design$indextype == "FI") design$selectivity_hist_idx else NA
+      observation_return[[paste0(index_name, "_selectivity_proj_idx")]] <- if(design$indextype == "FI") design$selectivity_proj_idx else NA
     }
+  }
+
+  #debugginng index area idx issue
+  # if(j %in% c(2, 3, 5, 8)) {  # Check a few different years
+  #   cat("YEAR", j-1, "- Survey_3_areas being returned:", observation_return$Survey_3_areas, "\n")
+  #   cat("YEAR", j-1, "- class:", class(observation_return$Survey_3_areas), "\n")
+  #   cat("YEAR", j-1, "- Survey_3_indextype:", observation_return$Survey_3_indextype, "\n")
+  # }
+
+  # ensure consistent column ordering (to check the bug)
+  # expected_cols <- c("k", "j", "indexID", "title", "final_indextype", "useWeight",
+  #                    "n_indices", "years_total", "iterations_total", "areas_total",
+  #                    "historical_end", "is_multifleet", "nfleets")
+  #
+  # observation_return <- observation_return[, c(expected_cols,
+  #                                              setdiff(names(observation_return), expected_cols))]
+
   return(observation_return)
 } # close the fucntion
 
-# Note need to add survey time correction - Ask Bill (  age GTG Z????)
-# better to calculate total mortality arrays and report in data Object
-# Need to calculate total mortality Z arrays (F* sel)+ M
-# Z_age_gtg <- (Ftotal[j, k, area] * selectivity[[gtg]][age])+lh$LifeHistory@M
 
-
-# I used this approach in my OM
-# ## index  survey for each block
-# if( j >= idsyr_blk1 & j < idsyr_blk2 )
-#   itSurv_blk1[j] = qsurv1 * sum(Nat[j,]*sel_s[j,]*waa_s[j,] * exp(-zt[j,]*fyrsurv1) )* exp( (tau_devs_surv1[j] )*obs_error-(tausurv1^2)/2)
-# if( j >= idsyr_blk2)
-#   itSurv_blk2[j] = qsurv2 * sum(Nat[j,]*sel_s[j,]*waa_s[j,] * exp(-zt[j,]*fyrsurv1) )* exp( (tau_devs_surv2[j] )*obs_error-(tausurv2^2)/2)
-# itSurv<-c(itSurv_blk1[1:idnyr_blk1],itSurv_blk2[idsyr_blk2:idnyr_blk2])
-
-# and for length comp:
-# TrueSurvCat[j,] =  Nat[j,] * sel_s[j,] *exp(-zt[j,]*fyrsurv1)                    ## True survey catch-at-age: question here, should I correct bt the time the survey occur
-# pSurvCat[j,] = (TrueSurvCat[j,] + tiny ) / sum(TrueSurvCat[j,] + tiny)           ## Calc. true prop-at-age (survey)
-# cat_sur_mvlog[j,] = mvlogistAgeComps(pSurvCat[j,],taupaasurv,id_seed=s+1000)
-
-
-#Roxygen header
-#'Function for integrating observation models
+#' Function for integrating observation models
 #'
+#' @title Function for integrating catch observation models
 #' @param CatchObsObj A Catch observation model object
 #' @export
 
@@ -2134,12 +3439,59 @@ calculate_single_CatchObs <- function(dataObject) {
   # Unpack dataObject (a list containing all needed data)
   for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
 
+  # Detect multifleet mode
+  is_multifleet <- !is.null(MultifleetObj) && MultifleetObj@nfleets >= 1
+
+  #debugging code
+  # cat("=== DEBUG CATCH OBS ===\n")
+  # cat("is_multifleet:", is_multifleet, "\n")
+  # cat("fleet_configs in slotNames:", "fleet_configs" %in% slotNames(CatchObsObj), "\n")
+  # cat("fleet_configs length:", length(CatchObsObj@fleet_configs), "\n")
+  # cat("class(CatchObsObj):", class(CatchObsObj), "\n")
+  # cat("slotNames(CatchObsObj):", paste(slotNames(CatchObsObj), collapse = ", "), "\n")
+  # if(length(CatchObsObj@fleet_configs) > 0) {
+  #   cat("First fleet_config fleet_id:", CatchObsObj@fleet_configs[[1]]$fleet_id, "\n")
+  # }
+  # cat("=====================\n")
+
+
+
+
+
   #dimensions
-  years <- dim(catchB)[1]
-  iterations <- dim(catchB)[2]
+  # years <- dim(catchB)[1]
+  # iterations <- dim(catchB)[2]
+
+  #Vania's edits
+  if(is_multifleet) {
+    years <- dim(catchB_by_fleet)[1]
+    iterations <- dim(catchB_by_fleet)[2]
+  } else {
+    years <- dim(catchB)[1]
+    iterations <- dim(catchB)[2]
+  }
+
   historicalYears <- TimeAreaObj@historicalYears
   historical_end <- 1 + historicalYears
   end_proj <- years
+
+
+
+  #validate multifleet arrays when needed
+  if(is_multifleet) {
+    required_arrays <- c("catchB_by_fleet")
+    missing_arrays <- c()
+
+    for(array_name in required_arrays) {
+      if(!exists(array_name)) {
+        missing_arrays <- c(missing_arrays, array_name)
+      }
+    }
+
+    if(length(missing_arrays) > 0) {
+      stop("Multifleet mode requires these arrays: ", paste(missing_arrays, collapse = ", "))
+    }
+  }
 
   # initialize the outputs in a tibble
   obs_catch_return <- tibble::tibble(
@@ -2151,112 +3503,324 @@ calculate_single_CatchObs <- function(dataObject) {
     historical_years = historicalYears,
     end_hist = historical_end,
     end_proj = end_proj,
-    period = ifelse(j <= historical_end, "Historical", "Projection")
+    period = ifelse(j <= historical_end, "Historical", "Projection"),
+    # NEW: Add multifleet metadata
+    is_multifleet = is_multifleet,
+    nfleets = if(is_multifleet) MultifleetObj@nfleets else 1
   )
 
-  # calculate if this year has catch observations
-  if((j-1) %in% CatchObsObj@catchYears) {
 
-    # adding year position (useful when data are not available every years)
-    catch_year_position <- which(CatchObsObj@catchYears == (j-1))
 
-    # reporting rate for each year (to simulate over reporitng or under reporting)
-    R_t <- CatchObsObj@reporting_rates[catch_year_position]
+  ########################################################################
+  #changing this section
+  # Determine if any fleet or the global config has data for this year
+  has_catch_data <- FALSE
 
-    # CV obs bounds for this year and sample a CV value for each iteration
-    if(nrow(CatchObsObj@obs_CVs) >= catch_year_position && ncol(CatchObsObj@obs_CVs) == 2) {
-      cv_min <- CatchObsObj@obs_CVs[catch_year_position, 1]
-      cv_max <- CatchObsObj@obs_CVs[catch_year_position, 2]
-      obs_CV <- runif(1, min = cv_min, max = cv_max)
+  if(is_multifleet && length(CatchObsObj@fleet_configs) > 0) {
+    #multifleet mode: check if any fleet has data for this year
+    for(config in CatchObsObj@fleet_configs) {
+      if((j-1) %in% config$catchYears) {
+        has_catch_data <- TRUE
+        break
+      }
+    }
+    cat("Multifleet catch check for year", j-1, ":", has_catch_data, "\n")
+  } else {
+    #single fleet mode: use global catchYears
+    has_catch_data <- (j-1) %in% CatchObsObj@catchYears
+    cat("Single fleet catch check for year", j-1, ":", has_catch_data, "\n")
+  }
+
+  if(has_catch_data) {
+    #process observations based on mode
+    if(is_multifleet && "fleet_configs" %in% slotNames(CatchObsObj) &&
+       length(CatchObsObj@fleet_configs) > 0) {
+
+      # MULTIFLEET MODE: Process each fleet
+      result <- process_multifleet_catch_obs(CatchObsObj, catchB_by_fleet,
+                                             j, k, obs_catch_return)
+
     } else {
-      stop(paste("obs_CVs matrix must have 2 columns (min, max) and at least", length(CatchObsObj@catchYears), "rows"))
+      # SINGLE FLEET MODE: Original behavior (backward compatibility)
+      catch_year_position <- which(CatchObsObj@catchYears == (j-1))
+
+      result <- process_single_fleet_catch_obs(CatchObsObj, catch_year_position,
+                                               catchB, j, k, obs_catch_return)
     }
 
+    return(result)
 
-    # apply  lognormal error with bias correction
+  } else {
+    #no observation this year - set to NA with CONSISTENT structure
+    if(is_multifleet && "fleet_configs" %in% slotNames(CatchObsObj) &&
+       length(CatchObsObj@fleet_configs) > 0) {
+
+      result <- set_multifleet_nas(CatchObsObj, obs_catch_return)
+    } else {
+      result <- set_single_fleet_nas(CatchObsObj, obs_catch_return)
+    }
+
+    return(result)
+  }
+}
+
+#Fixed
+#now calling the helper function for multifleet catch observations
+process_multifleet_catch_obs <- function(CatchObsObj, catchB_by_fleet,
+                                         j, k, obs_catch_return) {
+
+  #debugging code
+  # cat("=== MULTIFLEET CATCH PROCESSING ===\n")
+  # cat("j (simulation year):", j, "\n")
+  # cat("k (iteration):", k, "\n")
+  # cat("Looking for year (j-1) =", j-1, "\n")
+  # cat("catchB_by_fleet dimensions:", dim(catchB_by_fleet), "\n")
+
+  #process each fleet configuration
+  total_true_catch <- 0
+  total_observed_catch <- 0
+  n_fleets_with_data <- 0
+
+
+  #process each fleet configuration
+  for(config_idx in 1:length(CatchObsObj@fleet_configs)) {
+    config <- CatchObsObj@fleet_configs[[config_idx]]
+
+    fleet_id <- config$fleet_id
+    areas_list <- config$areas
+
+    cat("Processing Fleet", fleet_id, "\n")
+    cat("  Fleet catchYears (first 5):", paste(head(config$catchYears, 5), collapse=", "), "\n")
+    cat("  Is (j-1) in fleet catchYears?", (j-1) %in% config$catchYears, "\n")
+
+    # Check if this fleet has data for this year (CRITICAL)
+    if(!((j-1) %in% config$catchYears)) {
+      cat("  SKIP: Fleet", fleet_id, "has no data for year", j-1, "\n")
+
+      #set NA values for this fleet
+      obs_catch_return <- set_fleet_na_columns(obs_catch_return, fleet_id, areas_list)
+      next
+    }
+
+    n_fleets_with_data <- n_fleets_with_data + 1
+
+    #calculate fleet-specific catch_year_position
+    fleet_catch_year_position <- which(config$catchYears == (j-1))
+
+    #get fleet-specific parameters for this year (fixed)
+    R_t <- config$reporting_rates[fleet_catch_year_position]
+
+    #fleet-specific CV bounds
+    cv_min <- config$obs_CVs[fleet_catch_year_position, 1]
+    cv_max <- config$obs_CVs[fleet_catch_year_position, 2]
+
+    #generate INDEPENDENT observation error for this fleet-area combination
+    obs_CV <- runif(1, min = cv_min, max = cv_max)
     obs_error <- exp(rnorm(1, 0, obs_CV) - 0.5 * obs_CV^2)
 
-    # calculate catch by individual area
-    areas_list <- CatchObsObj@areas
+    #calculate fleet-specific catches by area
     n_areas <- length(areas_list)
-
-    # store individual area catches
     true_catch_by_area <- numeric(n_areas)
     catch_with_reporting_by_area <- numeric(n_areas)
     observed_catch_by_area <- numeric(n_areas)
 
-    # apply the obs model to catch by area
-
     for(i in 1:n_areas) {
       area_id <- areas_list[i]
 
-      # take true catch for the area
-      true_catch_by_area[i] <- catchB[j, k, area_id]
-
-      # apply reporting rate to the area
+      #extract fleet-specific catch from 4D array [year, iteration, area, fleet]
+      true_catch_by_area[i] <- catchB_by_fleet[j, k, area_id, fleet_id]
       catch_with_reporting_by_area[i] <- true_catch_by_area[i] * R_t
-
-      # apply observation error to the area
       observed_catch_by_area[i] <- catch_with_reporting_by_area[i] * obs_error
+
+      cat("  Area", area_id, "true catch:", true_catch_by_area[i], "\n")
     }
 
-    # Calculate totals (sum across areas)
-    true_catch_total <- sum(true_catch_by_area)
-    catch_with_reporting_total <- sum(catch_with_reporting_by_area)
-    observed_catch_total <- sum(observed_catch_by_area)
+    #add fleet-specific columns with consistent names
+    #adding fleet-specific columns to tibble
+    fleet_prefix <- paste0("fleet_", fleet_id)
 
+    obs_catch_return[[paste0(fleet_prefix, "_true_catch")]] <- sum(true_catch_by_area)
+    obs_catch_return[[paste0(fleet_prefix, "_R_t")]] <- R_t
+    #obs_catch_return[[paste0(fleet_prefix, "_catch_with_reporting")]] <- sum(catch_with_reporting_by_area)
+    obs_catch_return[[paste0(fleet_prefix, "_cv_min")]] <- cv_min
+    obs_catch_return[[paste0(fleet_prefix, "_cv_max")]] <- cv_max
+    obs_catch_return[[paste0(fleet_prefix, "_obs_CV")]] <- obs_CV
+    obs_catch_return[[paste0(fleet_prefix, "_observed_catch")]] <- sum(observed_catch_by_area)
+    obs_catch_return[[paste0(fleet_prefix, "_n_areas")]] <- n_areas
+    obs_catch_return[[paste0(fleet_prefix, "_areas_included")]] <- paste(areas_list, collapse = "_")
 
-    # store results
-    obs_catch_return$true_catch <- true_catch_total
-    obs_catch_return$R_t <- R_t
-    obs_catch_return$catch_with_reporting <- catch_with_reporting_total
-    obs_catch_return$cv_min <- cv_min
-    obs_catch_return$cv_max <- cv_max
-    obs_catch_return$obs_CV <- obs_CV
-    obs_catch_return$observed_catch <- observed_catch_total
-    # add individual area catches to output
-    obs_catch_return$n_areas <- n_areas
-    obs_catch_return$areas_included <- paste(areas_list, collapse = "_")
-
-    # store complete observation model results by area
+    #add fleet-area specific columns
     for(i in 1:n_areas) {
       area_id <- areas_list[i]
-
-      # true catch by area
-      obs_catch_return[[paste0("true_catch_area_", area_id)]] <- true_catch_by_area[i]
-
-      # catch with reporting by area
-      obs_catch_return[[paste0("catch_with_reporting_area_", area_id)]] <- catch_with_reporting_by_area[i]
-
-      # observed catch by area
-      obs_catch_return[[paste0("observed_catch_area_", area_id)]] <- observed_catch_by_area[i]
+      obs_catch_return[[paste0(fleet_prefix, "_true_catch_area_", area_id)]] <- true_catch_by_area[i]
+      #obs_catch_return[[paste0(fleet_prefix, "_catch_with_reporting_area_", area_id)]] <- catch_with_reporting_by_area[i]
+      obs_catch_return[[paste0(fleet_prefix, "_observed_catch_area_", area_id)]] <- observed_catch_by_area[i]
     }
 
-  } else {
-    # No observation this year - set to NA
-    obs_catch_return$true_catch <- NA
-    obs_catch_return$R_t <- NA
-    obs_catch_return$catch_with_reporting <- NA
-    obs_catch_return$cv_min <- NA
-    obs_catch_return$cv_max <- NA
-    obs_catch_return$obs_CV <- NA
-    obs_catch_return$observed_catch <- NA
-    obs_catch_return$n_areas <- NA
-    obs_catch_return$areas_included <- NA
-    # set individual area catches to NA
-    for(area_id in CatchObsObj@areas) {
-      obs_catch_return[[paste0("true_catch_area_", area_id)]] <- NA
-      obs_catch_return[[paste0("catch_with_reporting_area_", area_id)]] <- NA
-      obs_catch_return[[paste0("observed_catch_area_", area_id)]] <- NA
-    }
+    cat(" SUCCESS: Fleet", fleet_id, "total observed catch:", sum(observed_catch_by_area), "\n")
+
+    #accumulate totals
+    total_true_catch <- total_true_catch + sum(true_catch_by_area)
+    total_observed_catch <- total_observed_catch + sum(observed_catch_by_area)
   }
+  #add aggregated totals (for backward compatibility)
+  obs_catch_return$total_true_catch <- total_true_catch
+  obs_catch_return$total_observed_catch <- total_observed_catch
+  obs_catch_return$n_fleet_configs <- length(CatchObsObj@fleet_configs)
+  obs_catch_return$n_fleets_with_data <- n_fleets_with_data
+
+  cat("TOTAL across all fleets - True:", total_true_catch, "Observed:", total_observed_catch, "\n")
+  cat("===================================\n")
 
   return(obs_catch_return)
 }
 
-#Roxygen header
-#'Function for integrating length composition observation models
+
+#fixing Helper function for single fleet catch observations
+
+# Helper function for single fleet catch observations
+process_single_fleet_catch_obs <- function(CatchObsObj, catch_year_position,
+                                           catchB, j, k, obs_catch_return) {
+
+  # Continue with original single fleet logic
+  # reporting rate for each year (to simulate over reporitng or under reporting)
+  R_t <- CatchObsObj@reporting_rates[catch_year_position]
+
+  # CV obs bounds for this year and sample a CV value for each iteration
+  if(nrow(CatchObsObj@obs_CVs) >= catch_year_position && ncol(CatchObsObj@obs_CVs) == 2) {
+    cv_min <- CatchObsObj@obs_CVs[catch_year_position, 1]
+    cv_max <- CatchObsObj@obs_CVs[catch_year_position, 2]
+    obs_CV <- runif(1, min = cv_min, max = cv_max)
+  } else {
+    stop(paste("obs_CVs matrix must have 2 columns (min, max) and at least", length(CatchObsObj@catchYears), "rows"))
+  }
+
+
+  # apply  lognormal error with bias correction
+  obs_error <- exp(rnorm(1, 0, obs_CV) - 0.5 * obs_CV^2)
+
+  # calculate catch by individual area
+  areas_list <- CatchObsObj@areas
+  n_areas <- length(areas_list)
+
+  # store individual area catches
+  true_catch_by_area <- numeric(n_areas)
+  catch_with_reporting_by_area <- numeric(n_areas)
+  observed_catch_by_area <- numeric(n_areas)
+
+  # apply the obs model to catch by area
+
+  for(i in 1:n_areas) {
+    area_id <- areas_list[i]
+
+    # take true catch for the area
+    true_catch_by_area[i] <- catchB[j, k, area_id]
+
+    # apply reporting rate to the area
+    catch_with_reporting_by_area[i] <- true_catch_by_area[i] * R_t
+
+    # apply observation error to the area
+    observed_catch_by_area[i] <- catch_with_reporting_by_area[i] * obs_error
+  }
+
+  # store results with consistent structure
+  obs_catch_return$true_catch <- sum(true_catch_by_area)
+  obs_catch_return$R_t <- R_t
+  obs_catch_return$catch_with_reporting <- sum(catch_with_reporting_by_area)
+  obs_catch_return$cv_min <- cv_min
+  obs_catch_return$cv_max <- cv_max
+  obs_catch_return$obs_CV <- obs_CV
+  obs_catch_return$observed_catch <- sum(observed_catch_by_area)
+  # add individual area catches to output
+  obs_catch_return$n_areas <- n_areas
+  obs_catch_return$areas_included <- paste(areas_list, collapse = "_")
+
+  # store complete observation model results by area
+  for(i in 1:n_areas) {
+    area_id <- areas_list[i]
+
+    # true catch by area
+    obs_catch_return[[paste0("true_catch_area_", area_id)]] <- true_catch_by_area[i]
+
+    # catch with reporting by area
+    obs_catch_return[[paste0("catch_with_reporting_area_", area_id)]] <- catch_with_reporting_by_area[i]
+
+    # observed catch by area
+    obs_catch_return[[paste0("observed_catch_area_", area_id)]] <- observed_catch_by_area[i]
+  }
+  return(obs_catch_return)
+}
+
+
+# fixing helper function to set fleet-specific NA columns
+set_fleet_na_columns <- function(obs_catch_return, fleet_id, areas_list) {
+  fleet_prefix <- paste0("fleet_", fleet_id)
+
+  obs_catch_return[[paste0(fleet_prefix, "_true_catch")]] <- NA
+  obs_catch_return[[paste0(fleet_prefix, "_R_t")]] <- NA
+  obs_catch_return[[paste0(fleet_prefix, "_cv_min")]] <- NA
+  obs_catch_return[[paste0(fleet_prefix, "_cv_max")]] <- NA
+  obs_catch_return[[paste0(fleet_prefix, "_obs_CV")]] <- NA
+  obs_catch_return[[paste0(fleet_prefix, "_observed_catch")]] <- NA
+  obs_catch_return[[paste0(fleet_prefix, "_n_areas")]] <- NA
+  obs_catch_return[[paste0(fleet_prefix, "_areas_included")]] <- NA
+
+  #set fleet-area specific NAs
+  for(area_id in areas_list) {
+    obs_catch_return[[paste0(fleet_prefix, "_true_catch_area_", area_id)]] <- NA
+    obs_catch_return[[paste0(fleet_prefix, "_observed_catch_area_", area_id)]] <- NA
+  }
+  #adding return the modified tibble
+  return(obs_catch_return)
+}
+
+#helper function to set NAs for multifleet
+set_multifleet_nas <- function(CatchObsObj, obs_catch_return) {
+
+  #set fleet-specific NAs
+  for(config_idx in 1:length(CatchObsObj@fleet_configs)) {
+    config <- CatchObsObj@fleet_configs[[config_idx]]
+    fleet_id <- config$fleet_id
+    areas_list <- config$areas
+    set_fleet_na_columns(obs_catch_return, fleet_id, areas_list)
+  }
+
+  #set aggregated NAs
+  obs_catch_return$total_true_catch <- NA
+  obs_catch_return$total_observed_catch <- NA
+  obs_catch_return$n_fleet_configs <- length(CatchObsObj@fleet_configs)
+  obs_catch_return$n_fleets_with_data <- 0
+
+  return(obs_catch_return)
+}
+
+
+#helper function to set NAs for single fleet (original behavior)
+set_single_fleet_nas <- function(CatchObsObj, obs_catch_return) {
+
+  #no observation this year - set to NA
+  obs_catch_return$true_catch <- NA
+  obs_catch_return$R_t <- NA
+  obs_catch_return$catch_with_reporting <- NA
+  obs_catch_return$cv_min <- NA
+  obs_catch_return$cv_max <- NA
+  obs_catch_return$obs_CV <- NA
+  obs_catch_return$observed_catch <- NA
+  obs_catch_return$n_areas <- NA
+  obs_catch_return$areas_included <- NA
+  # set individual area catches to NA
+  for(area_id in CatchObsObj@areas) {
+    obs_catch_return[[paste0("true_catch_area_", area_id)]] <- NA
+    obs_catch_return[[paste0("catch_with_reporting_area_", area_id)]] <- NA
+    obs_catch_return[[paste0("observed_catch_area_", area_id)]] <- NA
+  }
+  return(obs_catch_return)
+}
+
+
+#' Function for integrating length composition observation models
 #'
+#' @title Function for integrating length composition observation models
 #' @param LengthCompObj A Length Comp observation model object
 #' @export
 
@@ -2265,12 +3829,49 @@ calculate_single_LengthComp  <- function(dataObject) {
   # unpack dataObject
   for(r in 1:NROW(dataObject)) assign(names(dataObject)[r], dataObject[[r]])
 
+  # NEW: Detect multifleet mode
+  is_multifleet <- !is.null(MultifleetObj) && MultifleetObj@nfleets >= 1
 
+  if(is_multifleet) {
+    nfleets <- MultifleetObj@nfleets
+
+    # validate required arrays for multifleet
+    required_arrays <- c("catchNage")  # We need catchNage arrays for FD calculations
+    missing_arrays <- c()
+
+    for(array_name in required_arrays) {
+      if(!exists(array_name)) {
+        missing_arrays <- c(missing_arrays, array_name)
+      }
+    }
+
+    if(length(missing_arrays) > 0) {
+      stop("Multifleet mode requires these arrays: ", paste(missing_arrays, collapse = ", "),
+           ". Check that evalMSE() multifleet implementation is complete.")
+    }
+  } else {
+    nfleets <- 1
+  }
 
   # get dimensions from simulation
-  years <- dim(VB)[1]
-  total_areas <- dim(VB)[3]
-  iterations <- dim(VB)[2]
+
+
+  #Vania's edits
+  #Get dimensions from appropriate arrays
+  if(is_multifleet) {
+    if(exists("catchB_by_fleet")) {
+      years <- dim(catchB_by_fleet)[1]
+      total_areas <- dim(catchB_by_fleet)[3]
+      iterations <- dim(catchB_by_fleet)[2]
+    } else{
+      stop("Cannot determine dimensions in multifleet mode")
+    }
+  } else {
+    years <- dim(VB)[1]
+    total_areas <- dim(VB)[3]
+    iterations <- dim(VB)[2]
+  }
+
   historical_years <- TimeAreaObj@historicalYears
   historical_end <- 1 + historical_years
 
@@ -2278,14 +3879,35 @@ calculate_single_LengthComp  <- function(dataObject) {
   # find the range of lengths across all GTGs and ages - useful to define bins
   # length_bin_width from the LCompObs object
   length_bin_width <- LengthCompObj@length_bin_width
+
+  #new BUG: Oct 16,2025 (when I include stochasticity some iteration has fish reaching bigger sizes )
+  #The length composition code was calculating bins based
+  #on each iteration's actual maximum length
+  #oter 1 created  bins up to 155 (156 cols)
+  #iter 2 created bins up to 145  (146 cols)
+  # so rbind did nto work due to dif cols in each iter
+
+
+
+  #use the base LifeHistoryObj to get consistent max_length
+  base_Linf <- LifeHistoryObj@Linf
+  max_length_fixed <- base_Linf * 1.25  # use 125% of base Linf as upper bound
+  #define bins using fixed maximum
+  length_bins <- seq(0, max_length_fixed + length_bin_width, by = length_bin_width)
+  n_length_bins <- length(length_bins) - 1
+
+
   all_lengths <- unlist(lh$L)   # unlist() converts the list of length vectors into one big vector
   min_length <- min(all_lengths)# find the smallest length across all GTGs and ages
   max_length <- max(all_lengths)# find the largest length across all GTGs and ages
 
 
-  # define the bins
-  length_bins <- seq(0, max_length + length_bin_width, by = length_bin_width) #create the sequence of bin edges
-  n_length_bins <- length(length_bins) - 1  #number of edges - 1  [0-1), [1-2), [2-3)..... etc
+  # add a warning if actual exceeds fixed (shouldn't happen with 110% buffer)
+  if(max_length  > max_length_fixed) {
+    warning(sprintf("Iteration %d: max length (%.2f) exceeds fixed max (%.2f). Consider increasing buffer.",
+                    k, max_length , max_length_fixed))
+  }
+
 
   # count indices
   n_indices <- length(LengthCompObj@survey_design)
@@ -2312,7 +3934,11 @@ calculate_single_LengthComp  <- function(dataObject) {
     n_length_bins = n_length_bins,     # number of length bins
     length_bin_width = length_bin_width, # width of each bin
     n_indices = n_indices,              # number of length comp indices
-    period = ifelse(j <= historical_end, "Historical", "Projection")
+    period = ifelse(j <= historical_end, "Historical", "Projection"),
+
+    # NEW: adding multifleet metadata
+    is_multifleet = is_multifleet,
+    nfleets = nfleets
   )
 
   # process each LC program
@@ -2320,13 +3946,28 @@ calculate_single_LengthComp  <- function(dataObject) {
   for(index_idx in 1:n_indices) {
     design <- LengthCompObj@survey_design[[index_idx]]
 
+    #NEW: extract fleet_id for FD indices in multifleet mode
+    fleet_id <- if("fleet_id" %in% names(design)) design$fleet_id else NA
+
     # define program name
-    program_name <- paste0(ifelse(design$indextype == "FI", "Survey_", "Fishery_"), index_idx)
+    #program_name <- paste0(ifelse(design$indextype == "FI", "Survey_", "Fishery_"), index_idx)
+
+    #NEW: program name for single fleet and multifleet
+    if(design$indextype == "FD" && is_multifleet && !is.na(fleet_id)) {
+      program_name <- paste0("LC_Fishery_", index_idx, "_Fleet_", fleet_id)
+    } else {
+      program_name <- paste0("LC_", ifelse(design$indextype == "FI", "Survey_", "Fishery_"), index_idx)
+    }
 
     #adding validations
     required_elements <- c("indextype", "areas", "years", "sample_sizes")
     if(design$indextype == "FI") {
       required_elements <- c(required_elements, "selectivity_hist_idx", "selectivity_proj_idx","survey_timing")
+    }
+
+    #NEW: for FD in multifleet, require fleet_id
+    if(design$indextype == "FD" && is_multifleet) {
+      required_elements <- c(required_elements, "fleet_id")
     }
 
     if(!all(required_elements %in% names(design))) {
@@ -2337,6 +3978,19 @@ calculate_single_LengthComp  <- function(dataObject) {
     if(!design$indextype %in% c("FD", "FI")) {
       stop(paste("Survey design", index_idx, ": indextype must be 'FD' or 'FI'"))
     }
+
+    # NEW:validate fleet_id if present
+    if(design$indextype == "FD" && is_multifleet) {
+      if(!is.numeric(fleet_id) || length(fleet_id) != 1 || fleet_id < 1 || fleet_id > nfleets) {
+        stop(paste("Survey design", index_idx, ": fleet_id must be between 1 and", nfleets))
+      }
+    }
+
+    #preventing FI indices from having fleet_id
+    if(design$indextype == "FI" && "fleet_id" %in% names(design)) {
+      stop(paste("Survey design", index_idx, ": FI indices cannot have fleet_id"))
+    }
+
 
     if(length(design$years) != length(design$sample_sizes)) {
       stop(paste("Survey design", index_idx, ": years and sample_sizes must have same length"))
@@ -2387,10 +4041,22 @@ calculate_single_LengthComp  <- function(dataObject) {
           # loop through each age within the corresponding GTG
           for(age in 1:lh$ageClasses) {
 
+            # NEW: improved data source selection for multifleet
+
             # choose data source based on type (FI or FD)
             if(design$indextype == "FD") {
-              #catch data (selectivity already applied)
-              selected_data <- catchNage[[gtg]][age, j, area]
+              if(is_multifleet) {
+                # MULTIFLEET MODE: Use fleet-specific catch data
+                # catchNage_by_fleet[[fleet]][[gtg]][age, year, area]
+                if(!exists("catchNage_by_fleet")) {
+                  stop("Multifleet FD length composition requires catchNage_by_fleet arrays")
+                }
+                selected_data <- catchNage_by_fleet[[fleet_id]][[gtg]][age, j, area]
+              } else {
+
+                # SINGLE FLEET MODE: Use aggregated catch data (remain unchanged)
+                selected_data <- catchNage[[gtg]][age, j, area]
+              }
             } else {  # FI
               # get the N of fish for this [[GTG]][age, year, area]
               numbers_at_age <- N[[gtg]][age, j, area]
@@ -2405,7 +4071,7 @@ calculate_single_LengthComp  <- function(dataObject) {
               # apply FI (surveys) selectivity
               selected_data <- numbers_at_age * selectivity$vul[[gtg]][age]
 
-               #survey timing correction (exp(-total_mortality * LengthCompObj@survey_timing))
+              #survey timing correction (exp(-total_mortality * LengthCompObj@survey_timing))
               survey_timing <- design$survey_timing
               timing_correction <- exp(-Z[[gtg]][age, j, area] * survey_timing)
               # apply timing correction
@@ -2419,8 +4085,8 @@ calculate_single_LengthComp  <- function(dataObject) {
               # get the mean length for this GTG at this age: extract the specific length for this GTG and age
               length_at_age <- lh$L[[gtg]][age]
 
-                #we look up which length bin this GTG-age combination belongs to
-                length_bin_index <- findInterval(length_at_age, length_bins)
+              #we look up which length bin this GTG-age combination belongs to
+              length_bin_index <- findInterval(length_at_age, length_bins)
 
 
 
@@ -2503,6 +4169,13 @@ calculate_single_LengthComp  <- function(dataObject) {
       lengthcomp_return[[paste0(program_name, "_sample_size")]] <- sample_size
       lengthcomp_return[[paste0(program_name, "_total_catch")]] <- total_catch
 
+      #NEW: add fleet metadata for FD programs
+      if(design$indextype == "FD" && is_multifleet) {
+        lengthcomp_return[[paste0(program_name, "_fleet_id")]] <- fleet_id
+      } else {
+        lengthcomp_return[[paste0(program_name, "_fleet_id")]] <- NA
+      }
+
       # Add selectivity info for FI programs
       if(design$indextype == "FI") {
         lengthcomp_return[[paste0(program_name, "_selectivity_hist_idx")]] <- design$selectivity_hist_idx
@@ -2527,6 +4200,13 @@ calculate_single_LengthComp  <- function(dataObject) {
       lengthcomp_return[[paste0(program_name, "_sample_size")]] <- NA
       lengthcomp_return[[paste0(program_name, "_total_catch")]] <- NA
 
+      #NEW: Add fleet metadata for NA cases
+      if(design$indextype == "FD" && is_multifleet) {
+        lengthcomp_return[[paste0(program_name, "_fleet_id")]] <- fleet_id
+      } else {
+        lengthcomp_return[[paste0(program_name, "_fleet_id")]] <- NA
+      }
+
       # Selectivity info
       if(design$indextype == "FI") {
         lengthcomp_return[[paste0(program_name, "_selectivity_hist_idx")]] <- design$selectivity_hist_idx
@@ -2547,3 +4227,6 @@ calculate_single_LengthComp  <- function(dataObject) {
 
   return(lengthcomp_return)
 }
+
+
+

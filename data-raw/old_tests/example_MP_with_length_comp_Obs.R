@@ -1,6 +1,10 @@
 rm(list=ls())
+#devtools::install()
 devtools::load_all()
+#devtools::document()
 library(ggplot2)
+#library(fishSimGTG)
+library(dplyr)
 
 # Create simple examples of each class to understand their structure
 lh <- new("LifeHistory")
@@ -163,6 +167,14 @@ testMP <- function(phase, dataObject) {
         combined_data[[col_name]] <- catch_result[[col_name]]
       }
     }
+    # adding the new obs model
+    if(!is.null(LengthCompObj)) {
+      lc_result <- calculate_single_LengthComp(dataObject)
+      # add all length composition columns
+      for(col_name in names(lc_result)) {
+        combined_data[[col_name]] <- lc_result[[col_name]]
+      }
+    }
 
     #User defines variable names for returned list, as this info will be used in Phase 2 (HCR)
     #return(list()) #e.g., return(list(year = j, iteration = k, CPUE = 1.4))
@@ -224,7 +236,7 @@ cpueB1@survey_design <- list(
   list(
     indextype = "FD",                          # new: add indextype to EACH index design
     areas = c(1, 2),                           # this CPUE covers both areas (1, 2)
-    indexYears = 2:21,                         # all years have data (collect data every year)
+    indexYears = 1:20,                         # all years have data (collect data every year)
     q_hist_bounds = c(0.00008, 0.00012),       # historical period - qbounds: 0.00008-0.00012
     q_proj_bounds = c(0.0001, 0.0003),         # projection period - qbounds: 0.0001-0.0003
     hyperstability_hist_bounds = c(0.85, 1.05),# historical - hypersbounds: 0.85-1.05
@@ -246,7 +258,7 @@ catch_obs1 <- new("CatchObs",
                       catchID = "Fishery Catch",
                       title = "Fishery catch observations",
                       areas = c(1, 2),  # Both areas like CPUE
-                      catchYears = 2:21,  # Same years as CPUE
+                      catchYears = 1:20,  # Same years as CPUE
                       reporting_rates = c(seq(0.6, 1, length=10), rep(1, 10)),  # Improving historical, non systematic bias in projection
                       obs_CVs = matrix(c(rep(0.2, 20), rep(0.4, 20)), ncol=2))  # CV bounds: 0.2-0.4 for all years
 
@@ -262,12 +274,12 @@ runProjection(
   IndexObj = cpueB1,
   CatchObsObj = catch_obs1,
   customToCluster = "testMP",
-  wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
+  wd = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs",
   fileName = "test_run_MP_with_catch_obs",
   doPlot = TRUE
 )
 
-out1<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_with_catch_obs")
+out1<-readProjection("P:/Fork_fish_Sim_GTG/fishSimGTG/outputs", "test_run_MP_with_catch_obs")
 out1$HCR$decisionData
 out1$HCR$decisionData$CPUE_1
 out1$HCR$decisionData$observed_catch
@@ -349,7 +361,14 @@ plotIndex_tibble <- function(tibble_data, save_plot = FALSE,
 
     # set NA for years not in indexYears (to match original behavior)
     all_years <- min(tibble_data$j):max(tibble_data$j)
-    missing_years <- setdiff(all_years, index_years)
+    # to match (j-1) changes
+    user_years <- (all_years - 1)  # convert j to user year format
+
+    missing_user_years  <- setdiff(user_years, index_years)
+    missing_years <- missing_user_years + 1  # convert back to simulation years (j format)
+
+    #Remove year 1 from missing_years since it's initial conditions
+    missing_years <- missing_years[missing_years > 1]
 
     if(length(missing_years) > 0) {
       missing_data <- data.frame(
@@ -386,6 +405,14 @@ plotIndex_tibble <- function(tibble_data, save_plot = FALSE,
     y_label <- if(use_weight) "Index (biomass)" else "Index (numbers)"
   }
 
+  # fixing to match the new (j-1) index
+  sim_years <- sort(unique(all_data$year))  # get actual years in the data (e.g., 2, 3, 4, ..., 21)
+  user_years <- sim_years - 1  # convert to user-friendly years (e.g., 1, 2, 3, ..., 20)
+
+  # convert historical_end to user-friendly scale for plotting
+  user_historical_end <- historical_end - 1
+
+
 
 
   # create the plot (matching original style)
@@ -401,6 +428,13 @@ plotIndex_tibble <- function(tibble_data, save_plot = FALSE,
                color = "black", size = 1.5) +
     facet_wrap(~ panel, scales = "free_y") +
     geom_vline(xintercept = historical_end, linetype = "dashed", color = "red") +
+
+    #new
+    scale_x_continuous(
+      breaks = sim_years,    # use actual simulation years for positioning
+      labels = user_years    # but show user-friendly labels
+    ) +
+
     labs(title = title, x = "Year", y = y_label) +
     theme_minimal() +
     theme(
@@ -476,7 +510,19 @@ plotCatch_tibble <- function(tibble_data, save_plot = FALSE,
 
     # set NA for years not in catchYears (as index plot)
     all_years <- min(tibble_data$j):max(tibble_data$j)
-    missing_years <- setdiff(all_years, index_years)
+
+    #NEW to match (j-1)
+    #convert simulation years to user years for comparison
+    user_years <- (all_years - 1)  # convert j to user year format
+    index_user_years <- index_years - 1  # convert index_years to user years for comparison
+
+    #find missing user years then convert back to simulation years
+    missing_user_years <- setdiff(user_years, index_user_years)
+    missing_years <- missing_user_years + 1  # Convert back to simulation years (j format)
+
+
+    # Remove year 1 from missing_years since it is initial conditions
+    missing_years <- missing_years[missing_years > 1]
 
     if(length(missing_years) > 0) {
       missing_data <- data.frame(
@@ -502,6 +548,16 @@ plotCatch_tibble <- function(tibble_data, save_plot = FALSE,
   # Y-axis label for catch
   y_label <- "Observed Catch (biomass)"
 
+  #NEW
+  # Calculate dynamic x-axis labels (same as index plot)
+  sim_years <- sort(unique(all_data$year))  # gets actual years in the data (e.g., 2, 3, 4, ..., 21)
+  user_years <- sim_years - 1  # convert to user-friendly years (e.g., 1, 2, 3, ..., 20)
+
+  # convert historical_end to user-friendly scale for plotting
+  user_historical_end <- historical_end - 1
+
+
+
   # create the plot (as index plot)
   p <- ggplot(all_data, aes(x = year, y = value)) +
     geom_line(data = subset(all_data, type == "Iterations"),
@@ -515,6 +571,12 @@ plotCatch_tibble <- function(tibble_data, save_plot = FALSE,
                color = "black", size = 1.5) +
     facet_wrap(~ panel, scales = "free_y") +
     geom_vline(xintercept = historical_end, linetype = "dashed", color = "red") +
+    # dynamic x-axis with user-friendly labels
+    scale_x_continuous(
+      breaks = sim_years,    # use actual simulation years for positioning
+      labels = user_years    # but show user-friendly labels
+    ) +
+
     labs(title = title, x = "Year", y = y_label) +
     theme_minimal() +
     theme(
@@ -536,14 +598,14 @@ plotCatch_tibble <- function(tibble_data, save_plot = FALSE,
 
 p1 <- plotIndex_tibble(out1$HCR$decisionData,
                        save_plot = TRUE,
-                       filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_CPUEB1.jpeg")
+                       filename = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs/index_plot_CPUEB1.jpeg")
 
 p1
 
 
 p2 <- plotCatch_tibble (out1$HCR$decisionData,
                            save_plot = TRUE,
-                             filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/plot_catchobs1.jpeg")
+                             filename = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs/plot_catchobs1.jpeg")
 p2
 
 #higer F in the projection period exaplain the increases in catchs
@@ -568,7 +630,7 @@ cpueB2@survey_design <- list(
   list(
     indextype = "FD",
     areas = c(1, 2),                              # covers all areas
-    indexYears = 2:21,                            # annual data collection
+    indexYears = 1:20,                            # annual data collection
     q_hist_bounds = c(0.0001, 0.00015),           # historical: 0.0001-0.00015
     q_proj_bounds = c(0.00015, 0.0003),           # projection: 0.00015-0.0003
     hyperstability_hist_bounds = c(0.9, 1.1),     # historical: 0.9-1.1
@@ -597,18 +659,18 @@ cpueB2@selectivity_proj_list <- list()
 
 
 # Define CVs for CatchObs class
-total_years <- strategy@projectionYears+ta@historicalYears+1
-end_hist <- ta@historicalYears+1
+total_years <- strategy@projectionYears+ta@historicalYears
+end_hist <- ta@historicalYears
 cv_periods <- matrix(nrow = 20, ncol = 2)  #nrow= years with data, ncol lower, upper bound
 
 for(pos in 1:20) {
-  actual_year <- pos + 1  # Position 1 = Year 2, Position 2 = Year 3, etc.....
+  actual_year <- pos
 
   if(actual_year <= end_hist) {
-    # Historical period (years 2-11)
+    # Historical period (years 1-10)
     cv_periods[pos, ] <- c(0.2, 0.4)
   } else {
-    # Projection period (years 12-21)
+    # Projection period (years 11-20)
     cv_periods[pos, ] <- c(0.1, 0.2)
   }
 }
@@ -619,9 +681,9 @@ catch_obs2 <- new("CatchObs",
                   catchID = "period_specific_CV",
                   title = "Different CV bounds by period",
                   areas = c(1, 2),
-                  catchYears = 2:total_years,
+                  catchYears = 1:total_years,
                   #improving reporting rates over time
-                  reporting_rates = seq(0.5, 0.9, length.out = total_years-1),
+                  reporting_rates = seq(0.5, 0.9, length.out = total_years),
                   #more precise catch record for the projection period
                   obs_CVs = cv_periods)
 
@@ -637,27 +699,29 @@ runProjection(
   IndexObj = cpueB2,
   CatchObsObj = catch_obs2,
   customToCluster = "testMP",
-  wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
+  wd = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs",
   fileName = "test_run_MP_with_catch_obs2",
   doPlot = TRUE
 )
 
-out2<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_with_catch_obs2")
+out2<-readProjection("P:/Fork_fish_Sim_GTG/fishSimGTG/outputs", "test_run_MP_with_catch_obs2")
 out2$HCR$decisionData
 out2$HCR$decisionData$CPUE_1
+out2$HCR$decisionData$CPUE_2
 out2$HCR$decisionData$observed_catch
+
 out2$dynamics$Ftotal
 
 
 p1 <- plotIndex_tibble(out2$HCR$decisionData,
                        save_plot = TRUE,
-                       filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_CPUEB2.jpeg")
+                       filename = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs/index_plot_CPUEB2.jpeg")
 
 p1
 
 p2 <- plotCatch_tibble (out1$HCR$decisionData,
                         save_plot = TRUE,
-                        filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/plot_catchobs2.jpeg")
+                        filename = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs/plot_catchobs2.jpeg")
 p2
 
 
@@ -675,7 +739,7 @@ cpueB3@survey_design <- list(
   list(
     indextype = "FD",
     areas = c(1),                              # covers  area 1
-    indexYears = 2:21,                      # annual data collection
+    indexYears = 1:20,                      # annual data collection
     q_hist_bounds = c(0.0001, 0.00015),        # historical: 0.0001-0.00015
     q_proj_bounds = c(0.00015, 0.0003),        # projection: 0.00015-0.0003
     hyperstability_hist_bounds = c(0.9, 1.1),  # historical: 0.9-1.1
@@ -704,20 +768,22 @@ cpueB3@selectivity_proj_list <- list()
 #Populating CVs for catchobs object
 cv_yearly <- matrix(nrow = 20, ncol = 2)
 # define a CV for each year individualy
-cv_yearly[1, ] <- c(0.2, 0.4)   # Position 1: Year 2: CV 0.2-0.4
-cv_yearly[2, ] <- c(0.1, 0.3)   # Position 2: Year 3: CV 0.1-0.3
-cv_yearly[3, ] <- c(0.15, 0.25) # Position 3: Year 4: CV 0.15-0.25
-cv_yearly[4:10, 1] <- 0.15      # Positions 4:10 - Year 5- 11 min CV 0.15
-cv_yearly[4:10, 2] <- 0.25      # Positions 4:10 - Year 5- 11 max CV 0.25
-cv_yearly[11:20, 1] <- 0.18     # Positions 11:20 -Year 12- 21 min CV 0.18
-cv_yearly[11:20, 2] <- 0.3      # Positions 11:20 -Year 12- 21 max CV 0.3
+cv_yearly[1, ] <- c(0.2, 0.4)   #  user year 1: CV 0.2-0.4
+cv_yearly[2, ] <- c(0.1, 0.3)   #  user year 2
+cv_yearly[3, ] <- c(0.15, 0.25) #  user year 3
+# user years 4-10: CV 0.15-0.25
+cv_yearly[4:10, 1] <- 0.15      # min CV 0.15
+cv_yearly[4:10, 2] <- 0.25      # max CV 0.25
+# user years 11-20 (projection period): CV 0.18-0.3
+cv_yearly[11:20, 1] <- 0.18
+cv_yearly[11:20, 2] <- 0.3
 
 
 catch_obs3 <- new("CatchObs",
                   catchID = "period_specific_CV",
                   title = "Different CV bounds by period",  # only in area 1 catch data are collected
                   areas = c(1),
-                  catchYears = 2:total_years,
+                  catchYears = 1:total_years,
                   #improving reporting rates over time
                   # historical: overreporting, projection: perfect reporting
                   reporting_rates = c(seq(1.2, 2.5, length=10), rep(1,10)), #length= length catchYears
@@ -736,12 +802,12 @@ runProjection(
   IndexObj = cpueB3,
   CatchObsObj = catch_obs3,
   customToCluster = "testMP",
-  wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
+  wd = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs",
   fileName = "test_run_MP_with_catch_obs3",
   doPlot = TRUE
 )
 
-out3<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_with_catch_obs3")
+out3<-readProjection("P:/Fork_fish_Sim_GTG/fishSimGTG/outputs", "test_run_MP_with_catch_obs3")
 out3$HCR$decisionData
 
 out3$HCR$decisionData$CPUE_1
@@ -753,13 +819,13 @@ out3$HCR$decisionData$observed_catch_area_1
 
 p1 <- plotIndex_tibble(out3$HCR$decisionData,
                        save_plot = TRUE,
-                       filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_CPUEB3.jpeg")
+                       filename = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs/index_plot_CPUEB3.jpeg")
 
 p1
 
 p2 <- plotCatch_tibble (out3$HCR$decisionData,
                         save_plot = TRUE,
-                        filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/plot_catchobs3.jpeg")
+                        filename = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs/plot_catchobs3.jpeg")
 p2
 
 
@@ -779,7 +845,7 @@ cpueN4@survey_design <- list(
   list(
     indextype = "FD",
     areas = c(1, 2),                              # covers all areas
-    indexYears = 2:21,                            # annual data collection
+    indexYears = 1:total_years,                            # annual data collection
     q_hist_bounds = c(0.0001, 0.00015),           # historical: 0.0001-0.00015
     q_proj_bounds = c(0.00015, 0.0003),           # projection: 0.00015-0.0003
     hyperstability_hist_bounds = c(0.9, 1.1),     # historical: 0.9-1.1
@@ -809,12 +875,12 @@ cpueN4@selectivity_proj_list <- list()
 
 #Populating CVs for catchobs object
 cv_block <- matrix(nrow = 10, ncol = 2)
-# define a CV for each year individualy
-cv_block[1:5, 1] <- 0.3   # Position 1 - 5: Years 2,4,6,8,10: CV 0.3-0.5
-cv_block[1:5, 2] <- 0.5   # Position 1 - 5: Years 2,4,6,8,10: CV 0.3-0.5
 
-cv_block[6:10, 1] <- 0.2   # Position 6 - 10: Years 12,14,16,18,20: CV 0.2-0.3
-cv_block[6:10, 2] <- 0.3   # Position 6 - 10: Years 12,14,16,18,20: CV 0.2-0.3
+cv_block[1:5, 1] <- 0.3
+cv_block[1:5, 2] <- 0.5
+
+cv_block[6:10, 1] <- 0.2
+cv_block[6:10, 2] <- 0.3
 
 
 catch_obs4 <- new("CatchObs",
@@ -838,12 +904,12 @@ runProjection(
   IndexObj = cpueN4,
   CatchObsObj = catch_obs4,
   customToCluster = "testMP",
-  wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
+  wd = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs",
   fileName = "test_run_MP_with_catch_obs4",
   doPlot = TRUE
 )
 
-out4<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_with_catch_obs4")
+out4<-readProjection("P:/Fork_fish_Sim_GTG/fishSimGTG/outputs", "test_run_MP_with_catch_obs4")
 out4$HCR$decisionData
 out4$HCR$decisionData$CPUE_1
 out4$HCR$decisionData$CPUE_2
@@ -851,14 +917,14 @@ out4$HCR$decisionData$observed_catch
 out4$HCR$decisionData$observed_catch_area_2
 
 
-p1 <- plotIndex_tibble(out3$HCR$decisionData,
+p1 <- plotIndex_tibble(out4$HCR$decisionData,
                        save_plot = TRUE,
-                       filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_CPUEN4.jpeg")
+                       filename = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs/index_plot_CPUEN4.jpeg")
 p1
 
-p2 <- plotCatch_tibble (out3$HCR$decisionData,
+p2 <- plotCatch_tibble (out4$HCR$decisionData,
                         save_plot = TRUE,
-                        filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/plot_catchobs4.jpeg")
+                        filename = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs/plot_catchobs4.jpeg")
 p2
 
 #---------------------------------------------------------------------------------------#
@@ -876,8 +942,8 @@ SurveyB5@survey_design <- list(
   list(
     indextype = "FI",
     areas = c(1, 2),                    # covers all areas
-    indexYears = 2:21,               # annual data collection
-    survey_timing = 1,
+    indexYears = 1:total_years,               # annual data collection
+    survey_timing = 0.1,                # near the beginning of the year
     selectivity_hist_idx = 1,           # uses survey_sel1_hist
     selectivity_proj_idx = 1,           # uses survey_sel1_proj
     q_hist_bounds = c(0.0001, 0.00015),       # historical: 0.0001-0.00015
@@ -893,7 +959,7 @@ SurveyB5@survey_design <- list(
     indextype = "FI",
     areas = c(1, 2),                    # also covers all areas
     indexYears = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),  # data collected every other year
-    survey_timing = 1,
+    survey_timing = 0.5,                #half year
     selectivity_hist_idx = 2,           # uses survey_sel2_hist
     selectivity_proj_idx = 2,           # uses survey_sel2_proj
     q_hist_bounds = c(0.0001, 0.00015),       # historical: 0.0001- 0.00015
@@ -950,15 +1016,15 @@ SurveyB5@selectivity_proj_list <- list(survey_sel1_proj, survey_sel2_proj)
 #Populating CVs for catchobs object
 cv_block <- matrix(nrow = 20, ncol = 2)
 # define a CV for each year individualy
-cv_block[1:20, 1] <- 0.1   # Position 1 - 20: Years 2 - 21: CV 0.1 -02
-cv_block[1:20, 2] <- 0.2   # Position 1 - 20: Years 2 - 21: CV 0.1 -02
+cv_block[1:20, 1] <- 0.1
+cv_block[1:20, 2] <- 0.2
 
 
 catch_obs5 <- new("CatchObs",
                   catchID = "One_CV",
                   title = "One CV",
                   areas = c(1,2),
-                  catchYears = c(2:21),
+                  catchYears = c(1:total_years),
                   #improving reporting rates over time
                   # 100% reporting
                   reporting_rates = c(rep(1,20)), #length= length catchYears
@@ -975,12 +1041,12 @@ runProjection(
   IndexObj = SurveyB5,
   CatchObsObj = catch_obs5,
   customToCluster = "testMP",
-  wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
+  wd = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs",
   fileName = "test_run_MP_with_catch_obs5",
   doPlot = TRUE
 )
 
-out5<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_with_catch_obs5")
+out5<-readProjection("P:/Fork_fish_Sim_GTG/fishSimGTG/outputs", "test_run_MP_with_catch_obs5")
 out5$HCR$decisionData
 out5$HCR$decisionData$Survey_1
 out5$HCR$decisionData$Survey_2
@@ -990,12 +1056,12 @@ out5$HCR$decisionData$observed_catch_area_2
 
 p1 <- plotIndex_tibble(out5$HCR$decisionData,
                        save_plot = TRUE,
-                       filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_SurveyB5.jpeg")
+                       filename = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs/index_plot_SurveyB5.jpeg")
 p1
 
 p2 <- plotCatch_tibble (out5$HCR$decisionData,
                         save_plot = TRUE,
-                        filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/plot_catchobs5.jpeg")
+                        filename = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs/plot_catchobs5.jpeg")
 p2
 
 
@@ -1016,7 +1082,7 @@ mixed_biomass@survey_design <- list(
   list(
     indextype = "FD",
     areas = c(1, 2),                    # covers both areas
-    indexYears = 2:21,               # annual data collection
+    indexYears = 1:total_years,               # annual data collection
     q_hist_bounds = c(0.0001, 0.00015),       # historical period
     q_proj_bounds = c(0.00012, 0.0002),       # projection period
     hyperstability_hist_bounds = c(0.9, 1.1),     # historical
@@ -1031,7 +1097,7 @@ mixed_biomass@survey_design <- list(
     indextype = "FI",
     areas = c(1, 2),                    # covers both areas
     indexYears = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),
-    survey_timing = 1,
+    survey_timing = 0.5,                # half year
     selectivity_hist_idx = 1,           # uses survey_sel1_hist
     selectivity_proj_idx = 1,           # uses survey_sel1_proj
     q_hist_bounds = c(0.00008, 0.00012),      # historical period
@@ -1068,19 +1134,19 @@ mixed_biomass@selectivity_proj_list <- list(survey_sel1_proj)
 #Populating CVs for catchobs object
 cv_blocks <- matrix(nrow = 20, ncol = 2)
 # define a CV for each year individualy
-cv_blocks[1:10, 1] <- 0.25   # Position 1 - 10: Years 2 - 11: CV 0.25 - 0.4
-cv_blocks[1:10, 2] <- 0.4    # Position 1 - 10: Years 2 - 11: CV 0.25 - 0.4
-cv_blocks[11:15, 1] <- 0.2   # Position 11 -15: Years 12 -16: CV 0.2 - 0.3
-cv_blocks[11:15, 2] <- 0.3   # Position 11 -15: Years 12 -16: CV 0.2 - 0.3
-cv_blocks[16:20, 1] <- 0.1   # Position 16 -20: Years 17 -21: CV 0.1 - 0.2
-cv_blocks[16:20, 2] <- 0.2   # Position 16 -20: Years 17 -21: CV 0.1 - 0.2
+cv_blocks[1:10, 1] <- 0.25
+cv_blocks[1:10, 2] <- 0.4
+cv_blocks[11:15, 1] <- 0.2
+cv_blocks[11:15, 2] <- 0.3
+cv_blocks[16:20, 1] <- 0.1
+cv_blocks[16:20, 2] <- 0.2
 
 
 catch_obs6 <- new("CatchObs",
                   catchID = "Blocks_CV",
                   title = "Blocks CV",
                   areas = c(1,2),
-                  catchYears = c(2:21),
+                  catchYears = c(1:total_years),
                   #improving reporting rates over time
                   # overeporting
                   reporting_rates = c(rep(1.8,20)), #length= length catchYears
@@ -1098,27 +1164,26 @@ runProjection(
   IndexObj = mixed_biomass,
   CatchObsObj = catch_obs6,
   customToCluster = "testMP",
-  wd = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole",
+  wd = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs",
   fileName = "test_run_MP_with_mixed_index_and_catch_obs6",
   doPlot = TRUE
 )
 
-out7<-readProjection("P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole", "test_run_MP_with_mixed_index_and_catch_obs6")
-out7$HCR$decisionData$historical_end
-out7$HCR$decisionData$CPUE_1
-out7$HCR$decisionData$Survey_2
-out7$HCR$decisionData$observed_catch
+out6<-readProjection("P:/Fork_fish_Sim_GTG/fishSimGTG/outputs", "test_run_MP_with_mixed_index_and_catch_obs6")
+out6$HCR$decisionData$CPUE_1
+out6$HCR$decisionData$Survey_2
+out6$HCR$decisionData$observed_catch
 
 
 
-p1 <- plotIndex_tibble(out7$HCR$decisionData,
+p1 <- plotIndex_tibble(out6$HCR$decisionData,
                        save_plot = TRUE,
-                       filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/index_plot_mixedB6.jpeg")
+                       filename = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs/index_plot_mixedB6.jpeg")
 p1
 
-p2 <- plotCatch_tibble (out7$HCR$decisionData,
+p2 <- plotCatch_tibble (out6$HCR$decisionData,
                         save_plot = TRUE,
-                        filename = "P:/Nature_Analytics_work/Simulation_obs_models1/data-test/Kole/plot_catchobs6.jpeg")
+                        filename = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs/plot_catchobs6.jpeg")
 p2
 
 
@@ -1129,19 +1194,24 @@ p2
 create_year_iteration_table <- function(data, index_col) {
   # get subset with non-NA values
   subset_data <- data[!is.na(data[[index_col]]), c("k", "j", index_col)]
+
   # get unique years and iterations
-  years <- sort(unique(subset_data$j))
+  sim_years <- sort(unique(subset_data$j))
   iterations <- sort(unique(subset_data$k))
+
+  # convert to user years for labeling
+  user_years <- sim_years - 1
+
   # create empty matrix
   result_matrix <- matrix(NA,
-                          nrow = length(years),
+                          nrow = length(sim_years),
                           ncol = length(iterations),
-                          dimnames = list(paste0("Year_", years),
+                          dimnames = list(paste0("Year_", user_years),
                                           paste0("Iter_", iterations)))
 
   # fill the matrix
   for(i in 1:nrow(subset_data)) {
-    year_pos <- which(years == subset_data$j[i])
+    year_pos <- which(sim_years  == subset_data$j[i])
     iter_pos <- which(iterations == subset_data$k[i])
     result_matrix[year_pos, iter_pos] <- subset_data[[index_col]][i]
   }
@@ -1149,11 +1219,338 @@ create_year_iteration_table <- function(data, index_col) {
   return(result_matrix)
 }
 
+out6$HCR$decisionData$CPUE_1
+out6$HCR$decisionData$Survey_2
+out6$HCR$decisionData$observed_catch
+
+cpue_data <- create_year_iteration_table(out6$HCR$decisionData, "CPUE_1")
+survey_data <- create_year_iteration_table(out6$HCR$decisionData, "Survey_2")
+catch_data <- create_year_iteration_table(out6$HCR$decisionData, "observed_catch")
+
+
+
+####################################################################################
+#####################New example including LC ######################################
+####################################################################################
+
+#---------------------------------------------------------------------------------------#
+# Observation model 7: Simulation of CPUE (FD) + Survey (FI)  index covering both areas (biomass)    #
+# catch observation model
+# length composition obs model
+#---------------------------------------------------------------------------------------#
+
+mixed_biomass <- new("Index")
+mixed_biomass@indexID <- "Mixed_CPUE_and_Survey_Biomass"
+mixed_biomass@title <- "Mixed CPUE and  Survey Biomass"
+mixed_biomass@useWeight <- TRUE                # biomass
+
+# Define MIXED survey designs
+mixed_biomass@survey_design <- list(
+
+  # CPUE (FD)
+  list(
+    indextype = "FD",
+    areas = c(1, 2),                    # covers both areas
+    indexYears = 1:total_years,               # annual data collection
+    q_hist_bounds = c(0.0001, 0.00015),       # historical period
+    q_proj_bounds = c(0.00012, 0.0002),       # projection period
+    hyperstability_hist_bounds = c(0.9, 1.1),     # historical
+    hyperstability_proj_bounds = c(0.85, 1.05),   # projection
+    obsError_CV_hist_bounds = c(0.2, 0.3),        # Historical CV
+    obsError_CV_proj_bounds = c(0.15, 0.25)       # Projection CV (improved precision)
+    # Note: No selectivity parameters needed for FD
+  ),
+
+  # Survey (FI)
+  list(
+    indextype = "FI",
+    areas = c(1, 2),                    # covers both areas
+    indexYears = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),
+    survey_timing = 0.5,                #half year
+    selectivity_hist_idx = 1,           # uses survey_sel1_hist
+    selectivity_proj_idx = 1,           # uses survey_sel1_proj
+    q_hist_bounds = c(0.00008, 0.00012),      # historical period
+    q_proj_bounds = c(0.0001, 0.00016),       # projection period
+    hyperstability_hist_bounds = c(0.95, 1.05),   # historical
+    hyperstability_proj_bounds = c(0.9, 1.1),     # projection
+    obsError_CV_hist_bounds = c(0.15, 0.25),      # Historical CV
+    obsError_CV_proj_bounds = c(0.1, 0.2)         # Projection CV (better precision)
+  )
+)
+# Survey Selectivity 1 (hist)
+survey_sel1_hist <- new("Fishery")
+survey_sel1_hist@title <- "Survey 1 - Historical"
+survey_sel1_hist@vulType <- "logistic"
+survey_sel1_hist@vulParams <- c(6, 1.0)
+survey_sel1_hist@retType <- "full"
+survey_sel1_hist@retMax <- 1.0
+survey_sel1_hist@Dmort <- 0.0
+
+# Survey Selectivity 1 (proj)
+survey_sel1_proj <- new("Fishery")
+survey_sel1_proj@title <- "Survey 1 - Projection"
+survey_sel1_proj@vulType <- "logistic"
+survey_sel1_proj@vulParams <- c(5, 0.8)
+survey_sel1_proj@retType <- "full"
+survey_sel1_proj@retMax <- 1.0
+survey_sel1_proj@Dmort <- 0.0
+
+# survey selectivity
+mixed_biomass@selectivity_hist_list <- list(survey_sel1_hist)
+mixed_biomass@selectivity_proj_list <- list(survey_sel1_proj)
+
+
+#Populating CVs for catchobs object
+cv_blocks <- matrix(nrow = 20, ncol = 2)
+# define a CV for each year individualy
+cv_blocks[1:10, 1] <- 0.25   # position 1-10: User Years 1-10 (Historical): CV 0.25-0.4
+cv_blocks[1:10, 2] <- 0.4
+cv_blocks[11:15, 1] <- 0.2
+cv_blocks[11:15, 2] <- 0.3
+cv_blocks[16:20, 1] <- 0.1
+cv_blocks[16:20, 2] <- 0.2
+
+
+catch_obs7 <- new("CatchObs",
+                  catchID = "Blocks_CV",
+                  title = "Blocks CV",
+                  areas = c(1,2),
+                  catchYears = c(1:total_years),
+                  #improving reporting rates over time
+                  # overeporting
+                  reporting_rates = c(rep(1.8,20)), #length= length catchYears
+                  obs_CVs = cv_blocks)
+
+#NEW addition
+
+# create length composition object
+length_comp7 <- new("LCompObs")
+length_comp7@indexID <- "Mixed_LC_FD_FI"
+length_comp7@title <- "Mixed FD and FI Length Composition"
+#length_comp7@length_cv <- 0.10         # 10% CV for individual length variability
+length_comp7@length_bin_width <- 1     # 1cm bins
+
+# define survey design for length composition
+length_comp7@survey_design <- list(
+
+  # Fishery-dependent length composition (uses catch data)
+  list(
+    indextype = "FD",
+    areas = c(1, 2),                     # Both areas (same as CPUE)
+    years = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),  # every other year
+    sample_sizes = c(50, 60, 70, 80, 90, 100, 110, 120, 130, 140)  # increasing sample sizes
+  ),
+
+  # Fishery-independent survey length composition - REUSING previous selectivity
+  list(
+    indextype = "FI",
+    areas = c(1, 2),                     # both areas (same as Survey)
+    years = c(6, 8, 10, 12, 14, 16, 18, 20),            # every 2 years
+    sample_sizes = c(200, 250, 300, 350, 300, 350, 300, 350),  # large sample sizes
+    selectivity_hist_idx = 1,            # REUSES survey_sel1_hist (same as  Index)
+    selectivity_proj_idx = 1,             # REUSES survey_sel1_proj (same as  Index)
+    survey_timing = 0.5      # half of year
+  )
+)
+
+# REUSE the same selectivity objects defined for the Index
+length_comp7@selectivity_hist_list <- list(survey_sel1_hist)  # SAME as mixed_biomass
+length_comp7@selectivity_proj_list <- list(survey_sel1_proj)  # SAME as mixed_biomass
+
+
+# Now run the simulation with the three observation models
+runProjection(
+  LifeHistoryObj = lh,
+  TimeAreaObj = ta,
+  HistFisheryObj = fishery,
+  ProFisheryObj_list = list(ProFisheryObj, ProFisheryObj),
+  StrategyObj = strategy,
+  StochasticObj = stochastic,
+  IndexObj = mixed_biomass,
+  CatchObsObj = catch_obs7,
+  LengthCompObj = length_comp7,      # NEW: Length composition object
+  customToCluster = "testMP",
+  wd = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs",
+  fileName = "test_run_MP_with_mixed_index_obs_catch_obs_length_obs",
+  doPlot = TRUE
+)
+
+out7<-readProjection("P:/Fork_fish_Sim_GTG/fishSimGTG/outputs", "test_run_MP_with_mixed_index_obs_catch_obs_length_obs")
 out7$HCR$decisionData$CPUE_1
 out7$HCR$decisionData$Survey_2
 out7$HCR$decisionData$observed_catch
+out7$HCR$decisionData$Fishery_1_count_bin_10
+out7$HCR$decisionData$Fishery_1_count_bin_13
+out7$HCR$decisionData$Survey_2_count_bin_12
+out7$HCR$decisionData$Survey_2_count_bin_18
 
-cpue_data <- create_year_iteration_table(out7$HCR$decisionData, "CPUE_1")
-survey_data <- create_year_iteration_table(out7$HCR$decisionData, "Survey_2")
-catch_data <- create_year_iteration_table(out7$HCR$decisionData, "observed_catch")
+
+p1 <- plotIndex_tibble(out7$HCR$decisionData,
+                       save_plot = TRUE,
+                       filename = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs/index_plot_mixedB7.jpeg")
+p1
+
+p2 <- plotCatch_tibble (out7$HCR$decisionData,
+                        save_plot = TRUE,
+                        filename = "P:/Fork_fish_Sim_GTG/fishSimGTG/outputs/plot_catchobs7.jpeg")
+p2
+
+
+#plotting length composition
+plotLengthComp_distributions <- function(tibble_data, program_name,
+                                         years_to_plot = NULL,
+                                         show_iterations = TRUE,
+                                         save_plot = FALSE,
+                                         filename = "length_comp_distributions.jpeg") {
+
+  # get number of length bins and basic info
+  n_bins <- unique(tibble_data$n_length_bins)[1]
+  length_bin_width <- unique(tibble_data$length_bin_width)[1]
+  title <- unique(tibble_data$title)[1]
+
+  # get years with data
+  sample_size_col <- paste0(program_name, "_sample_size")
+  years_with_data <- sort(unique(tibble_data$j[!is.na(tibble_data[[sample_size_col]])]))
+
+  #convert to user years
+  user_years_with_data <- years_with_data - 1
+
+  #which years to plot
+  if(is.null(years_to_plot)) {
+    years_to_plot <- user_years_with_data  # all years with data
+  }
+
+  # convert user years back to simulation years for data extraction
+  sim_years_to_plot <- years_to_plot + 1
+
+  #create data frame for plotting
+  plot_data <- data.frame()
+
+  for(sim_year in sim_years_to_plot) {
+    if(!sim_year %in% years_with_data) {
+      cat("No data for year", sim_year-1, "(user year)\n")
+      next
+    }
+
+    #get data for this year
+    year_data <- tibble_data[tibble_data$j == sim_year, ]
+
+    if(nrow(year_data) == 0) next
+
+    #extract number for each iteration
+    for(iter in unique(year_data$k)) {
+      iter_data <- year_data[year_data$k == iter, ]
+
+      if(nrow(iter_data) == 0) next
+
+      #get length composition numbers
+      numbers <- numeric(n_bins)
+      for(bin in 1:n_bins) {
+        col_name <- paste0(program_name, "_count_bin_", bin)
+        if(col_name %in% names(iter_data) && !is.na(iter_data[[col_name]][1])) {
+          numbers[bin] <- iter_data[[col_name]][1]
+        }
+      }
+
+      # include if there is actual data (not all zeros)
+      if(sum(numbers) > 0) {
+        #create length bins (center of each bin)
+        length_bins <- seq(length_bin_width/2, n_bins * length_bin_width - length_bin_width/2, by = length_bin_width)
+
+        iteration_df <- data.frame(
+          length_bin = length_bins,
+          numbers = numbers,
+          user_year = sim_year - 1,  #convert to user year
+          iteration = iter,
+          year_label = paste("Year", sim_year - 1)
+        )
+
+        plot_data <- rbind(plot_data, iteration_df)
+      }
+    }
+  }
+
+  #calculate median across iterations for each year and length bin
+  median_data <- plot_data %>%
+    group_by(user_year, length_bin, year_label) %>%
+    summarise(
+      median_numbers = median(numbers, na.rm = TRUE),
+      .groups = "drop"
+    )
+
+  #convert year label to ordered factor (so the years are shown organizd)
+  plot_data$year_label <- factor(plot_data$year_label,
+                                 levels = paste("Year", sort(unique(plot_data$user_year))))
+  median_data$year_label <- factor(median_data$year_label,
+                                   levels = paste("Year", sort(unique(median_data$user_year))))
+
+
+
+  #create the plot
+  p <- ggplot()
+
+  if(show_iterations) {
+    #ndividual iterations as thin lines
+    p <- p + geom_line(data = plot_data,
+                       aes(x = length_bin, y = numbers, group = interaction(user_year, iteration)),
+                       color = "lightblue", alpha = 0.3, size = 0.3)
+  }
+
+  #median line
+  p <- p + geom_line(data = median_data,
+                     aes(x = length_bin, y = median_numbers),
+                     color = "darkblue", size = 1.2) +
+    geom_point(data = median_data,
+               aes(x = length_bin, y = median_numbers),
+               color = "darkblue", size = 0.8) +
+    facet_wrap(~ year_label, scales = "free_y") +
+    labs(
+      title = paste("Length Composition Distributions -", program_name),
+      subtitle = paste("Data from:", title),
+      x = "Length (cm)",
+      y = "Numbers"
+    ) +
+    theme_minimal() +
+    theme(
+      strip.text = element_text(size = 10, face = "bold"),
+      plot.title = element_text(hjust = 0.5),
+      plot.subtitle = element_text(hjust = 0.5),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+
+  if(save_plot) {
+    ggsave(filename, plot = p, width = 12, height = 8, dpi = 300)
+    cat("Length composition plot saved as:", filename, "\n")
+  }
+
+  return(p)
+}
+
+p1 <- plotLengthComp_distributions(
+  out7$HCR$decisionData,
+  program_name = "Fishery_1",
+  years_to_plot = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),  # User years
+  show_iterations = TRUE,
+  save_plot = TRUE,
+  filename = "FD_length_distributions.jpeg"
+)
+p1
+
+p2 <- plotLengthComp_distributions(
+  out7$HCR$decisionData,
+  program_name = "Survey_2",
+  years_to_plot = c(6, 8, 10, 12, 14, 16, 18, 20),  # User years
+  show_iterations = TRUE,
+  save_plot = TRUE,
+  filename = "FI_length_distributions.jpeg"
+)
+p2
+
+
+
+
+
+
+
+
 
